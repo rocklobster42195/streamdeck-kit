@@ -103,3 +103,43 @@ export function wrapToWidth(text: string, fontSize: number, maxWidth: number, ma
     if (line) lines.push(line);
     return lines.slice(0, maxLines);
 }
+
+/**
+ * Split `text` into the fewest lines (up to `maxLines`) that fit `maxWidth`, with the break points
+ * chosen so the lines are as even as possible — a lyric line reads better as two halves than as a
+ * full line plus a dangling word. Breaks right after punctuation (",", "–", …) are slightly
+ * preferred. Returns undefined when even `maxLines` lines can't fit (a single word too wide, or too
+ * much text); the caller then shrinks or truncates.
+ */
+export function balanceLines(text: string, fontSize: number, maxWidth: number, maxLines = 2, bold = false): string[] | undefined {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return [''];
+    const factor = bold ? 1.07 : 1;
+    const width = (from: number, to: number) => measureArialWidth(words.slice(from, to).join(' '), fontSize) * factor;
+    // A break after a word ending in punctuation looks natural: count it as a little narrower
+    const bonus = (at: number) => (/[,;:.!?–—-]$/.test(words[at - 1]) ? fontSize * 2.2 : 0);
+
+    for (let n = 1; n <= Math.min(maxLines, words.length); n++) {
+        let best: { cuts: number[]; score: number } | undefined;
+        const search = (start: number, left: number, cuts: number[], worst: number, bonuses: number) => {
+            if (left === 1) {
+                const w = Math.max(worst, width(start, words.length));
+                if (w > maxWidth) return;
+                const score = w - bonuses;
+                if (!best || score < best.score) best = { cuts, score };
+                return;
+            }
+            for (let end = start + 1; end <= words.length - (left - 1); end++) {
+                const w = width(start, end);
+                if (w > maxWidth) break;
+                search(end, left - 1, [...cuts, end], Math.max(worst, w), bonuses + bonus(end));
+            }
+        };
+        search(0, n, [], 0, 0);
+        if (best) {
+            const bounds = [0, ...best.cuts, words.length];
+            return bounds.slice(1).map((end, i) => words.slice(bounds[i], end).join(' '));
+        }
+    }
+    return undefined;
+}

@@ -1,6 +1,6 @@
 // Ported from sonos-controller (src/utils/text-width.test.ts).
 import { describe, expect, it } from "vitest";
-import { measureArialWidth, truncateToWidth } from "../src/render/text-width.js";
+import { balanceLines, measureArialWidth, truncateToWidth } from "../src/render/text-width.js";
 
 describe("measureArialWidth", () => {
     it("returns 0 for empty text", () => {
@@ -71,5 +71,24 @@ describe("truncateToWidth", () => {
     it("is idempotent — truncating an already-truncated string changes nothing", () => {
         const once = truncateToWidth("A reasonably long track title here", 20, 150);
         expect(truncateToWidth(once, 20, 150)).toBe(once);
+    });
+});
+
+describe('balanceLines', () => {
+    it('keeps a line that fits', () => {
+        expect(balanceLines('Short line', 22, 180)).toEqual(['Short line']);
+    });
+    it('splits into two even halves instead of a full line plus a dangling word', () => {
+        // greedy filling would give "you can never tell who must" + "be waiting for you"
+        expect(balanceLines('you can never tell who must be waiting for you', 22, 300, 2, true)).toEqual(['you can never tell who', 'must be waiting for you']);
+        // too long for two lines on one dial: three even lines
+        expect(balanceLines('you can never tell who must be waiting for you', 22, 184, 3, true)).toHaveLength(3);
+    });
+    it('prefers a break after punctuation', () => {
+        expect(balanceLines('Oh my love, you are the only one', 22, 230, 2, true)).toEqual(['Oh my love,', 'you are the only one']);
+    });
+    it('gives up when the text cannot fit', () => {
+        expect(balanceLines('Supercalifragilisticexpialidocious', 22, 100)).toBeUndefined();
+        expect(balanceLines('a b c d e f g h i j k l m n o p q r s t u v w x y z', 22, 60, 2)).toBeUndefined();
     });
 });
