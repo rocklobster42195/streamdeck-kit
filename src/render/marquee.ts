@@ -1,8 +1,10 @@
 // Scrolling text for Stream Deck key images and touch-strip SVGs.
 //
-// Time-based instead of one interval per key (as sonos-controller's MarqueeAnimator does): the
-// scroll position is a pure function of the start time and "now", so rendering is deterministic
-// and testable, and one shared FrameTicker drives the redraws only while something moves.
+// The scroll position is a pure function of the start time and "now" (deterministic and testable,
+// one shared FrameTicker drives the redraws), but it moves in whole ticks: every frame shifts the
+// text by the same number of pixels. A continuous time-based offset jumps unevenly whenever a frame
+// reaches the device late, which reads as stutter on hardware (sonos-controller's MarqueeAnimator
+// steps 1 px per tick for the same reason). Match `tickMs` to the ticker that drives the redraws.
 import { measureArialWidth } from './text-width.js';
 
 export type MarqueeOptions = {
@@ -24,6 +26,8 @@ export type MarqueeOptions = {
     speed?: number;
     /** Still time at the start of every loop (ms). */
     pauseMs?: number;
+    /** Redraw interval the text moves in (ms). */
+    tickMs?: number;
 };
 
 const GAP = 28;
@@ -33,12 +37,17 @@ export function marqueeNeeded(text: string, fontSize: number, width: number): bo
     return measureArialWidth(text, fontSize) > width;
 }
 
-/** Current scroll offset in px (0 during the pause at the start of each loop). */
-export function marqueeOffset(textWidth: number, startedAt: number, now: number, speed = 40, pauseMs = 1500): number {
+/** Default redraw interval (ms) — the plugin's shared frame ticker. */
+export const MARQUEE_TICK_MS = 80;
+
+/** Current scroll offset in px (0 during the pause at the start of each loop), moving in whole ticks. */
+export function marqueeOffset(textWidth: number, startedAt: number, now: number, speed = 40, pauseMs = 1500, tickMs = MARQUEE_TICK_MS): number {
     const cycle = textWidth + GAP;
     const loopMs = pauseMs + (cycle / speed) * 1000;
     const t = (now - startedAt) % loopMs;
-    return t < pauseMs ? 0 : ((t - pauseMs) / 1000) * speed;
+    if (t < pauseMs) return 0;
+    const step = (speed * tickMs) / 1000;
+    return Math.floor((t - pauseMs) / tickMs) * step;
 }
 
 /** SVG fragment: static text if it fits, otherwise two copies scrolling left under a fade mask. */
@@ -49,7 +58,7 @@ export function marqueeSvg(o: MarqueeOptions): string {
     const textWidth = measureArialWidth(o.text, o.fontSize);
     if (textWidth <= o.width) return `<text x="${o.x}" y="${o.y}" ${attrs}>${text}</text>`;
 
-    const offset = marqueeOffset(textWidth, o.startedAt, o.now, o.speed, o.pauseMs);
+    const offset = marqueeOffset(textWidth, o.startedAt, o.now, o.speed, o.pauseMs, o.tickMs);
     const cycle = textWidth + GAP;
     const safe = o.id.replace(/[^a-zA-Z0-9_-]/g, '_');
     const top = o.y - o.fontSize - 2;

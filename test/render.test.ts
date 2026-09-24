@@ -23,7 +23,12 @@ describe('marquee', () => {
     });
     it('pauses at the start of each loop, then moves at the given speed', () => {
         expect(marqueeOffset(200, 0, 1000, 40, 1500)).toBe(0);
-        expect(marqueeOffset(200, 0, 2500, 40, 1500)).toBeCloseTo(40);
+        expect(marqueeOffset(200, 0, 2500, 40, 1500, 100)).toBeCloseTo(40);
+    });
+    it('moves in whole ticks, so every frame shifts the text by the same amount', () => {
+        // 25 px/s at 80 ms ticks = 2 px per tick; late or early frames land on the same grid
+        const at = (ms: number) => marqueeOffset(300, 0, 1500 + ms, 25, 1500, 80);
+        expect([at(0), at(79), at(80), at(159), at(160), at(241)]).toEqual([0, 0, 2, 2, 4, 6]);
     });
 });
 
