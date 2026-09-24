@@ -37,7 +37,8 @@ export class PanoramaEngine {
     join(context: string, deviceId: string, column: number, effectId: string, settings: Record<string, unknown>, redraw: () => void): void {
         const o = this.orchestrator;
         o.registerRenderCallback(context, redraw);
-        o.contextEffectSettings.set(context, settings);
+        // Only on the first join — later changes go through updateSettings() (compared + pushed)
+        if (!o.contextEffectSettings.has(context)) o.contextEffectSettings.set(context, settings);
         if (o.panoramaColumns.get(context) !== column || o.panoramaDeviceIds.get(context) !== deviceId) o.registerInPanorama(context, column, deviceId);
         o.setContextEffectId(context, effectId);
     }

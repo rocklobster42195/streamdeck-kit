@@ -8,12 +8,14 @@
 //
 // Attribute values for label/hint/placeholder/title are i18n keys (literal text works as fallback).
 import { PiChoice } from './choice.js';
+import { PiColor } from './color.js';
 import { PiField } from './field.js';
 import { PiRange } from './range.js';
 import { PiSection } from './section.js';
 import { PiToggle } from './toggle.js';
 
 export { PiChoice, type PiChoiceOption } from './choice.js';
+export { PiColor } from './color.js';
 export { PiField } from './field.js';
 export { PiRange } from './range.js';
 export { PiSection } from './section.js';
@@ -26,4 +28,5 @@ export function definePiComponents(): void {
     if (!customElements.get('pi-field')) customElements.define('pi-field', PiField);
     if (!customElements.get('pi-choice')) customElements.define('pi-choice', PiChoice);
     if (!customElements.get('pi-range')) customElements.define('pi-range', PiRange);
+    if (!customElements.get('pi-color')) customElements.define('pi-color', PiColor);
 }

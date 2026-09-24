@@ -117,3 +117,9 @@ body[data-connection="down"] .pi-needs-connection { opacity: 0.45; pointer-event
 /* Range slider (<pi-range>) */
 .pi-range { width: 100%; margin: 8px 0 2px; accent-color: var(--pi-accent-strong); }
 .pi-range-value { min-width: 44px; text-align: right; font-size: 13px; font-weight: 600; color: var(--pi-text); font-variant-numeric: tabular-nums; }
+
+/* Color picker (<pi-color>) */
+.pi-color { width: 44px; height: 30px; padding: 0; border: 1px solid var(--pi-control-border); border-radius: 8px; background: var(--pi-control); cursor: pointer; flex-shrink: 0; }
+.pi-color::-webkit-color-swatch-wrapper { padding: 3px; }
+.pi-color::-webkit-color-swatch { border: none; border-radius: 5px; }
+.pi-color-hex { font-variant-numeric: tabular-nums; }
