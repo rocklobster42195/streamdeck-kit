@@ -62,6 +62,15 @@ export class PanoramaEngine {
         return safeEffectCall(() => effect.renderSlice(offset, DISPLAY_W, DISPLAY_H), '', 'renderSlice');
     }
 
+    /** The displays of this context's group, left to right ([] while it isn't in a running group). */
+    members(context: string): { context: string; column: number }[] {
+        const key = this.orchestrator.panoramaContextGroupKey.get(context);
+        const g = key ? this.groups.get(key) : undefined;
+        return (g?.ctxs ?? [])
+            .map((c) => ({ context: c, column: this.orchestrator.panoramaColumns.get(c) ?? 0 }))
+            .sort((a, b) => a.column - b.column);
+    }
+
     isActive(context: string): boolean {
         return !!this.effectFor(context);
     }

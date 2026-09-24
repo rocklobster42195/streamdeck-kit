@@ -29,6 +29,10 @@ describe('PanoramaEngine', () => {
         expect(engine.orchestrator.panoramaContextGroupKey.get('a')).toBe(engine.orchestrator.panoramaContextGroupKey.get('b'));
         expect(engine.orchestrator.getPanoramaSliceOffset('b')).toBe(200);
         expect(engine.renderSlice('a').length).toBeGreaterThan(0);
+        expect(engine.members('b')).toEqual([
+            { context: 'a', column: 0 },
+            { context: 'b', column: 1 },
+        ]);
         // both displays redraw from the shared group tick
         expect(redraws.a).toBeGreaterThan(0);
         expect(redraws.b).toBeGreaterThan(0);
