@@ -1,7 +1,7 @@
 // Generic, device-agnostic PI components. Light DOM custom elements bound to Stream Deck settings.
 //
 //   <pi-section title="pi.display">…children…</pi-section>
-//   <pi-toggle setting="showProgress" label="pi.show_progress" hint="pi.show_progress_hint"></pi-toggle>
+//   <pi-toggle setting="showProgress" label="pi.show_progress" hint="pi.show_progress_hint" [data-default="true"]></pi-toggle>
 //   <pi-field setting="maUrl" global label="pi.server_url" placeholder="pi.server_url_placeholder" hint="…"></pi-field>
 //   <pi-field setting="maToken" global type="password" label="pi.token"></pi-field>
 //
@@ -55,9 +55,14 @@ export class PiToggle extends HTMLElement {
             </div>
             <button type="button" class="pi-switch" aria-label="${escapeHtml(label)}"><span class="pi-switch-knob"></span></button>`;
         const button = this.querySelector('button')!;
-        const render = () => button.setAttribute('aria-pressed', String(setting.get() === true));
+        // data-default="true": an unset setting counts as on
+        const isOn = () => {
+            const v = setting.get();
+            return v === undefined ? this.dataset.default === 'true' : v === true;
+        };
+        const render = () => button.setAttribute('aria-pressed', String(isOn()));
         button.addEventListener('click', () => {
-            setting.set(!(setting.get() === true));
+            setting.set(!isOn());
             render();
         });
         this.unsubscribe = setting.subscribe(render);
