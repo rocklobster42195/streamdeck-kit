@@ -79,13 +79,15 @@ describe('balanceLines', () => {
         expect(balanceLines('Short line', 22, 180)).toEqual(['Short line']);
     });
     it('splits into two even halves instead of a full line plus a dangling word', () => {
-        // greedy filling would give "you can never tell who must" + "be waiting for you"
-        expect(balanceLines('you can never tell who must be waiting for you', 22, 300, 2, true)).toEqual(['you can never tell who', 'must be waiting for you']);
-        // too long for two lines on one dial: three even lines
-        expect(balanceLines('you can never tell who must be waiting for you', 22, 184, 3, true)).toHaveLength(3);
+        // Invented text (no real song lyrics in the repo). Greedy filling would give
+        // "the paper boats keep sailing" + "down the quiet river"
+        expect(balanceLines('the paper boats keep sailing down the quiet river', 22, 300, 2, true)).toEqual(['the paper boats keep', 'sailing down the quiet river']);
+        // too long for two lines: three even lines
+        expect(balanceLines('the paper boats keep sailing down the quiet river', 22, 200, 3, true)).toEqual(['the paper boats', 'keep sailing down', 'the quiet river']);
     });
     it('prefers a break after punctuation', () => {
-        expect(balanceLines('Oh my love, you are the only one', 22, 230, 2, true)).toEqual(['Oh my love,', 'you are the only one']);
+        // "Hold the lantern, we" + "are almost home" would be a hair more even
+        expect(balanceLines('Hold the lantern, we are almost home', 22, 220, 2, true)).toEqual(['Hold the lantern,', 'we are almost home']);
     });
     it('gives up when the text cannot fit', () => {
         expect(balanceLines('Supercalifragilisticexpialidocious', 22, 100)).toBeUndefined();

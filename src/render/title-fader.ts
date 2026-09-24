@@ -41,9 +41,6 @@ export const SONOS_TITLE_FADER: TitleFaderConfig = {
     textStep: 0.1,
 };
 
-/** Arial Bold runs a little wider than the regular Arial metrics we measure with. */
-const BOLD_FACTOR = 1.07;
-
 enum Phase {
     BoxIn,
     ScrollAndFadeIn,
@@ -79,7 +76,7 @@ export class TitleFader {
         if (text === this.current) return;
         this.current = text;
         const c = this.config;
-        this.textWidth = measureArialWidth(text, c.fontSize) * BOLD_FACTOR;
+        this.textWidth = measureArialWidth(text, c.fontSize, true);
         this.scrolls = c.startX + this.textWidth > c.endX;
         this.restart();
     }
