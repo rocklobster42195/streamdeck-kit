@@ -120,8 +120,110 @@ export class PiField extends HTMLElement {
     }
 }
 
+export type PiChoiceOption = { value: string; label: string; icon?: string };
+
+/**
+ * <pi-choice setting="command" columns="3"> with options set via the `options` property
+ * ([{ value, label (i18n key), icon? (24×24 SVG path) }]) — a grid of tiles, one selected.
+ */
+export class PiChoice extends HTMLElement {
+    private _options: PiChoiceOption[] = [];
+    private unsubscribe?: () => void;
+
+    set options(options: PiChoiceOption[]) {
+        this._options = options;
+        if (this.isConnected) this.render();
+    }
+
+    connectedCallback(): void {
+        this.classList.add('pi-choice');
+        this.style.setProperty('--pi-choice-columns', this.getAttribute('columns') ?? '3');
+        this.unsubscribe = bound(this).subscribe(() => this.render());
+        this.render();
+    }
+
+    disconnectedCallback(): void {
+        this.unsubscribe?.();
+    }
+
+    private render(): void {
+        const setting = bound(this);
+        const value = String(setting.get() ?? this.getAttribute('default') ?? '');
+        this.innerHTML = this._options
+            .map(
+                (o) => `<button type="button" class="pi-choice-tile" data-value="${escapeHtml(o.value)}" aria-pressed="${o.value === value}">
+                    ${o.icon ? `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="${escapeHtml(o.icon)}"/></svg>` : ''}
+                    <span>${escapeHtml(t(o.label))}</span></button>`,
+            )
+            .join('');
+        this.querySelectorAll<HTMLElement>('.pi-choice-tile').forEach((el) =>
+            el.addEventListener('click', () => {
+                setting.set(el.dataset.value);
+                this.render();
+            }),
+        );
+    }
+}
+
+/** <pi-range setting="preset" min="0" max="100" step="1" default="20" label="…" unit="%"> — slider with live value. */
+export class PiRange extends HTMLElement {
+    private unsubscribe?: () => void;
+
+    connectedCallback(): void {
+        const setting = bound(this);
+        const min = Number(this.getAttribute('min') ?? 0);
+        const max = Number(this.getAttribute('max') ?? 100);
+        const step = Number(this.getAttribute('step') ?? 1);
+        const def = Number(this.getAttribute('default') ?? min);
+        const unit = this.getAttribute('unit') ?? '';
+        const label = this.getAttribute('label');
+        this.classList.add('pi-row');
+        this.innerHTML = `
+            <div class="pi-row-text">
+                <span class="pi-label">${escapeHtml(t(label ?? ''))}</span>
+                <input class="pi-range" type="range" min="${min}" max="${max}" step="${step}" aria-label="${escapeHtml(t(label ?? ''))}"/>
+            </div>
+            <span class="pi-range-value"></span>`;
+        const input = this.querySelector('input')!;
+        const out = this.querySelector<HTMLElement>('.pi-range-value')!;
+        const render = () => {
+            const v = Number(setting.get() ?? def);
+            if (document.activeElement !== input) input.value = String(v);
+            out.textContent = `${input.value}${unit}`;
+        };
+        input.addEventListener('input', () => (out.textContent = `${input.value}${unit}`));
+        input.addEventListener('change', () => setting.set(Number(input.value)));
+        this.unsubscribe = setting.subscribe(render);
+        render();
+    }
+
+    disconnectedCallback(): void {
+        this.unsubscribe?.();
+    }
+}
+
+/**
+ * Show elements only for certain setting values: `data-show-when="command=up,down"` (action
+ * settings; prefix the key with "global:" for global settings). Re-evaluated on every change.
+ */
+export function initConditionalVisibility(root: ParentNode = document): void {
+    const apply = () =>
+        root.querySelectorAll<HTMLElement>('[data-show-when]').forEach((el) => {
+            const [rawKey, values] = (el.dataset.showWhen ?? '').split('=');
+            const global = rawKey.startsWith('global:');
+            const key = global ? rawKey.slice(7) : rawKey;
+            const current = String((global ? sd.globalSettings : sd.settings)[key] ?? el.dataset.showDefault ?? '');
+            el.hidden = !values.split(',').includes(current);
+        });
+    sd.onSettings(apply);
+    sd.onGlobalSettings(apply);
+    apply();
+}
+
 export function definePiComponents(): void {
     if (!customElements.get('pi-section')) customElements.define('pi-section', PiSection);
     if (!customElements.get('pi-toggle')) customElements.define('pi-toggle', PiToggle);
     if (!customElements.get('pi-field')) customElements.define('pi-field', PiField);
+    if (!customElements.get('pi-choice')) customElements.define('pi-choice', PiChoice);
+    if (!customElements.get('pi-range')) customElements.define('pi-range', PiRange);
 }

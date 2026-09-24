@@ -105,3 +105,15 @@ body[data-connection="down"] .pi-needs-connection { opacity: 0.45; pointer-event
 
 /* When a field shows an error, the error replaces its regular hint */
 .pi-invalid .pi-hint:not(.pi-error) { display: none; }
+
+/* Choice tiles (<pi-choice>) */
+.pi-choice { display: grid; grid-template-columns: repeat(var(--pi-choice-columns, 3), minmax(0, 1fr)); gap: 6px; padding: 8px; }
+.pi-choice-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 58px; padding: 6px 4px; background: var(--pi-control); border: 1px solid var(--pi-control-border); border-radius: 8px; cursor: pointer; color: var(--pi-text-2); font-size: 11px; text-align: center; line-height: 1.2; }
+.pi-choice-tile:hover { border-color: #55555c; }
+.pi-choice-tile[aria-pressed="true"] { background: var(--pi-selected); border-color: var(--pi-accent); color: var(--pi-text); }
+.pi-choice-tile[aria-pressed="true"] svg { color: var(--pi-accent); }
+.pi-choice-tile:focus-visible { outline: 2px solid var(--pi-accent); outline-offset: 2px; }
+
+/* Range slider (<pi-range>) */
+.pi-range { width: 100%; margin: 8px 0 2px; accent-color: var(--pi-accent-strong); }
+.pi-range-value { min-width: 44px; text-align: right; font-size: 13px; font-weight: 600; color: var(--pi-text); font-variant-numeric: tabular-nums; }
