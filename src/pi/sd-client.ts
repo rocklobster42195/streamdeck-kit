@@ -81,6 +81,13 @@ export class StreamDeckPiClient {
         this.emit('settings', this.settings);
     }
 
+    /** Update several action settings in one message. */
+    setSettings(patch: JsonObject): void {
+        this.settings = { ...this.settings, ...patch };
+        this.send({ event: 'setSettings', context: this.uuid, payload: this.settings });
+        this.emit('settings', this.settings);
+    }
+
     setGlobalSetting(key: string, value: unknown): void {
         this.globalSettings = { ...this.globalSettings, [key]: value };
         this.send({ event: 'setGlobalSettings', context: this.uuid, payload: this.globalSettings });
