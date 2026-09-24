@@ -1,0 +1,107 @@
+/* Shared property inspector theme (MAC + sonos-controller).
+   Reference design: https://claude.ai/artifact/GXxM839hLsUPztGs5Rfugz
+   Plugins override --pi-accent / --pi-accent-strong to brand themselves. */
+:root {
+  color-scheme: dark;
+  --pi-bg: #1c1c1e;
+  --pi-card: #252528;
+  --pi-card-border: #323236;
+  --pi-control: #2a2a2e;
+  --pi-control-border: #3c3c42;
+  --pi-input-bg: #1c1c1e;
+  --pi-text: #ececec;
+  --pi-text-2: #b4b4b8;
+  --pi-text-3: #a4a4aa;
+  --pi-section: #9a9aa0;
+  --pi-muted: #7c7c82;
+  --pi-accent: #6cc4ff;
+  --pi-accent-strong: #2f8fd8;
+  --pi-selected: #33404d;
+  --pi-ok: #4cc38a;
+  --pi-warn: #f0b429;
+  --pi-error: #ff6b6b;
+  --pi-error-text: #ffb3b3;
+  --pi-idle: #6b6b72;
+  --pi-radius: 10px;
+  --pi-font: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--pi-bg); color: var(--pi-text); font-family: var(--pi-font); font-size: 13px; }
+body { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+button { font-family: inherit; color: inherit; }
+a { color: var(--pi-accent); }
+[hidden] { display: none !important; }
+
+/* Sections and cards */
+pi-section { display: flex; flex-direction: column; gap: 6px; }
+.pi-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pi-section); }
+.pi-card { background: var(--pi-card); border: 1px solid var(--pi-card-border); border-radius: var(--pi-radius); display: flex; flex-direction: column; }
+.pi-card > * + * { border-top: 1px solid var(--pi-card-border); }
+.pi-card > .pi-field + .pi-field { border-top: none; }
+.pi-padded { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Text */
+.pi-label { font-size: 13px; }
+.pi-strong { font-size: 13px; font-weight: 600; }
+.pi-hint { font-size: 11px; color: var(--pi-text-3); line-height: 1.45; }
+.pi-error { color: var(--pi-error-text); }
+.pi-footer { display: flex; justify-content: space-between; font-size: 11px; color: var(--pi-muted); margin-top: auto; }
+
+/* Row with text + control (toggle) */
+.pi-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 44px; }
+.pi-row-text { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }
+
+/* Switch */
+.pi-switch { width: 40px; height: 24px; border-radius: 12px; border: none; padding: 3px; background: #4a4a50; cursor: pointer; display: flex; justify-content: flex-start; flex-shrink: 0; transition: background 0.15s; }
+.pi-switch[aria-pressed="true"] { background: var(--pi-accent-strong); justify-content: flex-end; }
+.pi-switch-knob { width: 18px; height: 18px; border-radius: 9px; background: #fff; }
+.pi-switch:focus-visible, .pi-button:focus-visible, .pi-input:focus-visible, .pi-select-button:focus-visible { outline: 2px solid var(--pi-accent); outline-offset: 2px; }
+
+/* Fields */
+.pi-field { display: block; padding: 0 12px 10px; }
+.pi-field:first-child { padding-top: 10px; }
+.pi-field label { display: flex; flex-direction: column; gap: 4px; }
+.pi-field-label { font-size: 11px; color: var(--pi-text-3); }
+.pi-input-row { display: flex; gap: 6px; }
+.pi-input { flex-grow: 1; min-width: 0; background: var(--pi-input-bg); border: 1px solid var(--pi-control-border); border-radius: 8px; color: var(--pi-text); padding: 8px 10px; font-size: 13px; font-family: inherit; }
+.pi-input:focus { border-color: var(--pi-accent); outline: none; }
+.pi-invalid .pi-input { border-color: var(--pi-error); }
+.pi-icon-button { width: 36px; background: var(--pi-control); border: 1px solid var(--pi-control-border); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--pi-text-2); }
+
+/* Buttons */
+.pi-button { min-height: 36px; padding: 6px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; background: transparent; border: 1px solid #44444a; color: #d8d8dc; }
+.pi-button-primary { background: var(--pi-accent-strong); border-color: var(--pi-accent-strong); color: #fff; font-weight: 600; min-height: 40px; }
+.pi-button-small { min-height: 30px; font-size: 12px; padding: 4px 10px; }
+
+/* Status dot */
+.pi-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pi-idle); flex-shrink: 0; }
+.pi-dot-lg { width: 10px; height: 10px; }
+.pi-dot[data-status="ok"] { background: var(--pi-ok); box-shadow: 0 0 0 3px rgba(76, 195, 138, 0.18); }
+.pi-dot[data-status="warn"] { background: var(--pi-warn); }
+.pi-dot[data-status="error"] { background: var(--pi-error); box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.18); }
+.pi-dot[data-status="playing"] { background: var(--pi-ok); }
+.pi-dot[data-status="paused"] { background: var(--pi-warn); }
+.pi-dot[data-status="offline"] { background: var(--pi-error); }
+
+/* Custom select (button + popup list) */
+.pi-select { position: relative; }
+.pi-select-button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 8px 12px; background: var(--pi-control); border: 1px solid var(--pi-control-border); border-radius: var(--pi-radius); cursor: pointer; text-align: left; }
+.pi-select-button[aria-expanded="true"] { border-color: var(--pi-accent); }
+.pi-select-text { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }
+.pi-select-text > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pi-select-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10; background: var(--pi-control); border: 1px solid var(--pi-control-border); border-radius: var(--pi-radius); padding: 6px; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; gap: 2px; max-height: 320px; overflow-y: auto; }
+.pi-select-group { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8a8a90; padding: 6px 8px 2px; }
+.pi-select-divider { height: 1px; background: #3a3a40; margin: 4px 6px; }
+.pi-option { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 4px 8px; background: transparent; border: none; border-radius: 7px; cursor: pointer; text-align: left; }
+.pi-option:hover, .pi-option:focus-visible { background: #34343a; outline: none; }
+.pi-option[aria-selected="true"] { background: var(--pi-selected); }
+.pi-option-check { width: 14px; color: var(--pi-accent); }
+.pi-option-sub { font-size: 11px; color: var(--pi-text-3); }
+.pi-icon-accent { color: var(--pi-accent); flex-shrink: 0; }
+
+/* Sections that only make sense with a live connection */
+body[data-connection="down"] .pi-needs-connection { opacity: 0.45; pointer-events: none; }
+
+/* When a field shows an error, the error replaces its regular hint */
+.pi-invalid .pi-hint:not(.pi-error) { display: none; }
