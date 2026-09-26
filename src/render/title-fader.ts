@@ -19,6 +19,13 @@ export type TitleFaderConfig = {
     speed: number;
     /** Ticks a short title stands still, and the pause between loops. */
     pauseTicks: number;
+    /**
+     * The measured text width is scaled by this. sonos-controller measures with Open Sans Bold ×
+     * 1.03 but draws in Arial, so it thinks titles are ~5 % wider than they are; the fade-out then
+     * starts with the end already well in view. Measuring Arial exactly (1) made titles fade while
+     * their last letters were only just coming in — this keeps sonos-controller's look.
+     */
+    measureScale: number;
     fontSize: number;
     /** Text baseline. */
     y: number;
@@ -34,6 +41,7 @@ export const SONOS_TITLE_FADER: TitleFaderConfig = {
     endX: 144,
     speed: 2.2,
     pauseTicks: 120,
+    measureScale: 1.055,
     fontSize: 26,
     y: 120,
     boxMax: 0.3,
@@ -76,7 +84,7 @@ export class TitleFader {
         if (text === this.current) return;
         this.current = text;
         const c = this.config;
-        this.textWidth = measureArialWidth(text, c.fontSize, true);
+        this.textWidth = measureArialWidth(text, c.fontSize, true) * c.measureScale;
         this.scrolls = c.startX + this.textWidth > c.endX;
         this.restart();
     }
