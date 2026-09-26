@@ -63,6 +63,8 @@ export interface EffectDefinition<S = Record<string, unknown>> {
     id: string;
     /** Shown in the effect picker dropdown in the Property Inspector. */
     displayName: string;
+    /** Not offered in effect pickers (e.g. the blank effect hosts use for "no effect"). */
+    hidden?: boolean;
     defaultSettings: S;
     /** Drives auto-generated PI controls. Field labels/keys are entirely up to you. */
     settingsSchema: EffectField[];

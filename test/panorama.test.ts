@@ -3,8 +3,9 @@ import { PanoramaEngine } from '../src/panorama/engine.js';
 import { effectRegistry, listEffects, withEffectDefaults } from '../src/panorama/registry.js';
 
 describe('effect registry', () => {
-    it('contains the four built-in effects with PI-ready schemas', () => {
-        expect([...effectRegistry.keys()].sort()).toEqual(['boing-ball', 'boing-globe', 'matrix-rain', 'particles'].sort());
+    it('contains the four built-in effects with PI-ready schemas, plus the hidden blank one', () => {
+        expect([...effectRegistry.keys()].sort()).toEqual(['blank', 'boing-ball', 'boing-globe', 'matrix-rain', 'particles'].sort());
+        expect(listEffects().map((e) => e.id).sort()).toEqual(['boing-ball', 'boing-globe', 'matrix-rain', 'particles'].sort());
         for (const e of listEffects()) expect(Array.isArray(e.settingsSchema)).toBe(true);
     });
     it('fills in missing schema defaults', () => {
