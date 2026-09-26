@@ -185,6 +185,10 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
         this.bouncePhase = 0;
     }
 
+    getControls(): string[] {
+        return ['speed'];
+    }
+
     getIndicatorValue(): number {
         return Math.round((Math.abs(this.vx) - SPEED_MIN) / (SPEED_MAX - SPEED_MIN) * 100);
     }
@@ -208,7 +212,7 @@ const boingBallEffect: EffectDefinition<BoingBallEffectSettings> = {
         // is ~0.7-5.3 px/tick, fractional — see SPEED_MIN/MAX above, still used for clamping
         // whatever the PI sends and for the fine-grained physical dial-rotate control on the
         // Panorama Effects action). A slider showing "0.7017543859649122" was illegible.
-        { key: 'savedSpeed', type: 'range', label: 'Ball speed', min: 1, max: 5, step: 1, default: 2 },
+        { key: 'savedSpeed', type: 'range', label: 'Ball speed', min: 1, max: 5, step: 1, default: 2, control: 'speed' },
     ],
     createInstance: () => new BoingBallEffectInstance(),
 };

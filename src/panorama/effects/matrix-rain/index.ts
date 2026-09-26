@@ -242,6 +242,10 @@ class MatrixRainEffectInstance implements EffectInstance<MatrixRainEffectSetting
         this.respawnAllDrops();
     }
 
+    getControls(): string[] {
+        return ['density'];
+    }
+
     getIndicatorValue(): number {
         return Math.round((this.density - DENSITY_MIN) / (DENSITY_MAX - DENSITY_MIN) * 100);
     }
@@ -257,7 +261,7 @@ const matrixRainEffect: EffectDefinition<MatrixRainEffectSettings> = {
     defaultSettings: { color: '#22C55E' },
     settingsSchema: [
         { key: 'color', type: 'color', label: 'Color', default: '#22C55E' },
-        { key: 'savedDensity', type: 'range', label: 'Rain density', min: DENSITY_MIN, max: DENSITY_MAX, step: DENSITY_STEP, default: DENSITY_DEFAULT },
+        { key: 'savedDensity', type: 'range', label: 'Rain density', min: DENSITY_MIN, max: DENSITY_MAX, step: DENSITY_STEP, default: DENSITY_DEFAULT, control: 'density' },
     ],
     createInstance: () => new MatrixRainEffectInstance(),
 };

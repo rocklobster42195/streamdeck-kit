@@ -102,6 +102,18 @@ class ParticlesEffectInstance implements EffectInstance<ParticlesEffectSettings>
         this.mode = this.mode === 'particles' ? 'speed' : 'particles';
     }
 
+    getControls(): string[] {
+        return ['count', 'speed'];
+    }
+
+    getControl(): string {
+        return this.mode === 'speed' ? 'speed' : 'count';
+    }
+
+    setControl(id: string): void {
+        this.mode = id === 'speed' ? 'speed' : 'particles';
+    }
+
     getIndicatorValue(): number {
         if (this.mode === 'speed') {
             return Math.round((this.speed - SPEED_MIN) / (SPEED_MAX - SPEED_MIN) * 100);
@@ -123,8 +135,8 @@ const particlesEffect: EffectDefinition<ParticlesEffectSettings> = {
     displayName: 'Particles',
     defaultSettings: { color: '#404040' },
     settingsSchema: [
-        { key: 'savedDensity', type: 'range', label: 'Particle density', min: MIN_PER_DISPLAY, max: MAX_PER_DISPLAY, default: BASE_PER_DISPLAY },
-        { key: 'savedSpeed', type: 'range', label: 'Particle speed', min: SPEED_MIN, max: SPEED_MAX, step: SPEED_STEP, default: SPEED_DEFAULT },
+        { key: 'savedDensity', type: 'range', label: 'Particle density', min: MIN_PER_DISPLAY, max: MAX_PER_DISPLAY, default: BASE_PER_DISPLAY, control: 'count' },
+        { key: 'savedSpeed', type: 'range', label: 'Particle speed', min: SPEED_MIN, max: SPEED_MAX, step: SPEED_STEP, default: SPEED_DEFAULT, control: 'speed' },
     ],
     createInstance: () => new ParticlesEffectInstance(),
 };

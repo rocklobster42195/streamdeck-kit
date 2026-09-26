@@ -91,6 +91,22 @@ export class PanoramaEngine {
         if (e?.onTouch) safeEffectCall(() => e.onTouch!(x + this.orchestrator.getPanoramaSliceOffset(context), y), undefined, 'onTouch');
     }
 
+    /** What rotating can change on this context's effect (see EffectInstance.getControls). */
+    controls(context: string): string[] {
+        const e = this.effectFor(context);
+        return (e?.getControls ? safeEffectCall(() => e.getControls!(), undefined, 'getControls') : undefined) ?? [];
+    }
+
+    control(context: string): string | undefined {
+        const e = this.effectFor(context);
+        return e?.getControl ? safeEffectCall(() => e.getControl!(), undefined, 'getControl') : undefined;
+    }
+
+    setControl(context: string, id: string): void {
+        const e = this.effectFor(context);
+        if (e?.setControl) safeEffectCall(() => e.setControl!(id), undefined, 'setControl');
+    }
+
     /** Settings the effect changed itself (e.g. speed after rotating) that the host should persist. */
     runtimeSettings(context: string): Record<string, unknown> | undefined {
         const e = this.effectFor(context);

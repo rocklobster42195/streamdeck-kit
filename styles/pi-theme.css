@@ -43,6 +43,7 @@ pi-section { display: flex; flex-direction: column; gap: 6px; }
 
 /* Text */
 .pi-label { font-size: 13px; }
+.pi-label-icon { width: 15px; height: 15px; fill: var(--pi-accent); vertical-align: -3px; margin-right: 6px; }
 .pi-strong { font-size: 13px; font-weight: 600; }
 .pi-hint { font-size: 11px; color: var(--pi-text-3); line-height: 1.45; }
 .pi-error { color: var(--pi-error-text); }

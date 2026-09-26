@@ -228,6 +228,10 @@ class BoingGlobeEffectInstance implements EffectInstance<BoingGlobeEffectSetting
         this.bouncePhase = 0;
     }
 
+    getControls(): string[] {
+        return ['speed'];
+    }
+
     getIndicatorValue(): number {
         return Math.round((Math.abs(this.vx) - SPEED_MIN) / (SPEED_MAX - SPEED_MIN) * 100);
     }
@@ -248,7 +252,7 @@ const boingGlobeEffect: EffectDefinition<BoingGlobeEffectSettings> = {
         { key: 'oceanColor', type: 'color', label: 'Ocean color', default: '#1C3E6C' },
         // Deliberately simplified to a clean 1-5 integer scale for the PI — see the identical
         // comment in boing-ball/index.ts (same underlying tuning range/reasoning).
-        { key: 'savedSpeed', type: 'range', label: 'Drift speed', min: 1, max: 5, step: 1, default: 2 },
+        { key: 'savedSpeed', type: 'range', label: 'Drift speed', min: 1, max: 5, step: 1, default: 2, control: 'speed' },
     ],
     createInstance: () => new BoingGlobeEffectInstance(),
 };

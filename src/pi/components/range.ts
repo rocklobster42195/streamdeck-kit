@@ -2,7 +2,7 @@ import { escapeHtml } from '../dom.js';
 import { t } from '../i18n.js';
 import { bound } from './bound.js';
 
-/** <pi-range setting="preset" min="0" max="100" step="1" default="20" label="…" unit="%"> — slider with live value. */
+/** <pi-range setting="preset" min="0" max="100" step="1" default="20" label="…" unit="%" [icon="<MDI path>"]> — slider with live value. */
 export class PiRange extends HTMLElement {
     private unsubscribe?: () => void;
 
@@ -14,10 +14,12 @@ export class PiRange extends HTMLElement {
         const def = Number(this.getAttribute('default') ?? min);
         const unit = this.getAttribute('unit') ?? '';
         const label = this.getAttribute('label');
+        const iconPath = this.getAttribute('icon');
+        const iconSvg = iconPath ? `<svg class="pi-label-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${escapeHtml(iconPath)}"/></svg>` : '';
         this.classList.add('pi-row');
         this.innerHTML = `
             <div class="pi-row-text">
-                <span class="pi-label">${escapeHtml(t(label ?? ''))}</span>
+                <span class="pi-label">${iconSvg}${escapeHtml(t(label ?? ''))}</span>
                 <input class="pi-range" type="range" min="${min}" max="${max}" step="${step}" aria-label="${escapeHtml(t(label ?? ''))}"/>
             </div>
             <span class="pi-range-value"></span>`;

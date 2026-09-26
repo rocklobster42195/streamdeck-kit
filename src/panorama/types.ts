@@ -8,7 +8,8 @@
 // may contain arbitrary logic/imports.
 
 export type EffectField =
-    | { key: string; type: 'range'; label: string; min: number; max: number; step?: number; default: number }
+    /** `control`: the getControls() id this value belongs to (hosts show the same icon in the PI). */
+    | { key: string; type: 'range'; label: string; min: number; max: number; step?: number; default: number; control?: string }
     | { key: string; type: 'color'; label: string; default: string }
     | { key: string; type: 'checkbox'; label: string; default: boolean }
     | { key: string; type: 'select'; label: string; options: { label: string; value: string }[]; default: string };
@@ -42,6 +43,12 @@ export interface EffectInstance<S = Record<string, unknown>> {
     onRotate?(ticks: number): void;
     onPress?(): void;
     onTouch?(x: number, y: number): void;
+
+    /** Optional: what rotating can change ("count", "speed", "density", …), in the order a host
+     *  cycles through them; getControl/setControl read and switch the one rotating changes now. */
+    getControls?(): string[];
+    getControl?(): string;
+    setControl?(id: string): void;
 
     /** Optional 0-100 value shown on the dial's ring indicator. */
     getIndicatorValue?(): number;
