@@ -1,6 +1,6 @@
 # streamdeck-core
 
-Stream Deck building blocks that do not depend on any particular device. They are shared by **MAC** and **[Sonos Controller](https://github.com/rocklobster42195/streamdeck-sonos-controller)**.
+Stream Deck building blocks that do not depend on any particular device. They are shared by **MA-C** and **[Sonos Controller](https://github.com/rocklobster42195/streamdeck-sonos-controller)**.
 
 ## Property inspector kit (`streamdeck-core/pi`)
 
@@ -20,6 +20,6 @@ Reference design: https://claude.ai/artifact/GXxM839hLsUPztGs5Rfugz
 
 1. **Now:** the PI kit and theme
 2. **Next:** panorama/ambient effects and rendering helpers (cover art, marquee, progress bar, volume pie, fonts/icons), plus the cover art cache, all extracted from Sonos Controller
-3. **After the MAC MVP:** a shared player abstraction for actions
+3. **After the MA-C MVP:** a shared player abstraction for actions
 
 Sync rule: a change here is a change for both plugins. Check whether Sonos Controller needs it too.
