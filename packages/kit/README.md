@@ -27,6 +27,7 @@ Node 20 or later (the Stream Deck plugin runtime). The package is ESM only.
 |---|---|---|
 | `@rocklobster42195/streamdeck-kit` | Plugin (Node) | Rendering helpers, animation, Panorama effects, state and timing helpers. Safe to import in the plugin backend. |
 | `@rocklobster42195/streamdeck-kit/bridge` | Plugin (Node) | `piBridge`, the plugin side of the property inspector. Imports `@elgato/streamdeck` (a peer dependency), which is why it has its own entry point. |
+| `@rocklobster42195/streamdeck-kit/bus` | Plugin (Node) | `DeckBus`, the kit's implementation of **deckbus**, a local bus between plugins (see below). |
 | `@rocklobster42195/streamdeck-kit/mdi` | Plugin (Node) | Search over all Material Design Icons (see below). |
 | `@rocklobster42195/streamdeck-kit/pi` | Property inspector (browser) | Socket client, i18n, components. Bundle it into your PI script (e.g. with Rollup). |
 | `@rocklobster42195/streamdeck-kit/styles/pi-theme.css` | Property inspector | The theme. Copy it next to your PI pages at build time. |
@@ -111,6 +112,34 @@ import { setKitLogger } from "@rocklobster42195/streamdeck-kit";
 
 setKitLogger(streamDeck.logger);
 ```
+
+## deckbus (`/bus`)
+
+Stream Deck plugins can't talk to each other. **deckbus** lets them, and any other local program, share state, stream data, send requests and broadcast, without a central server or master. Every peer is equal, and one that goes away never takes the others down. The protocol is open and documented in [docs/deckbus-protocol.md](https://github.com/rocklobster42195/streamdeck-kit/blob/main/docs/deckbus-protocol.md), so programs without this kit can join too.
+
+```ts
+import { DeckBus } from "@rocklobster42195/streamdeck-kit/bus";
+
+const bus = new DeckBus({ id: "de.example.mixer-plugin", name: "Mixer", version: "1.0.0", caps: ["meters"] });
+await bus.start(); // false (and logged) if it can't: the plugin works on without the bus
+
+bus.setState("status", { online: true }); // soft state, sent again after every reconnect
+bus.onPeers((peers) => console.log(peers.map((p) => p.name)));
+
+bus.onSubscribers("meters/main", (n) => (n ? startMeters() : stopMeters())); // produce only while someone listens
+bus.publish("meters/main", { l: -18.5, r: -20.1 });
+
+bus.handle("duck", (params, peer) => duck(params), (peer) => allowedPeers.includes(peer.id)); // the receiver decides
+await otherBus.request("de.example.mixer-plugin", "duck", { target: "meters/main", by: -12 });
+
+bus.broadcast("alert", { text: "Doorbell" });
+```
+
+- **Addresses:** 16 slots, named pipes on Windows and Unix sockets elsewhere. The peer in the higher slot connects to the lower one.
+- **Access:** a per-user key file keeps other users out.
+- **Versions:** negotiated per pair of peers.
+- **Stream data:** the latest value wins when a peer is slow; nothing piles up.
+- **Tools in the repository:** `tools/bus-monitor.mjs` shows who is on the bus and what they send; `tools/bus-fake-meters.mjs` is a fake meter source for testing.
 
 ## Icon catalog (`/mdi`)
 

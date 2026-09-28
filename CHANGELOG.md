@@ -18,6 +18,7 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
   - the Material Design Icon search as its own entry point `/mdi`
 - `setKitLogger()`: one logger for everything the kit reports.
 - Gauges: `arc` (MA-C's volume ring) and `pie` (Sonos Controller's volume "Torte", same geometry by default).
+- **deckbus** (`/bus`): `DeckBus`, a local bus between plugins without a master (slots, per-user key, version negotiation, soft state, streams to subscribers only, requests with per-peer permission, broadcast). The protocol is open (`docs/deckbus-protocol.md`). Also tools to watch it (`tools/bus-monitor.mjs`) and a fake meter source (`tools/bus-fake-meters.mjs`).
 - `deviceFrame`: a drawn Stream Deck housing (with knobs for the Stream Deck +) for screenshots and READMEs.
 - Level meters: segmented `meterBar` (mono or stereo, lying or standing, peak line), `meterScaleMarks`, the dBFS scale and colour zones, `MeterBallistics` (digital) and `VuBallistics` plus `vuMeter` (analog VU, for XR-C's "Classic" style).
 - From MA-C's settings panels: `<pi-select>` (lists from the plugin, with registrable request parameters) and `<pi-icon-picker>` (optional icons with `none-label`/`reset-label`), `nextRequestId()`, the kit's own texts (`kit.*`, EN/DE), and `piBridge` on the plugin side (entry point `/bridge`: option lists, own requests and pushes, previews). `mdiOptions` serves the icon picker. `@elgato/streamdeck` is a peer dependency.

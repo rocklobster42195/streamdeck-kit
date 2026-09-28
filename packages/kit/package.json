@@ -27,6 +27,10 @@
             "types": "./dist/pi-bridge.d.ts",
             "import": "./dist/pi-bridge.js"
         },
+        "./bus": {
+            "types": "./dist/bus/index.d.ts",
+            "import": "./dist/bus/index.js"
+        },
         "./mdi": {
             "types": "./dist/mdi/index.d.ts",
             "import": "./dist/mdi/index.js"
