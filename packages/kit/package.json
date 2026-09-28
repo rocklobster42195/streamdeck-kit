@@ -1,10 +1,18 @@
 {
-    "name": "streamdeck-core",
+    "name": "@rocklobster42195/streamdeck-kit",
     "version": "0.1.0",
-    "private": true,
-    "description": "Device-agnostic Stream Deck building blocks shared by MAC and sonos-controller: property inspector client, components and theme (more to come: effects, rendering helpers).",
+    "description": "Building blocks for Elgato Stream Deck plugins: key and touch-strip rendering, animation, Panorama effects across dials, and a framework-free property inspector kit.",
     "license": "MIT",
     "author": "Boris Kemper",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rocklobster42195/streamdeck-kit.git",
+        "directory": "packages/kit"
+    },
+    "homepage": "https://github.com/rocklobster42195/streamdeck-kit#readme",
+    "bugs": {
+        "url": "https://github.com/rocklobster42195/streamdeck-kit/issues"
+    },
     "type": "module",
     "exports": {
         ".": {
@@ -15,13 +23,31 @@
             "types": "./dist/pi/index.d.ts",
             "import": "./dist/pi/index.js"
         },
-        "./styles/*": "./styles/*"
+        "./styles/*": "./styles/*",
+        "./package.json": "./package.json"
     },
     "files": [
         "dist",
-        "styles"
+        "styles",
+        "README.md"
+    ],
+    "keywords": [
+        "streamdeck",
+        "stream deck",
+        "elgato",
+        "plugin",
+        "property inspector",
+        "stream deck plus"
     ],
     "scripts": {
-        "build": "tsc -p tsconfig.json"
+        "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+        "build": "npm run clean && tsc -p tsconfig.json",
+        "prepack": "npm run build"
+    },
+    "engines": {
+        "node": ">=20"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

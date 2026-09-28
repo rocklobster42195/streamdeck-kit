@@ -1,0 +1,25 @@
+{
+    "name": "streamdeck-kit-monorepo",
+    "private": true,
+    "description": "Stream Deck plugin kit (rendering, Panorama effects, property inspector) and its dev tools",
+    "license": "MIT",
+    "author": "Boris Kemper",
+    "type": "module",
+    "workspaces": [
+        "packages/kit"
+    ],
+    "scripts": {
+        "build": "npm run build --workspaces",
+        "test": "vitest run",
+        "lint": "eslint packages",
+        "check": "npm run build && npm test && npm run lint"
+    },
+    "devDependencies": {
+        "@tsconfig/node20": "^20.1.9",
+        "@types/node": "~20.15.0",
+        "eslint": "^10.6.0",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.62.1",
+        "vitest": "^4.1.10"
+    }
+}
