@@ -1,0 +1,27 @@
+{
+    "name": "streamdeck-core",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Device-agnostic Stream Deck building blocks shared by MAC and sonos-controller: property inspector client, components and theme (more to come: effects, rendering helpers).",
+    "license": "MIT",
+    "author": "Boris Kemper",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./pi": {
+            "types": "./dist/pi/index.d.ts",
+            "import": "./dist/pi/index.js"
+        },
+        "./styles/*": "./styles/*"
+    },
+    "files": [
+        "dist",
+        "styles"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json"
+    }
+}

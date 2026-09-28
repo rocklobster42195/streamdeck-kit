@@ -1,0 +1,170 @@
+// Ported from sonos-controller (src/utils/text-width.ts). Keep both in sync — see the sync rule in CLAUDE.md.
+// True per-glyph advance widths for Arial, in 1/1000 em (Arial is metrically identical to
+// Helvetica; values from the standard Helvetica AFM). The dials' SVG feedback is rasterized by
+// the Stream Deck software using the SYSTEM Arial font, so summing real advance widths matches
+// what actually ends up on the display — unlike the old `chars × 0.55-0.58 × fontSize` heuristic,
+// whose per-character overshoot grew linearly with text length. On the panorama dial's
+// right-aligned track text that showed as a background pill jutting further and further out to
+// the LEFT of long titles (worst once the text spilled onto the neighboring display).
+//
+// Note on font-weight 500: Arial ships no medium face — renderers snap 500 to regular, so the
+// regular metrics below apply to the "500" title text too.
+
+const ARIAL_WIDTHS: Record<string, number> = {
+    ' ': 278, '!': 278, '"': 355, '#': 556, '$': 556, '%': 889, '&': 667, "'": 191,
+    '(': 333, ')': 333, '*': 389, '+': 584, ',': 278, '-': 333, '.': 278, '/': 278,
+    '0': 556, '1': 556, '2': 556, '3': 556, '4': 556, '5': 556, '6': 556, '7': 556,
+    '8': 556, '9': 556,
+    ':': 278, ';': 278, '<': 584, '=': 584, '>': 584, '?': 556, '@': 1015,
+    'A': 667, 'B': 667, 'C': 722, 'D': 722, 'E': 667, 'F': 611, 'G': 778, 'H': 722,
+    'I': 278, 'J': 500, 'K': 667, 'L': 556, 'M': 833, 'N': 722, 'O': 778, 'P': 667,
+    'Q': 778, 'R': 722, 'S': 667, 'T': 611, 'U': 722, 'V': 667, 'W': 944, 'X': 667,
+    'Y': 667, 'Z': 611,
+    '[': 278, '\\': 278, ']': 278, '^': 469, '_': 556, '`': 333,
+    'a': 556, 'b': 556, 'c': 500, 'd': 556, 'e': 556, 'f': 278, 'g': 556, 'h': 556,
+    'i': 222, 'j': 222, 'k': 500, 'l': 222, 'm': 833, 'n': 556, 'o': 556, 'p': 556,
+    'q': 556, 'r': 333, 's': 500, 't': 278, 'u': 556, 'v': 500, 'w': 722, 'x': 500,
+    'y': 500, 'z': 500,
+    '{': 334, '|': 260, '}': 334, '~': 584,
+    // Common non-ASCII in track/artist names that NFD cannot reduce to a base letter.
+    'ß': 611, '€': 556, '–': 556, '—': 1000, '…': 1000, '°': 400, '·': 278,
+    '‘': 222, '’': 222, '“': 333, '”': 333, '„': 333,
+};
+
+// Arial Bold, likewise metrically identical to Helvetica-Bold (standard AFM). Bold runs up to ~10%
+// wider than regular (e.g. "b" 611 vs 556), so estimating it from the regular table made long bold
+// lines overflow on the device.
+const ARIAL_BOLD_WIDTHS: Record<string, number> = {
+    ' ': 278, '!': 333, '"': 474, '#': 556, '$': 556, '%': 889, '&': 722, "'": 238,
+    '(': 333, ')': 333, '*': 389, '+': 584, ',': 278, '-': 333, '.': 278, '/': 278,
+    '0': 556, '1': 556, '2': 556, '3': 556, '4': 556, '5': 556, '6': 556, '7': 556,
+    '8': 556, '9': 556,
+    ':': 333, ';': 333, '<': 584, '=': 584, '>': 584, '?': 611, '@': 975,
+    'A': 722, 'B': 722, 'C': 722, 'D': 722, 'E': 667, 'F': 611, 'G': 778, 'H': 722,
+    'I': 278, 'J': 556, 'K': 722, 'L': 611, 'M': 833, 'N': 722, 'O': 778, 'P': 667,
+    'Q': 778, 'R': 722, 'S': 667, 'T': 611, 'U': 722, 'V': 667, 'W': 944, 'X': 667,
+    'Y': 667, 'Z': 611,
+    '[': 333, '\\': 278, ']': 333, '^': 584, '_': 556, '`': 333,
+    'a': 556, 'b': 611, 'c': 556, 'd': 611, 'e': 556, 'f': 333, 'g': 611, 'h': 611,
+    'i': 278, 'j': 278, 'k': 556, 'l': 278, 'm': 889, 'n': 611, 'o': 611, 'p': 611,
+    'q': 611, 'r': 389, 's': 556, 't': 333, 'u': 611, 'v': 556, 'w': 778, 'x': 556,
+    'y': 556, 'z': 500,
+    '{': 389, '|': 280, '}': 389, '~': 584,
+    'ß': 611, '€': 556, '–': 556, '—': 1000, '…': 1000, '°': 400, '·': 278,
+    '‘': 278, '’': 278, '“': 500, '”': 500, '„': 500,
+};
+
+// Typical lowercase/digit advance — fallback for glyphs not covered above.
+const DEFAULT_WIDTH = 556;
+const DEFAULT_BOLD_WIDTH = 611;
+
+/**
+ * Width of `text` rendered in Arial (or Arial Bold) at `fontSize`, in pixels. Accented characters
+ * fall back to their base letter's advance (ä→a, é→e, …) via NFD decomposition, which is exact for
+ * Arial — diacritics don't change the advance width.
+ */
+export function measureArialWidth(text: string, fontSize: number, bold = false): number {
+    const table = bold ? ARIAL_BOLD_WIDTHS : ARIAL_WIDTHS;
+    const fallback = bold ? DEFAULT_BOLD_WIDTH : DEFAULT_WIDTH;
+    let units = 0;
+    for (const ch of text) {
+        units += table[ch] ?? table[stripDiacritics(ch)] ?? fallback;
+    }
+    return Math.ceil((units / 1000) * fontSize);
+}
+
+function stripDiacritics(ch: string): string {
+    return ch.normalize('NFD')[0] ?? ch;
+}
+
+const ELLIPSIS = '…';
+
+/**
+ * Truncates `text` to the longest prefix (plus a trailing "…") that fits within `maxWidth`
+ * pixels at `fontSize`, measured via {@link measureArialWidth}. Returns `text` unchanged if it
+ * already fits. Binary search over character count rather than a fixed per-character estimate —
+ * exact regardless of how narrow/wide the trailing characters happen to be, and cheap enough to
+ * run every render tick (no I/O, no async, unlike TitleAnimator's opentype-based measurement).
+ */
+export function truncateToWidth(text: string, fontSize: number, maxWidth: number, bold = false): string {
+    if (measureArialWidth(text, fontSize, bold) <= maxWidth) return text;
+
+    const ellipsisWidth = measureArialWidth(ELLIPSIS, fontSize, bold);
+    let lo = 0, hi = text.length, best = 0;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        const candidate = text.slice(0, mid).trimEnd();
+        if (measureArialWidth(candidate, fontSize, bold) + ellipsisWidth <= maxWidth) {
+            best = mid;
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return best > 0 ? `${text.slice(0, best).trimEnd()}${ELLIPSIS}` : ELLIPSIS;
+}
+
+/**
+ * Word-wrap `text` into at most `maxLines` lines that each fit `maxWidth` px at `fontSize`
+ * (measured, not estimated). A word longer than a line is cut; the last line gets "…" if the
+ * text doesn't fit. Added in streamdeck-core (not in sonos-controller).
+ */
+export function wrapToWidth(text: string, fontSize: number, maxWidth: number, maxLines = 2, bold = false): string[] {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    const lines: string[] = [];
+    let line = '';
+    for (let i = 0; i < words.length; i++) {
+        const next = line ? `${line} ${words[i]}` : words[i];
+        if (measureArialWidth(next, fontSize, bold) <= maxWidth) {
+            line = next;
+            continue;
+        }
+        if (lines.length === maxLines - 1) {
+            // Last allowed line: everything that is left, cut to fit
+            return [...lines, truncateToWidth([line, ...words.slice(i)].filter(Boolean).join(' '), fontSize, maxWidth, bold)];
+        }
+        if (line) lines.push(line);
+        line = measureArialWidth(words[i], fontSize, bold) <= maxWidth ? words[i] : truncateToWidth(words[i], fontSize, maxWidth, bold);
+    }
+    if (line) lines.push(line);
+    return lines.slice(0, maxLines);
+}
+
+/**
+ * Split `text` into the fewest lines (up to `maxLines`) that fit `maxWidth`, with the break points
+ * chosen so the lines are as even as possible — a lyric line reads better as two halves than as a
+ * full line plus a dangling word. Breaks right after punctuation (",", "–", …) are slightly
+ * preferred. Returns undefined when even `maxLines` lines can't fit (a single word too wide, or too
+ * much text); the caller then shrinks or truncates.
+ */
+export function balanceLines(text: string, fontSize: number, maxWidth: number, maxLines = 2, bold = false): string[] | undefined {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return [''];
+    const width = (from: number, to: number) => measureArialWidth(words.slice(from, to).join(' '), fontSize, bold);
+    // A break after a word ending in punctuation looks natural: count it as a little narrower
+    const bonus = (at: number) => (/[,;:.!?–—-]$/.test(words[at - 1]) ? fontSize * 2.2 : 0);
+
+    for (let n = 1; n <= Math.min(maxLines, words.length); n++) {
+        let best: { cuts: number[]; score: number } | undefined;
+        const search = (start: number, left: number, cuts: number[], worst: number, bonuses: number) => {
+            if (left === 1) {
+                const w = Math.max(worst, width(start, words.length));
+                if (w > maxWidth) return;
+                const score = w - bonuses;
+                if (!best || score < best.score) best = { cuts, score };
+                return;
+            }
+            for (let end = start + 1; end <= words.length - (left - 1); end++) {
+                const w = width(start, end);
+                if (w > maxWidth) break;
+                search(end, left - 1, [...cuts, end], Math.max(worst, w), bonuses + bonus(end));
+            }
+        };
+        search(0, n, [], 0, 0);
+        if (best) {
+            const bounds = [0, ...best.cuts, words.length];
+            return bounds.slice(1).map((end, i) => words.slice(bounds[i], end).join(' '));
+        }
+    }
+    return undefined;
+}
