@@ -25,7 +25,8 @@ Node 20 or later (the Stream Deck plugin runtime). The package is ESM only.
 
 | Import | Runs in | Contents |
 |---|---|---|
-| `@rocklobster42195/streamdeck-kit` | Plugin (Node) | Rendering helpers, animation, Panorama effects. Safe to import in the plugin backend. |
+| `@rocklobster42195/streamdeck-kit` | Plugin (Node) | Rendering helpers, animation, Panorama effects, state and timing helpers. Safe to import in the plugin backend. |
+| `@rocklobster42195/streamdeck-kit/mdi` | Plugin (Node) | Search over all Material Design Icons (see below). |
 | `@rocklobster42195/streamdeck-kit/pi` | Property inspector (browser) | Socket client, i18n, components. Bundle it into your PI script (e.g. with Rollup). |
 | `@rocklobster42195/streamdeck-kit/styles/pi-theme.css` | Property inspector | The theme. Copy it next to your PI pages at build time. |
 
@@ -43,7 +44,34 @@ const lines = wrapToWidth("Two lines that fit the touch strip", 13, 180, 2);
 - `marqueeSvg`, `marqueeNeeded`, `marqueeOffset`: time-based scrolling text.
 - `TitleFader`: a title band that fades in, scrolls and fades out.
 - `AnimatedValue`, `FrameTicker`: eased values and a frame loop that stops when nothing moves.
+- `frames`: the plugin's shared `FrameTicker` (80 ms). Everything below animates on it.
+- `glide(key, target, redraw)`: a value that eases toward its target, e.g. a volume ring.
+- `ColorFader`: a color that fades to the next one, e.g. a ring following the cover color between tracks.
+- `loadCover`, `getCachedCover`: fetch images once into a small LRU cache of data URIs. `CoverFader` holds the last image while the next one loads, then crossfades.
+- Touch-strip helpers (200×100 SVG segments): `stripImage`, `text`, `mdi`, `image`, `gauge`, `progressBar`, `scrimDisc`, `scrimBox`, `fit`, `wrap`, `textWidth`, `escapeXml`, `formatTime`.
 - `encodePngDataUri`: raw RGBA into a PNG data URI, for raster images that must be built synchronously.
+
+## State and timing
+
+- `OptimisticStore`: short-lived local overrides of server state, so a key shows a change at once and reconciles when the device confirms it.
+- `LatestSender`: sends only the latest value, at most once per interval. Use it for dial rotations.
+- `AlarmTimers` and `alarmTimers`: countdowns that fire even while their key is not on screen, with catch-up and retry.
+- `computeFadeSteps(from, to, durationMs, minStepIntervalMs?)`: plans a volume ramp (0..100).
+
+## Logging
+
+The kit reports problems, such as an image that failed to load or an effect that threw, to `console` by default. Route them to the plugin log once at startup:
+
+```ts
+import streamDeck from "@elgato/streamdeck";
+import { setKitLogger } from "@rocklobster42195/streamdeck-kit";
+
+setKitLogger(streamDeck.logger);
+```
+
+## Icon catalog (`/mdi`)
+
+`@rocklobster42195/streamdeck-kit/mdi` provides `searchMdi(query)`, `mdiPath(name)` and `mdiLabel(name)` over all [Material Design Icons](https://pictogrammers.com/library/mdi/), so users can pick any icon for a key. It imports the whole icon set, which adds about 3 MB to the plugin bundle. That is why it has its own entry point.
 
 ## Panorama effects
 

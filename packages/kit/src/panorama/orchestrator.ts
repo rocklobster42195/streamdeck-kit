@@ -2,23 +2,16 @@
 // effect) and therefore share one effect instance spanning their touch strips.
 //
 // Ported from sonos-controller (src/effects/PanoramaOrchestrator.ts), device-agnostic: no Stream
-// Deck import (logging is injectable) and no back-compat function exports. The effect lifecycle
+// Deck import (logging goes through setKitLogger) and no back-compat function exports. The effect lifecycle
 // (create, tick, settings) lives in engine.ts.
 import type { EffectInstance } from './types.js';
+import { kitLog } from '../log.js';
 
 export const DISPLAY_W = 200;
 export const DISPLAY_H = 100;
 
 export type GroupSyncHandler = (newGrouping: Map<string, string[]>) => Promise<void> | void;
 export type SettingsChangeHandler = (contexts: Iterable<string>) => void;
-export type PanoramaLogger = { error(...args: unknown[]): void };
-
-let logger: PanoramaLogger = console;
-
-/** Route panorama errors (e.g. a throwing effect) to the host's logger. */
-export function setPanoramaLogger(l: PanoramaLogger): void {
-    logger = l;
-}
 
 /**
  * Every call into effect-supplied code goes through this, so one broken effect skips a frame or an
@@ -28,7 +21,7 @@ export function safeEffectCall<T>(fn: () => T, fallback: T, what: string): T {
     try {
         return fn();
     } catch (e) {
-        logger.error(`Panorama effect threw in ${what} — ignoring this call: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`);
+        kitLog().error(`Panorama effect threw in ${what} — ignoring this call: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`);
         return fallback;
     }
 }

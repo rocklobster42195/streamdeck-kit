@@ -23,6 +23,10 @@
             "types": "./dist/pi/index.d.ts",
             "import": "./dist/pi/index.js"
         },
+        "./mdi": {
+            "types": "./dist/mdi/index.d.ts",
+            "import": "./dist/mdi/index.js"
+        },
         "./styles/*": "./styles/*",
         "./package.json": "./package.json"
     },
@@ -49,5 +53,8 @@
     },
     "publishConfig": {
         "access": "public"
+    },
+    "dependencies": {
+        "@mdi/js": "^7.4.47"
     }
 }

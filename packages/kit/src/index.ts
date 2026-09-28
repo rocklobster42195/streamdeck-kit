@@ -1,5 +1,6 @@
-// Shared Stream Deck building blocks for MAC and sonos-controller — see README.md.
-// Node-safe rendering helpers are exported here; browser-only property inspector code lives in
-// the "streamdeck-core/pi" entry point.
+// Node side of the kit (plugin backend), see README.md. Browser-only property inspector code
+// lives in the "/pi" entry point, the icon catalog in "/mdi".
 export * from './render/index.js';
 export * from './panorama/index.js';
+export * from './util/index.js';
+export * from './log.js';
