@@ -9,3 +9,4 @@ export * from './color-fade.js';
 export * from './strip.js';
 export * from './cover-cache.js';
 export * from './cover-fade.js';
+export * from './gauge/index.js';

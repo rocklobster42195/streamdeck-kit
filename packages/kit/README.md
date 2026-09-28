@@ -48,8 +48,22 @@ const lines = wrapToWidth("Two lines that fit the touch strip", 13, 180, 2);
 - `glide(key, target, redraw)`: a value that eases toward its target, e.g. a volume ring.
 - `ColorFader`: a color that fades to the next one, e.g. a ring following the cover color between tracks.
 - `loadCover`, `getCachedCover`: fetch images once into a small LRU cache of data URIs. `CoverFader` holds the last image while the next one loads, then crossfades.
-- Touch-strip helpers (200×100 SVG segments): `stripImage`, `text`, `mdi`, `image`, `gauge`, `progressBar`, `scrimDisc`, `scrimBox`, `fit`, `wrap`, `textWidth`, `escapeXml`, `formatTime`.
+- Touch-strip helpers (200×100 SVG segments): `stripImage`, `text`, `mdi`, `image`, `progressBar`, `scrimDisc`, `scrimBox`, `fit`, `wrap`, `textWidth`, `escapeXml`, `formatTime`.
 - `encodePngDataUri`: raw RGBA into a PNG data URI, for raster images that must be built synchronously.
+
+## Gauges
+
+```ts
+import { arc, pie } from "@rocklobster42195/streamdeck-kit";
+
+const ring = arc(72, 72, 54, 0.42, "#6cc4ff", { width: 14 }); // SVG parts: track + arc
+const torte = pie(50, 50, 38, 0.42, "#cccccc");               // SVG parts: outline + wedge
+```
+
+- `arc(cx, cy, r, value, color, { track, width })`: a ring gauge with a round-capped arc from 12 o'clock, clockwise (MA-C's volume ring).
+- `pie(cx, cy, r, value, color, { inner, stroke })`: an outline circle and a filled wedge, also from 12 o'clock (Sonos Controller's volume look). Without options, the wedge radius and stroke follow Sonos Controller's proportions: 7 and 1.5 for r 9, 30 and 6 for r 38.
+
+Both take `value` from 0 to 1 and return SVG fragments to put into a key or strip image. More gauges (bars, zones, peak hold) will follow.
 
 ## State and timing
 

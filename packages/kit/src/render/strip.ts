@@ -53,18 +53,6 @@ export function mdi(path: string, x: number, y: number, size: number, fill: stri
     return `<path transform="translate(${x} ${y}) scale(${size / 24})" fill="${fill}" d="${path}"/>`;
 }
 
-/** Circular gauge (0..1) centered at (cx, cy). */
-export function gauge(cx: number, cy: number, r: number, value: number, color: string, track = "#2c2c30", width = 8): string[] {
-    const v = Math.min(1, Math.max(0, value));
-    const circumference = 2 * Math.PI * r;
-    return [
-        `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${track}" stroke-width="${width}"/>`,
-        v > 0
-            ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-dasharray="${(v * circumference).toFixed(1)} ${circumference.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"/>`
-            : "",
-    ];
-}
-
 export function progressBar(x: number, y: number, w: number, value: number, color: string, h = 4): string[] {
     const v = Math.min(1, Math.max(0, value));
     return [`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="#2c2c30"/>`, `<rect x="${x}" y="${y}" width="${Math.max(h, w * v).toFixed(1)}" height="${h}" rx="${h / 2}" fill="${color}"/>`];
