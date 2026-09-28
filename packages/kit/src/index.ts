@@ -4,3 +4,5 @@ export * from './render/index.js';
 export * from './panorama/index.js';
 export * from './util/index.js';
 export * from './log.js';
+export type * from './protocol.js';
+export * from './pi-bridge.js';

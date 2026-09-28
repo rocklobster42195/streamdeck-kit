@@ -124,3 +124,14 @@ body[data-connection="down"] .pi-needs-connection { opacity: 0.45; pointer-event
 .pi-color::-webkit-color-swatch-wrapper { padding: 3px; }
 .pi-color::-webkit-color-swatch { border: none; border-radius: 5px; }
 .pi-color-hex { font-variant-numeric: tabular-nums; }
+
+/* <pi-select> list notes (loading, empty) */
+.pi-select-note { padding: 6px 8px; }
+
+/* <pi-icon-picker> */
+.pi-icon-current { width: 28px; height: 28px; color: var(--pi-accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pi-icon-search { width: 100%; }
+.pi-icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; padding: 0 12px 12px; }
+.pi-icon-tile { height: 40px; display: flex; align-items: center; justify-content: center; background: var(--pi-control); border: 1px solid var(--pi-control-border); border-radius: 8px; cursor: pointer; color: var(--pi-text-2); }
+.pi-icon-tile:hover { color: var(--pi-text); }
+.pi-icon-tile[aria-pressed="true"] { border-color: var(--pi-accent); color: var(--pi-accent); }

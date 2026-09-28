@@ -125,11 +125,35 @@ sd.onReady(() => {
   - `<pi-range>`: a slider
   - `<pi-choice>`: tiles for choosing one option
   - `<pi-color>`: a color picker
+  - `<pi-select source="…">`: a dropdown whose entries the plugin provides (see the PI bridge below). `with="player"` sends parameters that the PI registered with `registerSelectParams("player", () => ({ playerId }))`, and the list reloads when they change. `label-setting` also stores the chosen label. `refreshPiSelects()` and `reloadPiSelects()` update all lists after the plugin pushed new state.
+  - `<pi-icon-picker setting="icon" default-icon="mdiBullhorn">`: search and pick any Material Design Icon. For optional icons (e.g. a marker), set `none-label` and `reset-label`.
 
   Add `global` to bind a component to global settings instead of the action's settings.
 - `data-show-when="setting=a,b"` shows an element only for those values. Prefix the key with `global:` to check a global setting.
 - `t(key, vars)` and `translateDom()` handle i18n. Components treat `label`, `hint` and `placeholder` as translation keys. Translations come from `window.PI_LOCALES` (`{ en: {...}, de: {...} }`), which your build generates from the `Localization` blocks of your plugin's `<lang>.json` files. Nested groups work the same way as in the plugin SDK: `pi.player` looks up `Localization.pi.player`.
-- The kit itself needs one key in your locale files: `pi.show_token`, the label of the password field's show button.
+- The kit brings its own texts (`kit.*`, English and German), such as "Choose" or the icon search placeholder. `t()` uses them when your locale files don't have the key, so you can override any of them in your `<lang>.json`.
+- `nextRequestId()`: ids for your own requests to the plugin. All kit components share the counter, so replies never reach the wrong component.
+
+## PI bridge (plugin side)
+
+`piBridge` is the plugin side of the property inspector. It knows which PI is open, answers the kit components' requests, and pushes your state to the open PI. Unchanged messages are not sent again.
+
+```ts
+import { piBridge } from "@rocklobster42195/streamdeck-kit";
+import { mdiOptions } from "@rocklobster42195/streamdeck-kit/mdi";
+
+piBridge.init();
+piBridge.registerOptions("mdi-icons", mdiOptions); // <pi-icon-picker>
+piBridge.registerOptions("inputs", ({ playerId }) => inputsOf(playerId)); // <pi-select source="inputs" with="player">
+piBridge.handle("reconnect", () => connection.reconnect()); // your own requests
+piBridge.addPusher(() => [{ event: "status", status: currentStatus() }]); // your own state
+connection.onChange(() => piBridge.schedulePush());
+```
+
+- `updatePreview(actionId, preview)` forwards what a key shows to its open PI (`{ event: "preview" }`).
+- `reply(msg)` answers a request.
+- The kit's messages are typed in `KitPiRequest` and `KitPiPush`, and list entries in `OptionItem`.
+- `@elgato/streamdeck` is a peer dependency.
 
 ## License
 

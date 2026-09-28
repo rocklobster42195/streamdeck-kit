@@ -18,7 +18,7 @@ export class PiField extends HTMLElement {
                 <span class="pi-input-row">
                     <input class="pi-input" type="${isPassword ? 'password' : 'text'}" spellcheck="false" autocomplete="off"
                         ${placeholder ? `placeholder="${escapeHtml(t(placeholder))}"` : ''}/>
-                    ${isPassword ? `<button type="button" class="pi-icon-button" aria-label="${escapeHtml(t('pi.show_token'))}">${icon('eye')}</button>` : ''}
+                    ${isPassword ? `<button type="button" class="pi-icon-button" aria-label="${escapeHtml(t('kit.show_token'))}">${icon('eye')}</button>` : ''}
                 </span>
                 ${hint ? `<span class="pi-hint">${escapeHtml(t(hint))}</span>` : ''}
             </label>`;

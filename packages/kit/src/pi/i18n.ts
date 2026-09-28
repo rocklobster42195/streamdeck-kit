@@ -1,5 +1,6 @@
 // PI translations. The plugin's build bundles the "Localization" blocks of its <lang>.json files
 // into window.PI_LOCALES, so one JSON file per language serves manifest, plugin and PI alike.
+import { KIT_LOCALES } from './kit-locales.js';
 import { sd } from './sd-client.js';
 
 type Dict = { [key: string]: string | Dict };
@@ -22,10 +23,14 @@ function lookup(dict: Dict | undefined, key: string): string | undefined {
     return typeof node === "string" ? node : undefined;
 }
 
-/** Translate a key; falls back to English, then to the key itself. `{name}` placeholders are filled from `vars`. */
+/**
+ * Translate a key: the plugin's locale, then the kit's own texts in that language, then both in
+ * English, then the key itself. `{name}` placeholders are filled from `vars`.
+ */
 export function t(key: string, vars?: Record<string, string | number>): string {
     const all = locales();
-    let text = lookup(all[sd.language], key) ?? lookup(all.en, key) ?? key;
+    const lang = sd.language;
+    let text = lookup(all[lang], key) ?? lookup(KIT_LOCALES[lang], key) ?? lookup(all.en, key) ?? lookup(KIT_LOCALES.en, key) ?? key;
     if (vars) for (const [k, v] of Object.entries(vars)) text = text.replaceAll(`{${k}}`, String(v));
     return text;
 }

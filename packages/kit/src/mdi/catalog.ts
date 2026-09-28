@@ -47,3 +47,13 @@ export function searchMdi(query: string, limit = 48): { name: string; label: str
         .slice(0, limit)
         .map(({ e }) => ({ name: e.name, label: e.words, path: PATHS[e.name] }));
 }
+
+/**
+ * Options source for <pi-icon-picker>: register it with piBridge.registerOptions("mdi-icons",
+ * mdiOptions). An exact "mdi…" name returns just that icon (the picker looks up its current choice).
+ */
+export function mdiOptions({ q }: Record<string, string>): { value: string; label: string; icon: string }[] {
+    const exact = mdiPath(q);
+    if (exact) return [{ value: q, label: mdiLabel(q), icon: exact }];
+    return searchMdi(q ?? "").map((r) => ({ value: r.name, label: r.label, icon: r.path }));
+}

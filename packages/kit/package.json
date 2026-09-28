@@ -56,5 +56,8 @@
     },
     "dependencies": {
         "@mdi/js": "^7.4.47"
+    },
+    "peerDependencies": {
+        "@elgato/streamdeck": "^2.0.0"
     }
 }
