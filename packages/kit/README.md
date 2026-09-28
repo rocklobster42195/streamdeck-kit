@@ -85,6 +85,15 @@ vuMeter({ x: 40, y: 4, width: 120, height: 82, vu: needle.update(dbfsToVu(measur
 - `MeterBallistics` (digital) and `VuBallistics` (analog): how the shown level follows the measured one.
 - `vuMeter`: an analog VU meter with a cream face, arc scale from -20 to +3 VU, a red zone and a needle. `dbfsToVu` sets 0 VU to -18 dBFS by default.
 
+## Device frame
+
+`deviceFrame({ screenWidth, screenHeight, knobs: 4 })` draws a Stream Deck housing as SVG: a dark body, the screen well and, for the Stream Deck +, the knobs. It is meant for screenshots, READMEs and store pictures. Put your rendered deck at `screenX`/`screenY` on top:
+
+```ts
+const frame = deviceFrame({ screenWidth: deck.width, screenHeight: deck.height, knobs: 4 });
+await sharp(Buffer.from(frame.svg)).composite([{ input: deckPng, left: frame.screenX, top: frame.screenY }]).png().toFile("deck.png");
+```
+
 ## State and timing
 
 - `OptimisticStore`: short-lived local overrides of server state, so a key shows a change at once and reconciles when the device confirms it.
