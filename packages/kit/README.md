@@ -26,6 +26,7 @@ Node 20 or later (the Stream Deck plugin runtime). The package is ESM only.
 | Import | Runs in | Contents |
 |---|---|---|
 | `@rocklobster42195/streamdeck-kit` | Plugin (Node) | Rendering helpers, animation, Panorama effects, state and timing helpers. Safe to import in the plugin backend. |
+| `@rocklobster42195/streamdeck-kit/bridge` | Plugin (Node) | `piBridge`, the plugin side of the property inspector. Imports `@elgato/streamdeck` (a peer dependency), which is why it has its own entry point. |
 | `@rocklobster42195/streamdeck-kit/mdi` | Plugin (Node) | Search over all Material Design Icons (see below). |
 | `@rocklobster42195/streamdeck-kit/pi` | Property inspector (browser) | Socket client, i18n, components. Bundle it into your PI script (e.g. with Rollup). |
 | `@rocklobster42195/streamdeck-kit/styles/pi-theme.css` | Property inspector | The theme. Copy it next to your PI pages at build time. |
@@ -139,7 +140,7 @@ sd.onReady(() => {
 `piBridge` is the plugin side of the property inspector. It knows which PI is open, answers the kit components' requests, and pushes your state to the open PI. Unchanged messages are not sent again.
 
 ```ts
-import { piBridge } from "@rocklobster42195/streamdeck-kit";
+import { piBridge } from "@rocklobster42195/streamdeck-kit/bridge";
 import { mdiOptions } from "@rocklobster42195/streamdeck-kit/mdi";
 
 piBridge.init();
@@ -153,7 +154,7 @@ connection.onChange(() => piBridge.schedulePush());
 - `updatePreview(actionId, preview)` forwards what a key shows to its open PI (`{ event: "preview" }`).
 - `reply(msg)` answers a request.
 - The kit's messages are typed in `KitPiRequest` and `KitPiPush`, and list entries in `OptionItem`.
-- `@elgato/streamdeck` is a peer dependency.
+- `@elgato/streamdeck` is a peer dependency. When you link the kit from a local checkout, tell your bundler to use one copy (Rollup: `nodeResolve({ dedupe: ["@elgato/streamdeck", "@elgato/utils"] })`), or the bridge talks through a second SDK instance that never connects.
 
 ## License
 

@@ -23,6 +23,10 @@
             "types": "./dist/pi/index.d.ts",
             "import": "./dist/pi/index.js"
         },
+        "./bridge": {
+            "types": "./dist/pi-bridge.d.ts",
+            "import": "./dist/pi-bridge.js"
+        },
         "./mdi": {
             "types": "./dist/mdi/index.d.ts",
             "import": "./dist/mdi/index.js"
