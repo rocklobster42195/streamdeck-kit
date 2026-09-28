@@ -64,7 +64,26 @@ const torte = pie(50, 50, 38, 0.42, "#cccccc");               // SVG parts: outl
 - `arc(cx, cy, r, value, color, { track, width })`: a ring gauge with a round-capped arc from 12 o'clock, clockwise (MA-C's volume ring).
 - `pie(cx, cy, r, value, color, { inner, stroke })`: an outline circle and a filled wedge, also from 12 o'clock (Sonos Controller's volume look). Without options, the wedge radius and stroke follow Sonos Controller's proportions: 7 and 1.5 for r 9, 30 and 6 for r 38.
 
-Both take `value` from 0 to 1 and return SVG fragments to put into a key or strip image. More gauges (bars, zones, peak hold) will follow.
+Both take `value` from 0 to 1 and return SVG fragments to put into a key or strip image.
+
+### Level meters
+
+```ts
+import { meterBar, meterScaleMarks, MeterBallistics, VuBallistics, vuMeter, dbfsToVu, METER_TICKS } from "@rocklobster42195/streamdeck-kit";
+
+const left = new MeterBallistics(); // fast attack, 20 dB/s release, 1.5 s peak hold
+const s = left.update(measuredDb, Date.now());
+meterBar({ x: 8, y: 32, length: 184, thickness: 22, levels: [s.level], peaks: [s.peak] }); // mono: one bar, stereo: [l, r]
+meterScaleMarks(8, 71, 184, METER_TICKS);
+
+const needle = new VuBallistics(); // 300 ms VU inertia
+vuMeter({ x: 40, y: 4, width: 120, height: 82, vu: needle.update(dbfsToVu(measuredDb), Date.now()), label: "MONO" });
+```
+
+- `meterBar`: segmented LED bars, lying or standing, one per channel. It has zone colours (green, yellow from -18 dB, red from -6 dB) and a peak line.
+- `scalePosition`, `METER_SCALE` and `zoneColor`: the dBFS scale (-60 to 0, with more room near the top) and the colour zones. Both can be replaced.
+- `MeterBallistics` (digital) and `VuBallistics` (analog): how the shown level follows the measured one.
+- `vuMeter`: an analog VU meter with a cream face, arc scale from -20 to +3 VU, a red zone and a needle. `dbfsToVu` sets 0 VU to -18 dBFS by default.
 
 ## State and timing
 
