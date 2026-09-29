@@ -9,6 +9,8 @@ export type OptionItem = {
     sub?: string;
     /** MDI path for a preview (e.g. the icon picker). */
     icon?: string;
+    /** A small picture before the label (URL or data URI), e.g. an app's icon. */
+    image?: string;
 };
 
 /** PI → plugin */

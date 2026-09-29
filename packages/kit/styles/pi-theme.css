@@ -98,6 +98,7 @@ pi-section { display: flex; flex-direction: column; gap: 6px; }
 .pi-option:hover, .pi-option:focus-visible { background: #34343a; outline: none; }
 .pi-option[aria-selected="true"] { background: var(--pi-selected); }
 .pi-option-check { width: 14px; color: var(--pi-accent); }
+.pi-option-image { width: 22px; height: 22px; flex: none; object-fit: contain; }
 .pi-option-sub { font-size: 11px; color: var(--pi-text-3); }
 .pi-icon-accent { color: var(--pi-accent); flex-shrink: 0; }
 

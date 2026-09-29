@@ -113,7 +113,7 @@ export class PiSelect extends HTMLElement {
         const button = this.querySelector<HTMLElement>('.pi-select-button')!;
         button.setAttribute('aria-expanded', String(this.open));
         const sub = current?.sub ? `<span class="pi-option-sub">${escapeHtml(current.sub)}</span>` : '';
-        button.innerHTML = `<span class="pi-select-text"><span class="pi-strong">${escapeHtml(label)}</span>${sub}</span>${icon('chevronDown', 16)}`;
+        button.innerHTML = `${picture(current?.image)}<span class="pi-select-text"><span class="pi-strong">${escapeHtml(label)}</span>${sub}</span>${icon('chevronDown', 16)}`;
 
         const list = this.querySelector<HTMLElement>('.pi-select-list')!;
         list.hidden = !this.open;
@@ -130,9 +130,14 @@ export class PiSelect extends HTMLElement {
             .map((i, n) => {
                 const itemSub = i.sub ? `<span class="pi-option-sub">${escapeHtml(i.sub)}</span>` : '';
                 const check = i.value === value ? icon('check', 14) : '';
-                return `<button type="button" class="pi-option" role="option" data-n="${n}" aria-selected="${i.value === value}"><span class="pi-select-text"><span class="pi-label">${escapeHtml(i.label)}</span>${itemSub}</span><span class="pi-option-check">${check}</span></button>`;
+                return `<button type="button" class="pi-option" role="option" data-n="${n}" aria-selected="${i.value === value}">${picture(i.image)}<span class="pi-select-text"><span class="pi-label">${escapeHtml(i.label)}</span>${itemSub}</span><span class="pi-option-check">${check}</span></button>`;
             })
             .join('');
         list.querySelectorAll<HTMLElement>('.pi-option').forEach((el) => el.addEventListener('click', () => this.choose(this.items![Number(el.dataset.n)])));
     }
+}
+
+/** An option's picture (only data URIs and http(s) URLs). */
+function picture(src: string | undefined): string {
+    return src && /^(data:image\/|https?:)/.test(src) ? `<img class="pi-option-image" src="${escapeHtml(src)}" alt="">` : '';
 }
