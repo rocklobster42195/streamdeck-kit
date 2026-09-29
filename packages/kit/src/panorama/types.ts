@@ -50,6 +50,10 @@ export interface EffectInstance<S = Record<string, unknown>> {
     getControl?(): string;
     setControl?(id: string): void;
 
+    /** Optional: the audio level 0..1 of the group's audio source (e.g. mixer meters over deckbus),
+     *  called before every tickPanorama; `undefined` = no audio source, behave as usual. Effects
+     *  can move with the music (speed, pulse, density). */
+    setLevel?(level: number | undefined): void;
     /** Optional 0-100 value shown on the dial's ring indicator. */
     getIndicatorValue?(): number;
     /** Optional: return the subset of settings this effect wants persisted after onRotate/onPress

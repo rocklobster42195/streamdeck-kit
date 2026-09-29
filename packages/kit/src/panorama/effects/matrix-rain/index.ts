@@ -174,6 +174,13 @@ class MatrixRainEffectInstance implements EffectInstance<MatrixRainEffectSetting
         }
     }
 
+    /** Fall speed factor: 1 without an audio source; with one, 0.4× in silence up to 2.6×. */
+    private rate = 1;
+
+    setLevel(level: number | undefined): void {
+        this.rate = level === undefined ? 1 : 0.4 + 2.2 * level;
+    }
+
     tickPanorama(): void {
         // Fading the WHOLE persistent buffer toward black is the entire trail mechanism — no
         // per-stream trail-length bookkeeping needed. Multiplying every channel by the same
@@ -201,7 +208,7 @@ class MatrixRainEffectInstance implements EffectInstance<MatrixRainEffectSetting
                 continue;
             }
             this.drawGlyph(col, Math.floor(d.row), headColor);
-            d.row += d.speed;
+            d.row += d.speed * this.rate;
             if (d.row > this.rows + 4) d.active = false;
         }
     }

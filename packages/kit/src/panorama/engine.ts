@@ -21,6 +21,8 @@ type Group = { ctxs: string[]; effectId: string; timer: ReturnType<typeof setInt
 export class PanoramaEngine {
     readonly orchestrator = new PanoramaOrchestrator();
     private readonly groups = new Map<string, Group>();
+    /** Audio level 0..1 per display that has an audio source (see setLevel). */
+    private readonly levels = new Map<string, number>();
     private readonly defaultTickMs: number;
     private readonly defaultColor: string;
 
@@ -51,7 +53,17 @@ export class PanoramaEngine {
     }
 
     leave(context: string): void {
+        this.levels.delete(context);
         this.orchestrator.unregisterFromPanorama(context);
+    }
+
+    /**
+     * The audio level 0..1 of this display's audio source, or undefined when it has none. A group
+     * moves with the loudest of its displays; effects without setLevel ignore it.
+     */
+    setLevel(context: string, level: number | undefined): void {
+        if (level === undefined) this.levels.delete(context);
+        else this.levels.set(context, Math.min(1, Math.max(0, level)));
     }
 
     /** SVG fragment of this display's slice of its group's effect ('' when none is running). */
@@ -155,6 +167,10 @@ export class PanoramaEngine {
         for (const ctx of ctxs) o.panoramaContextGroupKey.set(ctx, key);
         const tickMs = def.preferredTickMs ?? this.defaultTickMs;
         const timer = setInterval(() => {
+            if (instance.setLevel) {
+                const levels = ctxs.map((c) => this.levels.get(c)).filter((l): l is number => l !== undefined);
+                safeEffectCall(() => instance.setLevel!(levels.length ? Math.max(...levels) : undefined), undefined, 'setLevel');
+            }
             safeEffectCall(() => instance.tickPanorama(tickMs), undefined, 'tickPanorama');
             o.notifyGroupRender(ctxs);
         }, tickMs);

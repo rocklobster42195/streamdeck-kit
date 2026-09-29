@@ -68,3 +68,30 @@ describe('PanoramaEngine', () => {
         engine.dispose();
     });
 });
+
+describe('audio level', () => {
+    it('passes the loudest display level of a group to the effect, undefined without a source', async () => {
+        const { PanoramaEngine, effectRegistry } = await import('../src/panorama/index.js');
+        const seen: (number | undefined)[] = [];
+        effectRegistry.set('level-probe', {
+            id: 'level-probe',
+            displayName: 'Probe',
+            hidden: true,
+            defaultSettings: {},
+            settingsSchema: [],
+            preferredTickMs: 10,
+            createInstance: () => ({ initPanorama() {}, tickPanorama() {}, renderSlice: () => '', setLevel: (l: number | undefined) => void seen.push(l) }),
+        });
+        const engine = new PanoramaEngine();
+        engine.join('a', 'dev', 0, 'level-probe', {}, () => {});
+        await new Promise((r) => setTimeout(r, 150));
+        engine.setLevel('a', 0.7);
+        await new Promise((r) => setTimeout(r, 60));
+        engine.setLevel('a', undefined);
+        await new Promise((r) => setTimeout(r, 60));
+        engine.dispose();
+        effectRegistry.delete('level-probe');
+        expect(seen).toContain(0.7);
+        expect(seen.at(-1)).toBeUndefined();
+    });
+});

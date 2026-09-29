@@ -61,6 +61,7 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
     private width = 200;
     private height = 100;
     private radius = 28;
+    private level: number | undefined;
 
     private x = 100; // virtual position across the whole panorama
     private vx = SPEED_DEFAULT;
@@ -89,6 +90,10 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
     private floorY(): number { return this.height - 1 - this.radius; }
     private peakAmplitude(): number { return 0.5 * GRAVITY * FRAMES_HALF * FRAMES_HALF; }
 
+    setLevel(level: number | undefined): void {
+        this.level = level;
+    }
+
     tickPanorama(): void {
         this.bouncePhase = (this.bouncePhase + 1) % (FRAMES_HALF * 2);
 
@@ -111,7 +116,8 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
         if (localX + this.radius < 0 || localX - this.radius > width) return '';
 
         const y = this.ballY();
-        const r = this.radius;
+        // With an audio source the ball pulses with the music (up to a quarter bigger)
+        const r = this.radius * (1 + 0.25 * (this.level ?? 0));
         const size = Math.ceil(r * 2) + 2;
         const rgba = new Uint8ClampedArray(size * size * 4);
 

@@ -32,6 +32,8 @@ class ParticlesEffectInstance implements EffectInstance<ParticlesEffectSettings>
     private numDisplays = 1;
     private density = BASE_PER_DISPLAY;
     private speed = SPEED_DEFAULT;
+    /** The speed actually running (speed, scaled by the audio level when there is one). */
+    private liveSpeed = SPEED_DEFAULT;
     private mode: 'particles' | 'speed' = 'particles';
 
     initPanorama(ctx: PanoramaInitContext<ParticlesEffectSettings>): void {
@@ -67,6 +69,14 @@ class ParticlesEffectInstance implements EffectInstance<ParticlesEffectSettings>
 
     tickPanorama(): void {
         particleEngine.tickPanorama(this.key);
+    }
+
+    /** With an audio source the particles speed up with the music (0.4× in silence, up to 2.4×). */
+    setLevel(level: number | undefined): void {
+        const speed = level === undefined ? this.speed : this.speed * (0.4 + 2 * level);
+        if (Math.abs(speed - this.liveSpeed) < 0.01) return;
+        this.liveSpeed = speed;
+        particleEngine.setPanoramaSpeed(this.key, speed);
     }
 
     renderSlice(offsetX: number): string {

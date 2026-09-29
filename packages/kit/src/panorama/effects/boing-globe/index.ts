@@ -121,6 +121,13 @@ class BoingGlobeEffectInstance implements EffectInstance<BoingGlobeEffectSetting
     private floorY(): number { return this.height - 1 - this.radius; }
     private peakAmplitude(): number { return 0.5 * GRAVITY * FRAMES_HALF * FRAMES_HALF; }
 
+    /** Spin factor: 1 without an audio source; with one, 0.5× in silence up to 3×. */
+    private spinRate = 1;
+
+    setLevel(level: number | undefined): void {
+        this.spinRate = level === undefined ? 1 : 0.5 + 2.5 * level;
+    }
+
     tickPanorama(): void {
         this.bouncePhase = (this.bouncePhase + 1) % (FRAMES_HALF * 2);
         this.x += this.vx;
@@ -132,7 +139,7 @@ class BoingGlobeEffectInstance implements EffectInstance<BoingGlobeEffectSetting
         } else if (this.vx < 0 && this.x + this.radius < 0) {
             this.x = this.width + this.radius;
         }
-        this.spin += SPIN_STEP;
+        this.spin += SPIN_STEP * this.spinRate;
     }
 
     private globeY(): number {

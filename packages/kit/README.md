@@ -152,6 +152,7 @@ A Panorama effect is one animated picture that spans several dials of a Stream D
 - `PanoramaEngine` runs the effects, and `PanoramaOrchestrator` groups neighbouring dials.
 - `effectRegistry`, `listEffects()` and `withEffectDefaults()` cover the built-in effects: particles, matrix rain, boing ball, boing globe and blank.
 - `EffectDefinition` is the interface for writing your own effect.
+- **Audio-reactive:** `engine.setLevel(display, level)` with a level from 0 to 1 (e.g. mixer meters from deckbus) makes the effects move with the music. A group follows its loudest display, and `undefined` switches it off. Your own effect takes part by implementing `setLevel(level)`.
 
 ## Property inspector kit
 
