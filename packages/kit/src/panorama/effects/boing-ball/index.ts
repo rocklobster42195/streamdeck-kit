@@ -61,7 +61,11 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
     private width = 200;
     private height = 100;
     private radius = 28;
+    // Audio reaction (see setLevel): jump height per bounce, a gentle pulse, a squash on the beat
     private level: number | undefined;
+    private levelAvg = 0;
+    private hop = 1; // this bounce's height factor, fixed at take-off so every arc stays smooth
+    private beatTicks = 0; // > 0: a beat happened recently, squash at the next floor contact
 
     private x = 100; // virtual position across the whole panorama
     private vx = SPEED_DEFAULT;
@@ -90,12 +94,26 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
     private floorY(): number { return this.height - 1 - this.radius; }
     private peakAmplitude(): number { return 0.5 * GRAVITY * FRAMES_HALF * FRAMES_HALF; }
 
+    /**
+     * With an audio source the ball jumps higher when it's loud (about 25 % of the normal height in
+     * silence, up to 130 %), pulses gently (up to 12 % bigger, resting on the floor) and squashes
+     * on impact after a beat (a sudden rise well above the running average).
+     */
     setLevel(level: number | undefined): void {
         this.level = level;
+        if (level === undefined) {
+            this.levelAvg = 0;
+            return;
+        }
+        if (level - this.levelAvg > 0.2) this.beatTicks = 4;
+        this.levelAvg += (level - this.levelAvg) * 0.1;
     }
 
     tickPanorama(): void {
         this.bouncePhase = (this.bouncePhase + 1) % (FRAMES_HALF * 2);
+        // Phase FRAMES_HALF is the floor contact: the next arc's height follows the music
+        if (this.bouncePhase === FRAMES_HALF) this.hop = this.level === undefined ? 1 : 0.25 + 1.05 * this.level;
+        if (this.beatTicks > 0) this.beatTicks--;
 
         this.x += this.vx;
         const wallL = this.radius + 2, wallR = this.width - this.radius - 2;
@@ -108,16 +126,20 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
 
     private ballY(): number {
         const th = this.bouncePhase <= FRAMES_HALF ? this.bouncePhase : FRAMES_HALF * 2 - this.bouncePhase;
-        return (this.floorY() - this.peakAmplitude()) + 0.5 * GRAVITY * th * th;
+        // A scaled parabola: same timing, lower or higher peak (hop), same floor
+        return this.floorY() - this.hop * (this.peakAmplitude() - 0.5 * GRAVITY * th * th);
     }
 
     renderSlice(offsetX: number, width: number, height: number): string {
         const localX = this.x - offsetX;
         if (localX + this.radius < 0 || localX - this.radius > width) return '';
 
-        const y = this.ballY();
-        // With an audio source the ball pulses with the music (up to a quarter bigger)
-        const r = this.radius * (1 + 0.25 * (this.level ?? 0));
+        // Pulse with the music, resting on the same bottom point (never sinks into the floor)
+        const r = this.radius * (1 + 0.12 * (this.level ?? 0));
+        const y = this.ballY() + this.radius - r;
+        // Squash on impact after a beat: wider and flatter, anchored at the bottom
+        const onFloor = Math.abs(this.bouncePhase - FRAMES_HALF) <= 1;
+        const squash = this.level !== undefined && this.beatTicks > 0 && onFloor;
         const size = Math.ceil(r * 2) + 2;
         const rgba = new Uint8ClampedArray(size * size * 4);
 
@@ -163,7 +185,9 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
 
         return [
             `<ellipse cx="${localX}" cy="${floorLineY + shadowRy}" rx="${shadowRx}" ry="${shadowRy}" fill="#000" opacity="${shadowOpacity}"/>`,
-            `<image x="${imgX}" y="${imgY}" width="${size}" height="${size}" href="${encodePngDataUri(size, size, rgba)}"/>`,
+            squash
+                ? `<image x="${imgX}" y="${imgY}" width="${size}" height="${size}" href="${encodePngDataUri(size, size, rgba)}" transform="translate(${localX} ${y + r}) scale(1.18 0.8) translate(${-localX} ${-(y + r)})"/>`
+                : `<image x="${imgX}" y="${imgY}" width="${size}" height="${size}" href="${encodePngDataUri(size, size, rgba)}"/>`,
         ].join('');
     }
 
