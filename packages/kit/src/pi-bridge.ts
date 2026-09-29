@@ -129,3 +129,6 @@ export const piBridge = new PiBridge();
 function previewMessage(preview: unknown): PiPushMessage {
     return { event: "preview", preview } as unknown as PiPushMessage;
 }
+
+// Also on the SDK side: deckbus' "actions" state from the plugin's visible actions
+export { trackActions, type DescribeAction } from "./track-actions.js";

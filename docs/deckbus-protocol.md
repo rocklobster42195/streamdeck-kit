@@ -107,10 +107,27 @@ Names that everyone can use the same way. Anything specific to one plugin is pre
 |---|---|---|
 | state | `status` | `{ "online": boolean, "detail"?: string }`: whether the peer's own device or service is reachable. |
 | state | `streams` | Streams the peer offers: `[{ "topic": "meters/ch09", "label": "Sonos", "stereo": true }]`. |
+| state | `actions` | The peer's visible actions: `[{ "device", "column", "row", "controller": "Keypad" \| "Encoder", "action", "effect"? }]` (see below). |
 | topic | `meters/<name>` | Audio levels in dBFS with one decimal, about 20 per second: `{ "l": -18.5, "r": -20.1 }`; mono sends only `l`. |
 | request | `duck` | Lower a level for a while: `{ "target", "by" (dB), "rampMs", "maxMs" }`. The receiver restores it on `unduck`, after `maxMs`, or when the sender leaves the bus. |
 | request | `unduck` | `{ "target" }`: end a duck. |
 | broadcast | `alert` | `{ "text", "level"?: "info" \| "warn" }`: something every peer may show briefly. |
+
+### actions
+
+Where a peer's actions are visible right now, so plugins can tell who sits next to them, e.g. a Panorama that runs across the dials of two plugins.
+
+```json
+{"t":"state","key":"actions","value":[
+  {"device":"A1B2…","column":1,"row":0,"controller":"Encoder","action":"de.boriskemper.music-assistant-controller.panorama-dial","effect":"boing-ball"},
+  {"device":"A1B2…","column":0,"row":1,"controller":"Keypad","action":"de.boriskemper.xair-controller.channel-key"}
+]}
+```
+
+- `device` is the Stream Deck device id, `column` and `row` the position, `action` the action's UUID.
+- `effect`: the Panorama effect the action shows, if any. Peers may add other fields.
+- Only actions on a page that is visible now; not those inside multi-actions. The list changes when the user switches pages, adds or moves actions.
+- Neighbours are actions on the same device and of the same controller kind next to each other: left and right, and for keys also up and down.
 
 ## Guarantees and limits
 
