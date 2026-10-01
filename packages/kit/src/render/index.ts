@@ -12,3 +12,4 @@ export * from './cover-fade.js';
 export * from './gauge/index.js';
 export * from './device-frame.js';
 export * from './feedback.js';
+export * from './key-style.js';
