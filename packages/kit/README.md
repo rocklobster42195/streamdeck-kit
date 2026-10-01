@@ -157,6 +157,20 @@ A Panorama effect is one animated picture that spans several dials of a Stream D
 - `EffectDefinition` is the interface for writing your own effect.
 - **Audio-reactive:** `engine.setLevel(display, level)` with a level from 0 to 1 (e.g. mixer meters from deckbus) makes the effects move with the music. A group follows its loudest display, and `undefined` switches it off. Your own effect takes part by implementing `setLevel(level)`.
 
+### Key feedback
+
+Instead of Stream Deck's generic green check (`showOk()`) and yellow triangle (`showAlert()`), keys can confirm in their own colour:
+
+```ts
+import { isFeedbackPlaying, playFeedback } from "@rocklobster42195/streamdeck-kit";
+
+playFeedback(action.id, action, "ok", { color: "#F7A600", background: "#111111", restore: () => redraw() });
+// in your render(): if (isFeedbackPlaying(action.id)) return;
+```
+
+A disc in the colour grows from the centre and a white check mark draws itself in it ("alert": an exclamation mark on Monza red); after about 0.7 s `restore()` brings the key's own image back. `feedbackFrame(kind, p, opts)` draws a single frame (0 ≤ p ≤ 1). Defaults come from the standard colours: Yellow Sea for "ok", Monza for "alert".
+
+
 ## Property inspector kit
 
 ```ts

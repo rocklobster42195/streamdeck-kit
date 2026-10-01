@@ -6,6 +6,7 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ### Added
 
+- **Key feedback:** `playFeedback(id, action, "ok" | "alert", { color, background, restore })` instead of Stream Deck's generic `showOk()` / `showAlert()`: a disc in the key's colour grows from the centre, a white check mark draws itself (or an exclamation mark on Monza red), a ring pulses out, then the key's own image comes back (~0.7 s). `feedbackFrame()` draws one frame, `isFeedbackPlaying()` tells a key not to draw over it.
 - **Colour picker:** `<pi-color>` and `<pi-thresholds>` open a popover instead of the system colour field: 17 standard colours (around the colour wheel, then the greys), recent colours, colour wheel with brightness, hex and R/G/B; `<pi-color auto>` offers "automatic". `<pi-swatch>` is the swatch on its own (a drop-in for `<input type="color">`), `openColorPopover()` opens the popover from code; colour helpers in `color-math.ts`.
 - First version, carved out of MA-C's `streamdeck-core` with its history:
   - rendering helpers: Arial text metrics, truncation and wrapping, marquee, title fader, PNG encoder
