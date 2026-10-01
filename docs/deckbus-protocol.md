@@ -106,7 +106,7 @@ Names that everyone can use the same way. Anything specific to one plugin is pre
 | Kind | Name | Meaning |
 |---|---|---|
 | state | `status` | `{ "online": boolean, "detail"?: string }`: whether the peer's own device or service is reachable. |
-| state | `streams` | Streams the peer offers: `[{ "topic": "meters/ch09", "label": "Sonos", "stereo": true }]`. |
+| state | `streams` | Streams the peer offers: `[{ "topic": "meters/ch09", "label": "Sonos", "stereo": true }]`. `"input": true` marks a microphone or other input; plugins that move with music leave those out. |
 | state | `actions` | The peer's visible actions: `[{ "device", "column", "row", "controller": "Keypad" \| "Encoder", "action", "effect"? }]` (see below). |
 | state | `mic` | `{ "muted": boolean }`: the state of the computer's default microphone, from a peer that controls it (SA-C). |
 | topic | `meters/<name>` | Audio levels in dBFS with one decimal, about 20 per second: `{ "l": -18.5, "r": -20.1 }`; mono sends only `l`. |
