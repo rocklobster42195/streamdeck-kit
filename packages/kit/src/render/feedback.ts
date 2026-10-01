@@ -11,6 +11,9 @@ export type FeedbackOptions = {
     color?: string;
     /** The key's background. */
     background?: string;
+    /** Image size; default the key's 144 × 144. A dial's touch strip is 200 × 100 (drawn centred). */
+    width?: number;
+    height?: number;
 };
 
 /** The defaults, from the kit's standard colours. */
@@ -33,7 +36,13 @@ export function feedbackFrame(kind: FeedbackKind, p: number, opts: FeedbackOptio
     const ring = clamp((p - 0.25) / 0.45);
     const fade = 1 - clamp((p - 0.85) / 0.15);
     const draw = clamp((p - 0.25) / 0.35);
-    const parts = [`<rect width="${SIZE}" height="${SIZE}" fill="${bg}"/>`, `<g opacity="${fade.toFixed(3)}">`];
+    const w = opts.width ?? SIZE;
+    const h = opts.height ?? SIZE;
+    // Drawn for 144 × 144 and scaled into the middle of the image (a strip: the 100 px height)
+    const scale = Math.min(w, h) / SIZE;
+    const tx = (w - SIZE * scale) / 2;
+    const ty = (h - SIZE * scale) / 2;
+    const parts = [`<rect width="${w}" height="${h}" fill="${bg}"/>`, `<g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${scale.toFixed(4)})"><g opacity="${fade.toFixed(3)}">`];
     if (ring > 0 && ring < 1) parts.push(`<circle cx="${c}" cy="${c}" r="${(52 + ring * 16).toFixed(1)}" fill="none" stroke="${color}" stroke-width="${(6 * (1 - ring)).toFixed(2)}" opacity="${(0.6 * (1 - ring)).toFixed(3)}"/>`);
     parts.push(`<circle cx="${c}" cy="${c}" r="${r.toFixed(1)}" fill="${color}"/>`);
     if (kind === "ok") {
@@ -46,8 +55,8 @@ export function feedbackFrame(kind: FeedbackKind, p: number, opts: FeedbackOptio
         if (bar > 0) parts.push(`<line x1="${c}" y1="44" x2="${c}" y2="${(44 + 38 * bar).toFixed(1)}" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>`);
         if (draw > 0.75) parts.push(`<circle cx="${c}" cy="101" r="7" fill="#ffffff"/>`);
     }
-    parts.push("</g>");
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">${parts.join("")}</svg>`;
+    parts.push("</g></g>");
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${parts.join("")}</svg>`;
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 

@@ -172,7 +172,7 @@ playFeedback(action.id, action, "ok", { color: "#F7A600", background: "#111111",
 // in your render(): if (isFeedbackPlaying(action.id)) return;
 ```
 
-A disc in the colour grows from the centre and a white check mark draws itself in it ("alert": an exclamation mark on Monza red); after about 0.7 s `restore()` brings the key's own image back. `feedbackFrame(kind, p, opts)` draws a single frame (0 ≤ p ≤ 1). Defaults come from the standard colours: Yellow Sea for "ok", Monza for "alert".
+A disc in the colour grows from the centre and a white check mark draws itself in it ("alert": an exclamation mark on Monza red); after about 0.7 s `restore()` brings the key's own image back. `feedbackFrame(kind, p, opts)` draws a single frame (0 ≤ p ≤ 1). For a dial, pass `width: 200, height: 100` and an adapter that calls `setFeedback({ "full-canvas": image })`. Defaults come from the standard colours: Yellow Sea for "ok", Monza for "alert".
 
 
 ## Property inspector kit

@@ -20,6 +20,12 @@ describe('key feedback', () => {
         expect(end).toContain('cy="101"');
     });
 
+    it('fits a dial strip, centred', () => {
+        const strip = svg(feedbackFrame('ok', 0.5, { width: 200, height: 100 }));
+        expect(strip).toContain('width="200" height="100"');
+        expect(strip).toContain('translate(50.0 0.0) scale(0.6944)');
+    });
+
     it('plays frames, then gives the key back', () => {
         vi.useFakeTimers();
         const images: (string | undefined)[] = [];
