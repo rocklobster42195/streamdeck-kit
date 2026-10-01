@@ -26,6 +26,23 @@ describe("ActionsState", () => {
     });
 });
 
+describe("ActionsState order", () => {
+    it("keeps fields set before the action appeared", () => {
+        vi.useFakeTimers();
+        const setState = vi.fn();
+        const state = new ActionsState({ setState }, 10);
+        state.update("d", { effect: "particles" }); // the dial's willAppear ran first
+        state.set("d", dial(1));
+        vi.advanceTimersByTime(10);
+        expect(setState.mock.calls.at(-1)![1][0]).toMatchObject({ column: 1, effect: "particles" });
+        state.update("d", { effect: undefined });
+        state.set("d", dial(1));
+        vi.advanceTimersByTime(10);
+        expect(setState.mock.calls.at(-1)![1][0]).not.toHaveProperty("effect");
+        vi.useRealTimers();
+    });
+});
+
 describe("neighbours", () => {
     it("finds other peers' actions next to a dial on the same device", () => {
         const peers = [peer("XR-C", [dial(0), dial(2, { effect: "particles" }), dial(3), { ...dial(1), device: "D2" }]), peer("Broken", "nonsense")];

@@ -24,6 +24,11 @@ export type Neighbour = { peer: PeerInfo; action: BusAction; side: "left" | "rig
 /** Keeps this peer's "actions" state; changes go out together after `delayMs`. */
 export class ActionsState {
     private readonly actions = new Map<string, BusAction>();
+    /**
+     * Fields set through update() per context, kept so set() keeps them: the Stream Deck SDK may
+     * call the plugin's own willAppear (which sets e.g. the effect) before trackActions' one.
+     */
+    private readonly extras = new Map<string, Partial<BusAction>>();
     private timer: ReturnType<typeof setTimeout> | undefined;
 
     constructor(
@@ -33,12 +38,15 @@ export class ActionsState {
 
     /** An action appeared (or changed): `context` is its Stream Deck context id. */
     set(context: string, action: BusAction): void {
-        this.actions.set(context, action);
+        const next = { ...action, ...this.extras.get(context) };
+        for (const key of Object.keys(next)) if (next[key] === undefined) delete next[key];
+        this.actions.set(context, next);
         this.schedule();
     }
 
     /** Merge fields into a visible action (e.g. its effect after a settings change). */
     update(context: string, patch: Partial<BusAction>): void {
+        this.extras.set(context, { ...this.extras.get(context), ...patch });
         const current = this.actions.get(context);
         if (!current) return;
         const next = { ...current, ...patch };
@@ -49,6 +57,7 @@ export class ActionsState {
     }
 
     remove(context: string): void {
+        this.extras.delete(context);
         if (this.actions.delete(context)) this.schedule();
     }
 
