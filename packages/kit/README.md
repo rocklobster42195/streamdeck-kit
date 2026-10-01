@@ -189,7 +189,7 @@ sd.onReady(() => {
   - `<pi-color>`: a color picker
   - `<pi-select source="…">`: a dropdown whose entries the plugin provides (see the PI bridge below). `with="player"` sends parameters that the PI registered with `registerSelectParams("player", () => ({ playerId }))`, and the list reloads when they change. `label-setting` also stores the chosen label. `refreshPiSelects()` and `reloadPiSelects()` update all lists after the plugin pushed new state.
   - `<pi-icon-picker setting="icon" default-icon="mdiBullhorn">`: search and pick any Material Design Icon. For optional icons (e.g. a marker), set `none-label` and `reset-label`.
-  - `<pi-thresholds setting="thresholds" base-setting="color" unit="°C" min-setting="min" max-setting="max">`: colour ranges for a value: a base colour and "from … : colour" rows, with a bar that previews them between min and max. Stored as `[{ from, color }]`, sorted, ready to use as `Zones` after the base colour.
+  - `<pi-thresholds setting="thresholds" base-setting="color" unit="°C" min-setting="min" max-setting="max">` (or `unit-setting="unit"` for the unit the user typed): colour ranges for a value: a base colour and "from … : colour" rows, with a bar that previews them between min and max. Stored as `[{ from, color }]`, sorted, ready to use as `Zones` after the base colour.
 
   Add `global` to bind a component to global settings instead of the action's settings.
 - `data-show-when="setting=a,b"` shows an element only for those values. Prefix the key with `global:` to check a global setting.

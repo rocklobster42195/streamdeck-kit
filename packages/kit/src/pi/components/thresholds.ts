@@ -1,4 +1,4 @@
-// <pi-thresholds setting="thresholds" [base-setting="color"] [base-default="#F7A600"] [unit="°C"]
+// <pi-thresholds setting="thresholds" [base-setting="color"] [base-default="#F7A600"] [unit="°C" | unit-setting="unit"]
 //                [min-setting="min"] [max-setting="max"] [default-min="0"] [default-max="100"]>
 // Colour ranges for a value: a base colour (below the first threshold) and any number of
 // "from <value>: <colour>" rows, with a bar that previews them between min and max. Stored as
@@ -39,6 +39,12 @@ export class PiThresholds extends HTMLElement {
         this.off?.();
     }
 
+    /** A fixed unit, or the one the user typed into another setting. */
+    private get unit(): string {
+        const k = this.getAttribute('unit-setting');
+        return this.getAttribute('unit') ?? (k ? String(sd.settings[k] ?? '') : '');
+    }
+
     private save(rows: Threshold[]): void {
         sd.setSetting(this.key, [...rows].sort((a, b) => a.from - b.from));
     }
@@ -58,7 +64,7 @@ export class PiThresholds extends HTMLElement {
         // Keep focus while typing: the row being edited re-renders only on change
         if (this.contains(document.activeElement) && (document.activeElement as HTMLInputElement).type === 'number') return;
         const rows = this.rows;
-        const unit = this.getAttribute('unit') ?? '';
+        const unit = this.unit;
         const baseKey = this.getAttribute('base-setting');
         this.innerHTML = `
             <div class="pi-thresholds-bar"></div>
@@ -127,7 +133,7 @@ export class PiThresholds extends HTMLElement {
         }
         stops.push(`${color} ${at}%`, `${color} 100%`);
         this.querySelector<HTMLElement>('.pi-thresholds-bar')!.style.background = `linear-gradient(to right, ${stops.join(', ')})`;
-        const unit = this.getAttribute('unit') ?? '';
+        const unit = this.unit;
         const [a, b] = this.querySelectorAll<HTMLElement>('.pi-thresholds-scale span');
         a.textContent = `${min}${unit ? ` ${unit}` : ''}`;
         b.textContent = `${max}${unit ? ` ${unit}` : ''}`;
