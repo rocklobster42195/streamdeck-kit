@@ -136,3 +136,13 @@ body[data-connection="down"] .pi-needs-connection { opacity: 0.45; pointer-event
 .pi-icon-tile { height: 40px; display: flex; align-items: center; justify-content: center; background: var(--pi-control); border: 1px solid var(--pi-control-border); border-radius: 8px; cursor: pointer; color: var(--pi-text-2); }
 .pi-icon-tile:hover { color: var(--pi-text); }
 .pi-icon-tile[aria-pressed="true"] { border-color: var(--pi-accent); color: var(--pi-accent); }
+
+/* <pi-thresholds> */
+.pi-thresholds { display: flex; flex-direction: column; }
+.pi-thresholds-bar { height: 10px; margin: 12px 12px 2px; border-radius: 5px; }
+.pi-thresholds-scale { display: flex; justify-content: space-between; padding: 0 12px 4px; font-size: 11px; color: var(--pi-text-3); }
+.pi-thresholds-row { gap: 8px; min-height: 40px; padding: 4px 12px; }
+.pi-thresholds-from { min-width: 44px; }
+.pi-thresholds-value { width: 80px; flex-grow: 0; padding: 6px 8px; }
+.pi-thresholds-row .pi-color { margin-left: auto; }
+.pi-thresholds-remove { height: 30px; width: 30px; font-size: 16px; }

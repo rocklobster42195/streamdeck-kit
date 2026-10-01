@@ -7,6 +7,7 @@
 //   <pi-field setting="maToken" global type="password" label="pi.token"></pi-field>
 //   <pi-select setting="source" source="player-sources" with="player"></pi-select>   (list from the plugin)
 //   <pi-icon-picker setting="icon" default-icon="mdiBullhorn"></pi-icon-picker>
+//   <pi-thresholds setting="thresholds" base-setting="color" unit="°C" min-setting="min" max-setting="max"></pi-thresholds>
 //
 // Attribute values for label/hint/placeholder/title are i18n keys (literal text works as fallback).
 import { PiChoice } from './choice.js';
@@ -16,6 +17,7 @@ import { PiIconPicker } from './icon-picker.js';
 import { PiRange } from './range.js';
 import { PiSection } from './section.js';
 import { PiSelect } from './select.js';
+import { PiThresholds } from './thresholds.js';
 import { PiToggle } from './toggle.js';
 
 export { PiChoice, type PiChoiceOption } from './choice.js';
@@ -25,6 +27,7 @@ export { PiIconPicker } from './icon-picker.js';
 export { PiRange } from './range.js';
 export { PiSection } from './section.js';
 export { PiSelect, refreshPiSelects, registerSelectParams, reloadPiSelects } from './select.js';
+export { PiThresholds, type Threshold } from './thresholds.js';
 export { PiToggle } from './toggle.js';
 export { initConditionalVisibility } from './visibility.js';
 
@@ -37,4 +40,5 @@ export function definePiComponents(): void {
     if (!customElements.get('pi-color')) customElements.define('pi-color', PiColor);
     if (!customElements.get('pi-select')) customElements.define('pi-select', PiSelect);
     if (!customElements.get('pi-icon-picker')) customElements.define('pi-icon-picker', PiIconPicker);
+    if (!customElements.get('pi-thresholds')) customElements.define('pi-thresholds', PiThresholds);
 }

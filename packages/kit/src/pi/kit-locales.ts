@@ -13,6 +13,10 @@ export const KIT_LOCALES: Record<string, Dict> = {
             icon_default_name: "Default icon",
             icon_search: "Search icons … (e.g. pasta, bell, coffee)",
             icon_none_found: "No icon found.",
+            threshold_base: "Colour",
+            threshold_from: "From",
+            threshold_add: "Add a colour range",
+            threshold_remove: "Remove",
         },
     },
     de: {
@@ -25,6 +29,10 @@ export const KIT_LOCALES: Record<string, Dict> = {
             icon_default_name: "Standardsymbol",
             icon_search: "Symbol suchen … (z. B. pasta, bell, coffee)",
             icon_none_found: "Kein Symbol gefunden.",
+            threshold_base: "Farbe",
+            threshold_from: "Ab",
+            threshold_add: "Farbbereich hinzufügen",
+            threshold_remove: "Entfernen",
         },
     },
 };

@@ -64,6 +64,7 @@ const torte = pie(50, 50, 38, 0.42, "#cccccc");               // SVG parts: outl
 
 - `arc(cx, cy, r, value, color, { track, width })`: a ring gauge with a round-capped arc from 12 o'clock, clockwise (MA-C's volume ring).
 - `pie(cx, cy, r, value, color, { inner, stroke })`: an outline circle and a filled wedge, also from 12 o'clock (Sonos Controller's volume look). Without options, the wedge radius and stroke follow Sonos Controller's proportions: 7 and 1.5 for r 9, 30 and 6 for r 38.
+- `halfArc({ cx, cy, r, min, max, value, target, zones, width, track, color })`: a half-circle gauge from 9 o'clock over the top to 3 o'clock, in the value's own unit (°C, W, %). Colour zones (`Zones`, as for meters) show as dim bands on the track, the value as a filled arc in its zone's colour, and `target` as a marker, e.g. a thermostat's setpoint. `halfArcPosition` and `halfArcPoint` give positions for labels.
 
 Both take `value` from 0 to 1 and return SVG fragments to put into a key or strip image.
 
@@ -188,6 +189,7 @@ sd.onReady(() => {
   - `<pi-color>`: a color picker
   - `<pi-select source="…">`: a dropdown whose entries the plugin provides (see the PI bridge below). `with="player"` sends parameters that the PI registered with `registerSelectParams("player", () => ({ playerId }))`, and the list reloads when they change. `label-setting` also stores the chosen label. `refreshPiSelects()` and `reloadPiSelects()` update all lists after the plugin pushed new state.
   - `<pi-icon-picker setting="icon" default-icon="mdiBullhorn">`: search and pick any Material Design Icon. For optional icons (e.g. a marker), set `none-label` and `reset-label`.
+  - `<pi-thresholds setting="thresholds" base-setting="color" unit="°C" min-setting="min" max-setting="max">`: colour ranges for a value: a base colour and "from … : colour" rows, with a bar that previews them between min and max. Stored as `[{ from, color }]`, sorted, ready to use as `Zones` after the base colour.
 
   Add `global` to bind a component to global settings instead of the action's settings.
 - `data-show-when="setting=a,b"` shows an element only for those values. Prefix the key with `global:` to check a global setting.
