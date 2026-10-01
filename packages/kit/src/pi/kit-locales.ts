@@ -17,6 +17,11 @@ export const KIT_LOCALES: Record<string, Dict> = {
             threshold_from: "From",
             threshold_add: "Add a colour range",
             threshold_remove: "Remove",
+            color_pick: "Pick a colour",
+            color_auto: "Automatic",
+            color_house: "House colours",
+            color_recent: "Recent",
+            color_brightness: "Brightness",
         },
     },
     de: {
@@ -33,6 +38,11 @@ export const KIT_LOCALES: Record<string, Dict> = {
             threshold_from: "Ab",
             threshold_add: "Farbbereich hinzufügen",
             threshold_remove: "Entfernen",
+            color_pick: "Farbe wählen",
+            color_auto: "Automatisch",
+            color_house: "Hausfarben",
+            color_recent: "Zuletzt",
+            color_brightness: "Helligkeit",
         },
     },
 };

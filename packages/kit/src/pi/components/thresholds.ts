@@ -73,14 +73,14 @@ export class PiThresholds extends HTMLElement {
         this.innerHTML = `
             <div class="pi-thresholds-bar"></div>
             <div class="pi-thresholds-scale"><span></span><span></span></div>
-            ${baseKey ? `<div class="pi-row pi-thresholds-row"><span class="pi-label pi-thresholds-from">${escapeHtml(t('kit.threshold_base'))}</span><input class="pi-color" type="color" data-base value="${escapeHtml(this.base)}"/></div>` : ''}
+            ${baseKey ? `<div class="pi-row pi-thresholds-row"><span class="pi-label pi-thresholds-from">${escapeHtml(t('kit.threshold_base'))}</span><pi-swatch class="pi-color" data-base value="${escapeHtml(this.base)}"></pi-swatch></div>` : ''}
             ${rows
                 .map(
                     (r, i) => `<div class="pi-row pi-thresholds-row">
                         <span class="pi-label pi-thresholds-from">${escapeHtml(t('kit.threshold_from'))}</span>
                         <input class="pi-input pi-thresholds-value" type="number" step="any" data-i="${i}" value="${r.from}"/>
                         <span class="pi-hint">${escapeHtml(unit)}</span>
-                        <input class="pi-color" type="color" data-i="${i}" value="${escapeHtml(r.color)}"/>
+                        <pi-swatch class="pi-color" data-i="${i}" value="${escapeHtml(r.color)}"></pi-swatch>
                         <button type="button" class="pi-icon-button pi-thresholds-remove" data-i="${i}" aria-label="${escapeHtml(t('kit.threshold_remove'))}">×</button>
                     </div>`,
                 )
@@ -88,7 +88,7 @@ export class PiThresholds extends HTMLElement {
             <div class="pi-padded"><button type="button" class="pi-button pi-button-small pi-thresholds-add">${escapeHtml(t('kit.threshold_add'))}</button></div>`;
         this.renderBar(rows);
 
-        this.querySelector<HTMLInputElement>('input[data-base]')?.addEventListener('change', (e) => sd.setSetting(baseKey!, (e.target as HTMLInputElement).value));
+        this.querySelector<HTMLInputElement>('pi-swatch[data-base]')?.addEventListener('change', (e) => sd.setSetting(baseKey!, (e.target as HTMLInputElement).value));
         this.querySelectorAll<HTMLInputElement>('.pi-thresholds-value').forEach((el) =>
             el.addEventListener('change', () => {
                 const v = Number(el.value);

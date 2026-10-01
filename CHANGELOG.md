@@ -6,6 +6,7 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ### Added
 
+- **Colour picker:** `<pi-color>` and `<pi-thresholds>` open a popover instead of the system colour field: house palette (CD Düsseldorf), recent colours, colour wheel with brightness, hex and R/G/B; `<pi-color auto>` offers "automatic". `<pi-swatch>` is the swatch on its own (a drop-in for `<input type="color">`), `openColorPopover()` opens the popover from code; colour helpers in `color-math.ts`.
 - First version, carved out of MA-C's `streamdeck-core` with its history:
   - rendering helpers: Arial text metrics, truncation and wrapping, marquee, title fader, PNG encoder
   - animation: `AnimatedValue`, `FrameTicker`

@@ -186,7 +186,8 @@ sd.onReady(() => {
   - `<pi-field>`: a text or password field
   - `<pi-range>`: a slider
   - `<pi-choice>`: tiles for choosing one option
-  - `<pi-color>`: a color picker
+  - `<pi-color>`: a colour setting with the kit's colour picker: a popover with the house palette, the 8 colours picked last (kept in the PI's localStorage), a colour wheel (hue = angle, saturation = distance from the centre) with a brightness slider, and hex and R/G/B fields. Dragging previews, letting go picks. Add `auto` to offer "automatic" (stored as `"auto"`).
+  - `<pi-swatch value="#F7A600" [auto]>`: just the swatch that opens the picker. It stands in for `<input type="color">` (same `value`, same `input` and `change` events), so lists of colours (e.g. states, colour ranges) can use the picker without other changes. `openColorPopover(anchor, { value, auto, onInput, onChange })` opens the popover from anything else; `HOUSE_COLORS` and the hex/RGB/HSV helpers (`normalizeHex`, `hexToHsv`, `hsvToHex`, …) are exported too.
   - `<pi-select source="…">`: a dropdown whose entries the plugin provides (see the PI bridge below). `with="player"` sends parameters that the PI registered with `registerSelectParams("player", () => ({ playerId }))`, and the list reloads when they change. `label-setting` also stores the chosen label. `refreshPiSelects()` and `reloadPiSelects()` update all lists after the plugin pushed new state.
   - `<pi-icon-picker setting="icon" default-icon="mdiBullhorn">`: search and pick any Material Design Icon. For optional icons (e.g. a marker), set `none-label` and `reset-label`.
   - `<pi-thresholds setting="thresholds" base-setting="color" unit="°C" min-setting="min" max-setting="max">` (or `unit-setting="unit"` for the unit the user typed): colour ranges for a value: a base colour and "from … : colour" rows, with a bar that previews them between min and max. Stored as `[{ from, color }]`, sorted, ready to use as `Zones` after the base colour.

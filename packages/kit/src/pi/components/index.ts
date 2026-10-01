@@ -12,6 +12,7 @@
 // Attribute values for label/hint/placeholder/title are i18n keys (literal text works as fallback).
 import { PiChoice } from './choice.js';
 import { PiColor } from './color.js';
+import { PiSwatch } from './swatch.js';
 import { PiField } from './field.js';
 import { PiIconPicker } from './icon-picker.js';
 import { PiRange } from './range.js';
@@ -22,10 +23,12 @@ import { PiToggle } from './toggle.js';
 
 export { PiChoice, type PiChoiceOption } from './choice.js';
 export { PiColor } from './color.js';
+export { closeColorPopover, openColorPopover, type ColorPopoverOptions } from './color-popover.js';
 export { PiField } from './field.js';
 export { PiIconPicker } from './icon-picker.js';
 export { PiRange } from './range.js';
 export { PiSection } from './section.js';
+export { PiSwatch } from './swatch.js';
 export { PiSelect, refreshPiSelects, registerSelectParams, reloadPiSelects } from './select.js';
 export { PiThresholds, type Threshold } from './thresholds.js';
 export { PiToggle } from './toggle.js';
@@ -37,6 +40,8 @@ export function definePiComponents(): void {
     if (!customElements.get('pi-field')) customElements.define('pi-field', PiField);
     if (!customElements.get('pi-choice')) customElements.define('pi-choice', PiChoice);
     if (!customElements.get('pi-range')) customElements.define('pi-range', PiRange);
+    // The swatch first: pi-color and pi-thresholds put swatches into their markup
+    if (!customElements.get('pi-swatch')) customElements.define('pi-swatch', PiSwatch);
     if (!customElements.get('pi-color')) customElements.define('pi-color', PiColor);
     if (!customElements.get('pi-select')) customElements.define('pi-select', PiSelect);
     if (!customElements.get('pi-icon-picker')) customElements.define('pi-icon-picker', PiIconPicker);
