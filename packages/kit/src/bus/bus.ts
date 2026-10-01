@@ -143,9 +143,14 @@ export class DeckBus {
         this.handlers.set(method, { fn, allow });
     }
 
-    /** Ask the peer with plugin UUID `peerId`; rejects on "not allowed", errors, a missing peer or the timeout. */
-    request(peerId: string, method: string, params?: unknown, timeoutMs = this.o.timeoutMs ?? 3000): Promise<unknown> {
-        const conn = [...this.conns].find((c) => c.ready && c.info!.id === peerId);
+    /**
+     * Ask a peer: by plugin UUID, or a PeerInfo from peers() when two peers share an id (e.g. a
+     * plugin in the simulator next to the same plugin in Stream Deck). Rejects on "not allowed",
+     * errors, a missing peer or the timeout.
+     */
+    request(peer: string | PeerInfo, method: string, params?: unknown, timeoutMs = this.o.timeoutMs ?? 3000): Promise<unknown> {
+        const peerId = typeof peer === "string" ? peer : peer.id;
+        const conn = [...this.conns].find((c) => c.ready && c.info!.id === peerId && (typeof peer === "string" || c.info!.slot === peer.slot));
         if (!conn) return Promise.reject(new Error(`no peer ${peerId}`));
         const id = ++this.nextId;
         return new Promise((resolve, reject) => {

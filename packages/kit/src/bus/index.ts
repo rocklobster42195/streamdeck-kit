@@ -4,3 +4,4 @@ export { DeckBus, type DeckBusOptions, type PeerInfo } from "./bus.js";
 export { ActionsState, neighbours, peerActions, type BusAction, type Controller, type Neighbour } from "./actions.js";
 export { PROTOCOL_VERSIONS, type BusMessage, type Hello } from "./protocol.js";
 export { defaultKeyDir, slotAddress, userTag } from "./paths.js";
+export { DUCK_LIMITS, DuckLeases, parseDuck, serveDucking, type DuckChange, type DuckRequest, type ServeDuckingOptions } from "./duck.js";

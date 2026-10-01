@@ -118,7 +118,7 @@ setKitLogger(streamDeck.logger);
 Stream Deck plugins can't talk to each other. **deckbus** lets them, and any other local program, share state, stream data, send requests and broadcast, without a central server or master. Every peer is equal, and one that goes away never takes the others down. The protocol is open and documented in [docs/deckbus-protocol.md](https://github.com/rocklobster42195/streamdeck-kit/blob/main/docs/deckbus-protocol.md), so programs without this kit can join too.
 
 ```ts
-import { DeckBus } from "@rocklobster42195/streamdeck-kit/bus";
+import { DeckBus, DuckLeases, serveDucking } from "@rocklobster42195/streamdeck-kit/bus";
 
 const bus = new DeckBus({ id: "de.example.mixer-plugin", name: "Mixer", version: "1.0.0", caps: ["meters"] });
 await bus.start(); // false (and logged) if it can't: the plugin works on without the bus
@@ -129,7 +129,9 @@ bus.onPeers((peers) => console.log(peers.map((p) => p.name)));
 bus.onSubscribers("meters/main", (n) => (n ? startMeters() : stopMeters())); // produce only while someone listens
 bus.publish("meters/main", { l: -18.5, r: -20.1 });
 
-bus.handle("duck", (params, peer) => duck(params), (peer) => allowedPeers.includes(peer.id)); // the receiver decides
+// Ducking: leases per peer and target (deepest wins, ends on unduck, after maxMs or when the peer leaves)
+const leases = new DuckLeases(({ target, db, rampMs }) => fadeTo(target, db, rampMs)); // db 0 = restore
+serveDucking(bus, leases, { allow: (peer) => allowedPeers.includes(peer.id), has: (target) => target === "meters/main" });
 await otherBus.request("de.example.mixer-plugin", "duck", { target: "meters/main", by: -12 });
 
 bus.broadcast("alert", { text: "Doorbell" });

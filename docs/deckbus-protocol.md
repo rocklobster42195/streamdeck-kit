@@ -130,6 +130,24 @@ Where a peer's actions are visible right now, so plugins can tell who sits next 
 - Only actions on a page that is visible now; not those inside multi-actions. The list changes when the user switches pages, adds or moves actions.
 - Neighbours are actions on the same device and of the same controller kind next to each other: left and right, and for keys also up and down.
 
+### duck
+
+A peer asks another to lower a level for a while, e.g. MA-C during an announcement asks SA-C to lower the computer's sound.
+
+```json
+{"t":"req","id":7,"method":"duck","params":{"target":"meters/system-output","by":-12,"rampMs":300,"maxMs":30000}}
+{"t":"res","id":7,"ok":true,"result":{"db":-12}}
+```
+
+- `target` is one of the receiver's stream topics (the level that moves is the one it shows). Unknown targets are refused (`unknown target …`).
+- `by` is in dB, 0 or below; receivers clamp it to −60. `rampMs` (default 300, at most 5000) is the fade; `maxMs` (default 30000, at most 300000) ends the duck by itself. The result is the target's gain now.
+- Several peers may duck the same target; the **deepest** one wins. When the last duck ends, the receiver puts the **exact** level from before back.
+- The **user wins:** if the user sets the level by hand during a duck, the duck ends there and the user's level stays. The same when the target goes away (another device, a closed app).
+- `duck` needs the user's permission per peer (`not allowed` otherwise). `unduck` is always accepted, and taking the permission back ends that peer's ducks.
+- A repeated `duck` from the same peer on the same target replaces its earlier one (new `by`, `maxMs` counts again).
+
+The kit implements the receiving side as `DuckLeases` and `serveDucking()`.
+
 ## Guarantees and limits
 
 - **Local only:** one computer, one user, at most 16 peers.
