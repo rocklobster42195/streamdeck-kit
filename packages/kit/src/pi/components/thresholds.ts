@@ -9,7 +9,7 @@ import { sd } from '../sd-client.js';
 
 export type Threshold = { from: number; color: string };
 
-/** The kit's house palette steps, offered in turn for new rows. */
+/** Colours offered in turn for new rows. */
 const NEXT_COLORS = ['#3ddc84', '#f5c542', '#ff4d4d', '#6cc4ff', '#E14190'];
 
 export class PiThresholds extends HTMLElement {

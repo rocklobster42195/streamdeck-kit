@@ -4,5 +4,5 @@ export * from './dom.js';
 export * from './components/index.js';
 export * from './requests.js';
 export * from './color-math.js';
-export { HOUSE_COLORS, type NamedColor } from './house-colors.js';
+export { STANDARD_COLORS, type NamedColor } from './standard-colors.js';
 export type * from '../protocol.js';

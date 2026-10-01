@@ -4,7 +4,7 @@ import { bound } from './bound.js';
 
 /**
  * <pi-color setting="primaryColor" default="#87AE73" label="…" [auto]> — a colour setting: label,
- * the hex value, and a swatch that opens the kit's colour picker (house palette, recent colours,
+ * the hex value, and a swatch that opens the kit's colour picker (standard colours, recent colours,
  * colour wheel, hex and RGB). With `auto`, "automatic" can be picked (stored as "auto").
  */
 export class PiColor extends HTMLElement {

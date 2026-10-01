@@ -1,11 +1,11 @@
 // The colour picker's popover, under the swatch that opened it: "automatic" (when allowed), the
-// house palette, the recent colours, a colour wheel (hue = angle, saturation = distance from the
+// standard colours, the recent colours, a colour wheel (hue = angle, saturation = distance from the
 // centre) with a brightness slider, and hex and R/G/B fields. Dragging previews (onInput), letting
 // go, a swatch or a typed value picks (onChange). One popover at a time; Escape or a click outside
 // closes it.
 import { hexToHsv, hexToRgb, hsvToHex, normalizeHex, rgbToHex, type Hsv } from '../color-math.js';
 import { escapeHtml } from '../dom.js';
-import { HOUSE_COLORS, recentColors, rememberColor } from '../house-colors.js';
+import { recentColors, rememberColor, STANDARD_COLORS } from '../standard-colors.js';
 import { t } from '../i18n.js';
 
 export type ColorPopoverOptions = {
@@ -33,8 +33,8 @@ export function openColorPopover(anchor: HTMLElement, opts: ColorPopoverOptions)
     const recent = recentColors();
     el.innerHTML = `
         ${opts.auto ? `<button type="button" class="pi-button pi-button-small pi-color-auto">${escapeHtml(t('kit.color_auto'))}</button>` : ''}
-        <div class="pi-color-title">${escapeHtml(t('kit.color_house'))}</div>
-        <div class="pi-color-chips">${HOUSE_COLORS.map((c) => swatch(c.hex, c.name)).join('')}</div>
+        <div class="pi-color-title">${escapeHtml(t('kit.color_standard'))}</div>
+        <div class="pi-color-chips">${STANDARD_COLORS.map((c) => swatch(c.hex, c.name)).join('')}</div>
         ${recent.length ? `<div class="pi-color-title">${escapeHtml(t('kit.color_recent'))}</div><div class="pi-color-chips">${recent.map((c) => swatch(c)).join('')}</div>` : ''}
         <div class="pi-color-mixer">
             <div class="pi-color-wheel"><canvas width="${WHEEL}" height="${WHEEL}"></canvas><span class="pi-color-thumb"></span></div>
