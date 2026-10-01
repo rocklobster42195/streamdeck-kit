@@ -55,8 +55,12 @@ export class PiThresholds extends HTMLElement {
             const v = raw === undefined || raw === '' ? Number.NaN : Number(raw);
             return Number.isFinite(v) ? v : Number(def ?? fallback);
         };
-        const min = num(this.getAttribute('min-setting'), this.getAttribute('default-min'), 0);
-        const max = num(this.getAttribute('max-setting'), this.getAttribute('default-max'), 100);
+        let min = num(this.getAttribute('min-setting'), this.getAttribute('default-min'), 0);
+        let max = num(this.getAttribute('max-setting'), this.getAttribute('default-max'), 100);
+        // Without a min/max setting, the preview grows to show every threshold (e.g. 1000 W)
+        const froms = this.rows.map((r) => r.from);
+        if (froms.length && !this.getAttribute('max-setting') && Math.max(...froms) >= max) max = Math.max(...froms) * 1.25 || Math.max(...froms) + 1;
+        if (froms.length && !this.getAttribute('min-setting') && Math.min(...froms) <= min) min = Math.min(...froms) - (max - Math.min(...froms)) * 0.2;
         return max > min ? [min, max] : [min, min + 1];
     }
 
