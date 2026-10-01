@@ -161,6 +161,10 @@ A Panorama effect is one animated picture that spans several dials of a Stream D
 
 `openRing({ cx, cy, r, min, max, value, dot, zones, handle, dim })` draws a ring open at the bottom (270°), as Home Assistant's thermostat and light cards: filled up to `value` in its zone's colour, an optional handle on the value (what a dial sets) and a dot for a second value (a thermostat's room temperature). Text inside is up to you. It joins the other gauges: `arc` (ring), `pie` (Sonos Controller's Torte), `halfArc`.
 
+### Shared Panorama
+
+`new SharedPanorama(engine, actionsState)` wraps your `PanoramaEngine` with the same API (`join`, `leave`, `renderSlice`, …). Call `connect(bus)` once deckbus runs: adjacent dials of different plugins with the same effect then share one Panorama. The plugin with the leftmost dial leads and streams the others their slices; `role(context)` tells a dial whether it runs locally, leads, or follows (and whom), e.g. for "effect from the left neighbour" in its settings. Pass your `ActionsState`, so other plugins see which effect each dial shows.
+
 ### Key feedback
 
 Instead of Stream Deck's generic green check (`showOk()`) and yellow triangle (`showAlert()`), keys can confirm in their own colour:

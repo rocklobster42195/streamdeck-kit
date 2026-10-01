@@ -109,6 +109,7 @@ Names that everyone can use the same way. Anything specific to one plugin is pre
 | state | `streams` | Streams the peer offers: `[{ "topic": "meters/ch09", "label": "Sonos", "stereo": true }]`. `"input": true` marks a microphone or other input; plugins that move with music leave those out. |
 | state | `actions` | The peer's visible actions: `[{ "device", "column", "row", "controller": "Keypad" \| "Encoder", "action", "effect"? }]` (see below). |
 | state | `mic` | `{ "muted": boolean }`: the state of the computer's default microphone, from a peer that controls it (SA-C). |
+| topic | `panorama/<device>/<column>` | One dial's slice of a shared Panorama: an SVG fragment (string, 200 × 100, no outer `<svg>`), one per effect tick, from the peer that leads the group (see below). |
 | topic | `meters/<name>` | Audio levels in dBFS with one decimal, about 20 per second: `{ "l": -18.5, "r": -20.1 }`; mono sends only `l`. |
 | request | `duck` | Lower a level for a while: `{ "target", "by" (dB), "rampMs", "maxMs" }`. The receiver restores it on `unduck`, after `maxMs`, or when the sender leaves the bus. |
 | request | `unduck` | `{ "target" }`: end a duck. |
@@ -129,6 +130,21 @@ Where a peer's actions are visible right now, so plugins can tell who sits next 
 - `effect`: the Panorama effect the action shows, if any. Peers may add other fields.
 - Only actions on a page that is visible now; not those inside multi-actions. The list changes when the user switches pages, adds or moves actions.
 - Neighbours are actions on the same device and of the same controller kind next to each other: left and right, and for keys also up and down.
+
+### panorama
+
+One Panorama effect across adjacent dials of different plugins.
+
+- **Groups** are worked out by every peer the same way from all `actions`: dials (`"controller": "Encoder"`) on the same `device` in adjacent columns with the same `effect` form one group, whichever peer they belong to.
+- The peer with the group's **leftmost** dial **leads**: it runs the effect over the whole group (its width is all of the group's displays) and publishes every other peer's dial slice on `panorama/<device>/<column>`, one message per effect tick (the latest one wins for a slow subscriber). The leftmost dial's settings apply to the group.
+- A peer whose dial is in a group led by someone else does **not** run that group; it subscribes to its dial's topic and draws the slice it gets, with its own foreground (value, ring, name) on top. When the leading peer leaves or the group splits, it runs its dials itself again.
+
+```json
+{"t":"sub","topic":"panorama/A1B2…/2"}
+{"t":"pub","topic":"panorama/A1B2…/2","data":"<g>…</g>"}
+```
+
+The kit implements both sides as `SharedPanorama` (same API as its `PanoramaEngine`).
 
 ### duck
 
