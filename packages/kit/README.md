@@ -157,6 +157,10 @@ A Panorama effect is one animated picture that spans several dials of a Stream D
 - `EffectDefinition` is the interface for writing your own effect.
 - **Audio-reactive:** `engine.setLevel(display, level)` with a level from 0 to 1 (e.g. mixer meters from deckbus) makes the effects move with the music. A group follows its loudest display, and `undefined` switches it off. Your own effect takes part by implementing `setLevel(level)`.
 
+### Open ring
+
+`openRing({ cx, cy, r, min, max, value, dot, zones, handle, dim })` draws a ring open at the bottom (270°), as Home Assistant's thermostat and light cards: filled up to `value` in its zone's colour, an optional handle on the value (what a dial sets) and a dot for a second value (a thermostat's room temperature). Text inside is up to you. It joins the other gauges: `arc` (ring), `pie` (Sonos Controller's Torte), `halfArc`.
+
 ### Key feedback
 
 Instead of Stream Deck's generic green check (`showOk()`) and yellow triangle (`showAlert()`), keys can confirm in their own colour:
