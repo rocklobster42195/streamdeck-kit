@@ -37,6 +37,16 @@ export function scrimDisc(cx: number, cy: number, r: number): string {
     return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#000" opacity="0.5"/>`;
 }
 
+/**
+ * A tight dark box behind one line of text over an effect (x/baseline as the text is drawn), so
+ * the effect still shows around it. Rows of such boxes leave the gaps between them free.
+ */
+export function scrimText(x: number, baseline: number, value: string, size: number, opts: { bold?: boolean; maxWidth?: number; anchor?: "start" | "middle" | "end" } = {}): string {
+    const w = Math.min(textWidth(value, size, { bold: opts.bold }), opts.maxWidth ?? Infinity);
+    const left = opts.anchor === "end" ? x - w : opts.anchor === "middle" ? x - w / 2 : x;
+    return `<rect x="${(left - 4).toFixed(1)}" y="${(baseline - size + 1).toFixed(1)}" width="${(w + 8).toFixed(1)}" height="${size + 4}" rx="5" fill="#000" opacity="0.55"/>`;
+}
+
 /** … and behind a block of text (x/y = top-left, sized to the text plus padding). */
 export function scrimBox(x: number, y: number, w: number, h: number): string {
     return `<rect x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="8" fill="#000" opacity="0.5"/>`;
