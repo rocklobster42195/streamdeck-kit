@@ -39,16 +39,17 @@ export function keyIcon(path: string, place: { size: number; x: number; y: numbe
 
 /**
  * The caption under the icon: bold, as large as fits (28 px down to 16 px), cut with "…" when even
- * that is too wide. `y` is the baseline (default near the bottom edge).
+ * that is too wide, kept clear of the "on" frame. `y` is the baseline (default near the bottom).
  */
 export function keyCaption(text: string, color: string, opts: { y?: number; max?: number; min?: number } = {}): string {
-    const width = KEY_SIZE - 12;
+    // Inside the "on" frame (4 px inset, 3 px stroke) with a little air
+    const width = KEY_SIZE - 24;
     const max = opts.max ?? 28;
     const min = opts.min ?? 16;
     let size = max;
     while (size > min && measureArialWidth(text, size, true) > width) size--;
     const shown = measureArialWidth(text, size, true) > width ? truncateToWidth(text, size, width, true) : text;
-    return `<text x="${KEY_SIZE / 2}" y="${opts.y ?? KEY_SIZE - 8}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="${size}" font-weight="700" fill="${escapeXml(color)}">${escapeXml(shown)}</text>`;
+    return `<text x="${KEY_SIZE / 2}" y="${opts.y ?? KEY_SIZE - 11}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="${size}" font-weight="700" fill="${escapeXml(color)}">${escapeXml(shown)}</text>`;
 }
 
 /** The key image: the background, then the parts, as an SVG data URI. */

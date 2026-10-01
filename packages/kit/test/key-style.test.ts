@@ -10,6 +10,7 @@ describe('family key style', () => {
     it('fits a caption, and cuts a long one with an ellipsis', () => {
         expect(keyCaption('1 min', '#fff')).toContain('font-size="28"');
         const long = keyCaption('Wohnzimmer Deckenlicht links hinten', '#fff');
+        expect(keyCaption('Wohnzimmer', '#fff')).not.toContain('font-size="28"');
         expect(long).toContain('font-size="16"');
         expect(long).toContain('…');
     });
