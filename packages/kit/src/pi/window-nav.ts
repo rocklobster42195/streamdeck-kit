@@ -33,6 +33,9 @@ export function initWindowNav(): void {
         entries = sections();
         for (const e of entries) e.el.id ||= `pi-sec-${nextId++}`;
         nav.innerHTML = entries.map((e) => `<a href="#${e.el.id}" data-id="${e.el.id}">${escapeHtml(e.title)}</a>`).join('');
+        // Sections scrolled to stop under the bar, however many lines it wraps to
+        const bar = getComputedStyle(nav).position === 'sticky' ? nav.getBoundingClientRect().height : 0;
+        document.documentElement.style.setProperty('--pi-window-nav-height', `${Math.round(bar)}px`);
         spy();
     };
 

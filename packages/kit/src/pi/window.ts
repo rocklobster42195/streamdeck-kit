@@ -77,8 +77,9 @@ export function initSettingsWindow(options: { name: string }): void {
  */
 export function settingsWindowShown(): void {
     if (!isSettingsWindow()) return;
-    const title = document.body.dataset.title;
-    document.title = [pluginName, title ? t(title) : ''].filter(Boolean).join(' · ');
+    // <body data-title="i18n key">, else the page's own <title>
+    const title = document.body.dataset.title ? t(document.body.dataset.title) : document.title;
+    document.title = [pluginName, title].filter(Boolean).join(' · ');
     initWindowNav();
     if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
 }
