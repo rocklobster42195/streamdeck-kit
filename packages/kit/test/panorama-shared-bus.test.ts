@@ -52,5 +52,10 @@ describe('shared Panorama over deckbus', () => {
         expect(right.shared.role('right-dial')).toEqual({ role: 'follower', leader: 'MA-C' });
         await until(() => right.shared.renderSlice('right-dial').length > 0 && right.redraws() > 2);
         expect(right.shared.engine.isActive('right-dial')).toBe(false);
+
+        // What the following dial puts into the effect reaches the leader's group
+        right.shared.updateLive('right-dial', { color: '#FF0000' });
+        const virtual = 'virtual:panorama/deck/1';
+        await until(() => left.shared.engine.orchestrator.contextLiveSettings.get(virtual)?.color === '#FF0000');
     }, 10000);
 });

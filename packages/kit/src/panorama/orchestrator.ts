@@ -35,6 +35,8 @@ export class PanoramaOrchestrator {
     readonly contextEffectId = new Map<string, string>();
     /** Each context's effect settings (merged per group by the engine). */
     readonly contextEffectSettings = new Map<string, Record<string, unknown>>();
+    /** Each context's live settings (from outside sources, e.g. HA entities): they win over all picked ones. */
+    readonly contextLiveSettings = new Map<string, Record<string, unknown>>();
     /** Running effect instance per group key (owned by the engine). */
     readonly groupEffects = new Map<string, EffectInstance<any>>();
     /** Per-context "redraw now" callbacks, called for all members after every group tick. */
@@ -66,6 +68,7 @@ export class PanoramaOrchestrator {
         this.panoramaDeviceIds.delete(context);
         this.contextEffectId.delete(context);
         this.contextEffectSettings.delete(context);
+        this.contextLiveSettings.delete(context);
         this.renderCallbacks.delete(context);
         this.requestSync();
     }
@@ -79,6 +82,15 @@ export class PanoramaOrchestrator {
     /** Settings don't affect grouping — only what is fed into the running effect. */
     setContextEffectSettings(context: string, settings: Record<string, unknown>): void {
         this.contextEffectSettings.set(context, settings);
+        this.settingsChanged(context);
+    }
+
+    setContextLiveSettings(context: string, live: Record<string, unknown>): void {
+        this.contextLiveSettings.set(context, live);
+        this.settingsChanged(context);
+    }
+
+    private settingsChanged(context: string): void {
         this.pendingSettingsContexts.add(context);
         if (this.settingsTimer) clearTimeout(this.settingsTimer);
         this.settingsTimer = setTimeout(() => {

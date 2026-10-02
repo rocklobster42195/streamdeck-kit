@@ -5,7 +5,9 @@
 // whichever plugin they belong to. The plugin with the group's leftmost dial leads: it runs the
 // effect over the whole group (other plugins' dials join its engine as virtual members) and
 // publishes each foreign dial's slice on "panorama/<device>/<column>". The others don't run that
-// group themselves; their dials subscribe and draw the slice they get. Without the bus, or with
+// group themselves; their dials subscribe and draw the slice they get, and send what they put into
+// the effect (picked and live settings, level) on "panorama-in/<device>/<column>", so the leader
+// feeds it into the group as if the dial were its own. Without the bus, or with
 // nobody next to them, everything runs locally as before.
 //
 // Same API as PanoramaEngine for the dial actions (join, leave, renderSlice, …), so a plugin only
@@ -16,12 +18,15 @@ import type { DeckBus, PeerInfo } from "../bus/bus.js";
 import type { PanoramaEngine } from "./engine.js";
 
 /** The parts of the bus the shared Panorama uses (a fake in tests). */
-export type PanoramaBus = Pick<DeckBus, "onPeers" | "publish" | "subscribe">;
+export type PanoramaBus = Pick<DeckBus, "onPeers" | "publish" | "subscribe"> & Partial<Pick<DeckBus, "onSubscribers">>;
+
+/** What a following dial puts into the group's effect, sent to the leading plugin. */
+export type PanoramaInputs = { settings: Record<string, unknown>; live: Record<string, unknown>; level?: number };
 
 /** How a dial takes part: on its own plugin's engine, leading a shared group, or following one. */
 export type PanoramaRole = { role: "local" } | { role: "leader" } | { role: "follower"; leader: string };
 
-type OwnDial = { device: string; column: number; effect: string; settings: Record<string, unknown>; redraw: () => void };
+type OwnDial = { device: string; column: number; effect: string; settings: Record<string, unknown>; live: Record<string, unknown>; level?: number; redraw: () => void };
 type Slot = { owner: string; ownerName: string; device: string; column: number; effect: string; context?: string };
 
 const SELF = "\u0000self";
@@ -29,6 +34,11 @@ const SELF = "\u0000self";
 /** Topic of one dial's slice. */
 export function panoramaTopic(device: string, column: number): string {
     return `panorama/${device}/${column}`;
+}
+
+/** Topic of what a following dial puts into the effect (PanoramaInputs). */
+export function panoramaInputTopic(device: string, column: number): string {
+    return `panorama-in/${device}/${column}`;
 }
 
 /**
@@ -64,9 +74,9 @@ export class SharedPanorama {
     /** Own dials currently joined to the local engine. */
     private readonly joined = new Set<string>();
     /** Virtual members for other plugins' dials this plugin leads: virtual context → topic. */
-    private readonly virtuals = new Map<string, string>();
-    /** Own dials that follow another plugin: context → { leader, unsubscribe, latest slice }. */
-    private readonly following = new Map<string, { leader: string; topic: string; off: () => void; svg: string }>();
+    private readonly virtuals = new Map<string, { topic: string; off: () => void }>();
+    /** Own dials that follow another plugin: context → { leader, unsubscribe, latest slice, last inputs sent }. */
+    private readonly following = new Map<string, { leader: string; topic: string; off: () => void; svg: string; sent?: string }>();
     /** Own dials leading a group with other plugins' dials in it. */
     private readonly leading = new Set<string>();
     private bus: PanoramaBus | undefined;
@@ -96,11 +106,12 @@ export class SharedPanorama {
 
     join(context: string, deviceId: string, column: number, effectId: string, settings: Record<string, unknown>, redraw: () => void): void {
         const prev = this.own.get(context);
-        this.own.set(context, { device: deviceId, column, effect: effectId, settings, redraw });
+        this.own.set(context, { device: deviceId, column, effect: effectId, settings, live: prev?.live ?? {}, level: prev?.level, redraw });
         // Others see where this dial is and which effect it wants (its position comes from trackActions)
         this.actions?.update(context, { effect: effectId });
         if (prev && prev.device === deviceId && prev.column === column && prev.effect === effectId) {
             if (this.joined.has(context)) this.engine.join(context, deviceId, column, effectId, settings, redraw);
+            this.sendInputs(context);
             return;
         }
         this.recompute();
@@ -116,10 +127,22 @@ export class SharedPanorama {
         const d = this.own.get(context);
         if (d) d.settings = settings;
         if (this.joined.has(context)) this.engine.updateSettings(context, settings);
+        this.sendInputs(context);
+    }
+
+    /** Live settings from an outside source (see PanoramaEngine.updateLive); they win in the whole group. */
+    updateLive(context: string, live: Record<string, unknown>): void {
+        const d = this.own.get(context);
+        if (d) d.live = live;
+        if (this.joined.has(context)) this.engine.updateLive(context, live);
+        this.sendInputs(context);
     }
 
     setLevel(context: string, level: number | undefined): void {
+        const d = this.own.get(context);
+        if (d) d.level = level;
         if (this.joined.has(context)) this.engine.setLevel(context, level);
+        this.sendInputs(context);
     }
 
     /** The dial's slice: from its own engine, or the one the leading plugin sent last. */
@@ -229,32 +252,70 @@ export class SharedPanorama {
             this.engine.leave(context);
             this.joined.delete(context);
         }
-        for (const [v] of [...this.virtuals]) {
+        for (const [v, entry] of [...this.virtuals]) {
             if (wantVirtual.has(v)) continue;
+            entry.off();
             this.engine.leave(v);
             this.virtuals.delete(v);
         }
         for (const context of wantJoined) {
             const d = this.own.get(context)!;
+            const fresh = !this.joined.has(context);
             this.engine.join(context, d.device, d.column, d.effect, d.settings, d.redraw);
+            if (fresh) {
+                this.engine.updateLive(context, d.live);
+                this.engine.setLevel(context, d.level);
+            }
             this.joined.add(context);
         }
         for (const [v, s] of wantVirtual) {
             // Each tick, the slice for the other plugin's dial goes out on its topic
             this.engine.join(v, s.device, s.column, s.effect, {}, () => this.bus?.publish(s.topic, this.engine.renderSlice(v)));
-            this.virtuals.set(v, s.topic);
+            if (this.virtuals.has(v)) continue;
+            // What that dial puts into the effect comes back on its input topic
+            const off = this.bus?.subscribe(panoramaInputTopic(s.device, s.column), (data) => {
+                const inputs = data as Partial<PanoramaInputs> | null;
+                if (!inputs || typeof inputs !== "object" || !this.virtuals.has(v)) return;
+                this.engine.updateSettings(v, inputs.settings ?? {});
+                this.engine.updateLive(v, inputs.live ?? {});
+                this.engine.setLevel(v, typeof inputs.level === "number" ? inputs.level : undefined);
+            });
+            this.virtuals.set(v, { topic: s.topic, off: off ?? (() => {}) });
         }
         for (const [context, want] of wantFollow) {
             if (this.following.has(context) || !this.bus) continue;
-            const entry = { leader: want.leader, topic: want.topic, svg: "", off: () => {} };
-            entry.off = this.bus.subscribe(want.topic, (data) => {
+            const bus = this.bus;
+            const d = this.own.get(context)!;
+            const entry: { leader: string; topic: string; svg: string; sent?: string; off: () => void } = { leader: want.leader, topic: want.topic, svg: "", off: () => {} };
+            const offSlices = bus.subscribe(want.topic, (data) => {
                 if (typeof data !== "string") return;
                 entry.svg = data;
                 this.own.get(context)?.redraw();
             });
+            // Streams aren't kept: whenever the leader (re)subscribes, it gets the inputs again
             this.following.set(context, entry);
+            const offWatch = bus.onSubscribers?.(panoramaInputTopic(d.device, d.column), (count) => {
+                if (count > 0) this.sendInputs(context, true);
+            });
+            entry.off = () => {
+                offSlices();
+                offWatch?.();
+            };
+            this.sendInputs(context, true);
             this.own.get(context)?.redraw();
         }
+    }
+
+    /** A following dial's settings, live settings and level to the leading plugin (only when changed, unless forced). */
+    private sendInputs(context: string, force = false): void {
+        const f = this.following.get(context);
+        const d = this.own.get(context);
+        if (!f || !d || !this.bus) return;
+        const inputs: PanoramaInputs = { settings: d.settings, live: d.live, ...(d.level !== undefined ? { level: d.level } : {}) };
+        const json = JSON.stringify(inputs);
+        if (!force && json === f.sent) return;
+        f.sent = json;
+        this.bus.publish(panoramaInputTopic(d.device, d.column), inputs);
     }
 }
 

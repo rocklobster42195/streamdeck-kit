@@ -4,7 +4,8 @@
 //
 // Extracted from sonos-controller's PanoramaEffectsDial (src/actions/panorama-effects-dial.ts),
 // without its Sonos device/cover-color handling: the host passes colors in as ordinary effect
-// settings (e.g. `color`), the first group member that sets a value wins.
+// settings (e.g. `color`), the first group member that sets a value wins. Live settings (from
+// outside sources such as HA entities, see updateLive) win over picked ones.
 import { DISPLAY_H, DISPLAY_W, PanoramaOrchestrator, safeEffectCall } from './orchestrator.js';
 import { DEFAULT_EFFECT_ID, effectRegistry } from './registry.js';
 import type { EffectInstance } from './types.js';
@@ -50,6 +51,17 @@ export class PanoramaEngine {
         const prev = this.orchestrator.contextEffectSettings.get(context);
         if (prev && JSON.stringify(prev) === JSON.stringify(settings)) return;
         this.orchestrator.setContextEffectSettings(context, settings);
+    }
+
+    /**
+     * Settings that follow an outside source (e.g. a colour from a Home Assistant light): in the
+     * group they win over every member's picked settings. A change goes into the running effect
+     * like any settings change, so the last change wins over rotating the dial.
+     */
+    updateLive(context: string, live: Record<string, unknown>): void {
+        const prev = this.orchestrator.contextLiveSettings.get(context) ?? {};
+        if (JSON.stringify(prev) === JSON.stringify(live)) return;
+        this.orchestrator.setContextLiveSettings(context, live);
     }
 
     leave(context: string): void {
@@ -200,12 +212,17 @@ export class PanoramaEngine {
         }
     }
 
-    /** All members' settings merged: the first member with a defined value wins each key. */
+    /**
+     * All members' settings merged: live settings first, then picked ones; within each, the first
+     * member with a defined value wins each key.
+     */
     private merged(ctxs: string[]): Record<string, unknown> {
         const merged: Record<string, unknown> = {};
-        for (const ctx of ctxs) {
-            for (const [k, v] of Object.entries(this.orchestrator.contextEffectSettings.get(ctx) ?? {})) {
-                if (v !== undefined && v !== '' && merged[k] === undefined) merged[k] = v;
+        for (const source of [this.orchestrator.contextLiveSettings, this.orchestrator.contextEffectSettings]) {
+            for (const ctx of ctxs) {
+                for (const [k, v] of Object.entries(source.get(ctx) ?? {})) {
+                    if (v !== undefined && v !== '' && merged[k] === undefined) merged[k] = v;
+                }
             }
         }
         merged.color ??= this.defaultColor;
