@@ -107,11 +107,13 @@ Names that everyone can use the same way. Anything specific to one plugin is pre
 |---|---|---|
 | state | `status` | `{ "online": boolean, "detail"?: string }`: whether the peer's own device or service is reachable. |
 | state | `streams` | Streams the peer offers: `[{ "topic": "meters/ch09", "label": "Sonos", "stereo": true }]`. `"input": true` marks a microphone or other input; plugins that move with music leave those out. |
-| state | `actions` | The peer's visible actions: `[{ "device", "column", "row", "controller": "Keypad" \| "Encoder", "action", "effect"? }]` (see below). |
+| state | `actions` | The peer's visible actions: `[{ "device", "column", "row", "controller": "Keypad" \| "Encoder", "action", "effect"?, "label"?, "panoramaMember"? }]` (see below). |
+| state | `panorama-rows` | The newest Panorama row the peer knows per device: `{ "<device>": { "effect", "settings": {…}, "stamp" } }` (see panorama). |
 | state | `mic` | `{ "muted": boolean }`: the state of the computer's default microphone, from a peer that controls it (SA-C). |
 | topic | `panorama/<device>/<column>` | One dial's slice of a shared Panorama: an SVG fragment (string, 200 × 100, no outer `<svg>`), one per effect tick, from the peer that leads the group (see below). |
 | topic | `panorama-in/<device>/<column>` | What a following dial puts into a shared Panorama: `{ "settings": {…}, "live": {…}, "level"?: 0..1 }`, to the peer that leads the group (see below). |
 | topic | `meters/<name>` | Audio levels in dBFS with one decimal, about 20 per second: `{ "l": -18.5, "r": -20.1 }`; mono sends only `l`. |
+| request | `panorama-member` | `{ "device", "column", "member": boolean }`: check or uncheck the peer's dial at that place in its row's Panorama. |
 | request | `duck` | Lower a level for a while: `{ "target", "by" (dB), "rampMs", "maxMs" }`. The receiver restores it on `unduck`, after `maxMs`, or when the sender leaves the bus. |
 | request | `unduck` | `{ "target" }`: end a duck. |
 | broadcast | `alert` | `{ "text", "level"?: "info" \| "warn" }`: something every peer may show briefly. |
@@ -128,7 +130,7 @@ Where a peer's actions are visible right now, so plugins can tell who sits next 
 ```
 
 - `device` is the Stream Deck device id, `column` and `row` the position, `action` the action's UUID.
-- `effect`: the Panorama effect the action shows, if any. Peers may add other fields.
+- `effect`: the Panorama effect the action shows, if any. `label`: a short name for the dial (a channel, a player). `panoramaMember`: false when the dial doesn't show its row's effect. Peers may add other fields.
 - Only actions on a page that is visible now; not those inside multi-actions. The list changes when the user switches pages, adds or moves actions.
 - Neighbours are actions on the same device and of the same controller kind next to each other: left and right, and for keys also up and down.
 
@@ -136,6 +138,7 @@ Where a peer's actions are visible right now, so plugins can tell who sits next 
 
 One Panorama effect across adjacent dials of different plugins.
 
+- **One effect per row:** all dials of a device form a row with one effect (`effect` "none" for none) and one set of `settings`. Every peer publishes the newest row it knows in `panorama-rows`; a row with a higher `stamp` (ms) wins and is taken over by every peer (the latest choice wins). A dial that doesn't take part (`panoramaMember: false`) stays in the group but draws nothing. Other peers' dials are checked or unchecked with the request `panorama-member`.
 - **Groups** are worked out by every peer the same way from all `actions`: dials (`"controller": "Encoder"`) on the same `device` in adjacent columns with the same `effect` form one group, whichever peer they belong to.
 - The peer with the group's **leftmost** dial **leads**: it runs the effect over the whole group (its width is all of the group's displays) and publishes every other peer's dial slice on `panorama/<device>/<column>`, one message per effect tick (the latest one wins for a slow subscriber). Settings are merged per key: **live** settings (from outside sources, e.g. a colour or speed from a Home Assistant entity) win over picked ones; within each, the leftmost dial that sets a key wins. The group moves with the highest `level`.
 - A peer whose dial is in a group led by someone else does **not** run that group; it subscribes to its dial's topic and draws the slice it gets, with its own foreground (value, ring, name) on top. When the leading peer leaves or the group splits, it runs its dials itself again.

@@ -200,3 +200,19 @@ body.pi-window { max-width: 760px; margin: 0 auto; padding: 0 16px 32px; }
 .pi-card > .pi-pair { border-top: none; }
 .pi-pair > .pi-field { padding-top: 0; }
 .pi-pair > .pi-field + .pi-field { padding-left: 0; }
+
+/* <pi-panorama> (src/pi/components/panorama.ts): the row's effect, its dials, its settings */
+pi-panorama { display: flex; flex-direction: column; gap: 6px; }
+.pi-pano-map { display: grid; grid-template-columns: repeat(var(--pi-pano-columns, 4), minmax(0, 1fr)); gap: 6px; padding: 8px; }
+.pi-pano-cell { display: flex; flex-direction: column; gap: 3px; padding: 8px; border: 1px solid var(--pi-control-border); border-radius: 8px; background: var(--pi-control); cursor: pointer; min-width: 0; }
+.pi-pano-cell input { margin: 0 0 2px; accent-color: var(--pi-accent, #3d8bfd); }
+.pi-pano-self { border-color: var(--pi-accent, #3d8bfd); }
+.pi-pano-empty { cursor: default; background: none; border-style: dashed; }
+.pi-pano-plugin { font-size: 10.5px; color: var(--pi-text-3, #8a8a90); text-transform: uppercase; letter-spacing: 0.03em; }
+.pi-pano-label { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pi-pano-fields { display: flex; flex-direction: column; }
+.pi-pano-field { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--pi-card-border); }
+.pi-pano-inline { flex-direction: row; align-items: center; justify-content: space-between; }
+.pi-pano-range { display: flex; align-items: center; gap: 10px; }
+.pi-pano-range input { flex-grow: 1; }
+.pi-pano-summary { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; padding: 10px 12px; width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; border: 1px solid var(--pi-control-border); }
