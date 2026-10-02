@@ -29,10 +29,16 @@ export function initWindowNav(): void {
         return out;
     };
 
+    let shown = '';
     const render = () => {
         entries = sections();
         for (const e of entries) e.el.id ||= `pi-sec-${nextId++}`;
-        nav.innerHTML = entries.map((e) => `<a href="#${e.el.id}" data-id="${e.el.id}">${escapeHtml(e.title)}</a>`).join('');
+        // Only when the sections changed: plugins send messages often (e.g. a preview per frame),
+        // and new links between mouse down and up would swallow the click
+        const html = entries.map((e) => `<a href="#${e.el.id}" data-id="${e.el.id}">${escapeHtml(e.title)}</a>`).join('');
+        if (html === shown) return spy();
+        shown = html;
+        nav.innerHTML = html;
         // Sections scrolled to stop under the bar, however many lines it wraps to
         const bar = getComputedStyle(nav).position === 'sticky' ? nav.getBoundingClientRect().height : 0;
         document.documentElement.style.setProperty('--pi-window-nav-height', `${Math.round(bar)}px`);
