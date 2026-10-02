@@ -7,6 +7,7 @@
 //   <pi-field setting="maToken" global type="password" label="pi.token"></pi-field>
 //   <pi-select setting="source" source="player-sources" with="player"></pi-select>   (list from the plugin)
 //   <pi-icon-picker setting="icon" default-icon="mdiBullhorn"></pi-icon-picker>
+//   <pi-more ready-when="entityId"></pi-more>   (the short PI's button into the settings window, see window.ts)
 //   <pi-thresholds setting="thresholds" base-setting="color" unit="°C" min-setting="min" max-setting="max"></pi-thresholds>
 //
 // Attribute values for label/hint/placeholder/title are i18n keys (literal text works as fallback).
@@ -15,6 +16,7 @@ import { PiColor } from './color.js';
 import { PiSwatch } from './swatch.js';
 import { PiField } from './field.js';
 import { PiIconPicker } from './icon-picker.js';
+import { PiMore } from './more.js';
 import { PiRange } from './range.js';
 import { PiSection } from './section.js';
 import { PiSelect } from './select.js';
@@ -26,6 +28,7 @@ export { PiColor } from './color.js';
 export { closeColorPopover, openColorPopover, type ColorPopoverOptions } from './color-popover.js';
 export { PiField } from './field.js';
 export { PiIconPicker } from './icon-picker.js';
+export { PiMore } from './more.js';
 export { PiRange } from './range.js';
 export { PiSection } from './section.js';
 export { PiSwatch } from './swatch.js';
@@ -46,4 +49,5 @@ export function definePiComponents(): void {
     if (!customElements.get('pi-select')) customElements.define('pi-select', PiSelect);
     if (!customElements.get('pi-icon-picker')) customElements.define('pi-icon-picker', PiIconPicker);
     if (!customElements.get('pi-thresholds')) customElements.define('pi-thresholds', PiThresholds);
+    if (!customElements.get('pi-more')) customElements.define('pi-more', PiMore);
 }

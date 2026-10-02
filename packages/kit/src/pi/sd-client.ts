@@ -103,6 +103,44 @@ export class StreamDeckPiClient {
         this.send({ event: 'sendToPlugin', action: this.actionInfo?.action, context: this.uuid, payload });
     }
 
+    /** The PI's context (unique per open property inspector). */
+    get context(): string {
+        return this.uuid;
+    }
+
+    /**
+     * Become a mirror of another page's client (the settings window of the PI that opened it, see
+     * window.ts): the same settings, messages and context; everything goes out through `remote`.
+     * Returns a function that detaches the listeners on `remote`.
+     */
+    mirror(remote: StreamDeckPiClient): () => void {
+        this.settings = remote.settings;
+        this.globalSettings = remote.globalSettings;
+        this.actionInfo = remote.actionInfo;
+        this.info = remote.info;
+        this.uuid = remote.uuid;
+        this.setSetting = (k, v) => remote.setSetting(k, v);
+        this.setSettings = (patch) => remote.setSettings(patch);
+        this.setGlobalSetting = (k, v) => remote.setGlobalSetting(k, v);
+        this.sendToPlugin = (payload) => remote.sendToPlugin(payload);
+        this.openUrl = (u) => remote.openUrl(u);
+        const offs = [
+            remote.onSettings((s) => {
+                this.settings = s;
+                this.emit('settings', s);
+            }),
+            remote.onGlobalSettings((g) => {
+                this.globalSettings = g;
+                this.emit('globalSettings', g);
+            }),
+            remote.onMessage((m) => this.emit('message', m)),
+        ];
+        this.ready = true;
+        for (const fn of this.listeners.ready) fn();
+        this.listeners.ready.clear();
+        return () => offs.forEach((off) => off());
+    }
+
     private send(msg: JsonObject): void {
         if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(msg));
     }

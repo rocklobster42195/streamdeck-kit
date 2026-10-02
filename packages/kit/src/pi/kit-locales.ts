@@ -22,6 +22,10 @@ export const KIT_LOCALES: Record<string, Dict> = {
             color_standard: "Standard colours",
             color_recent: "Recent",
             color_brightness: "Brightness",
+            more_settings: "More settings …",
+            set_up: "Set up …",
+            set_up_hint: "Not set up yet.",
+            window_alone: "Open this window from the key's settings in Stream Deck.",
         },
     },
     de: {
@@ -43,6 +47,10 @@ export const KIT_LOCALES: Record<string, Dict> = {
             color_standard: "Standardfarben",
             color_recent: "Zuletzt",
             color_brightness: "Helligkeit",
+            more_settings: "Mehr einstellen …",
+            set_up: "Einrichten …",
+            set_up_hint: "Noch nicht eingerichtet.",
+            window_alone: "Öffne dieses Fenster aus den Einstellungen der Taste in Stream Deck.",
         },
     },
 };
