@@ -32,6 +32,9 @@ export type TitleFaderConfig = {
     boxMax: number;
     boxStep: number;
     textStep: number;
+    /** Band: how far its top sits above the text's cap height, and how much taller than the font (px). */
+    bandTop?: number;
+    bandExtra?: number;
 };
 
 /** sonos-controller's values (72 px keys, play/pause key: 80 ms ticks, 120-tick pause) scaled to 144 px. */
@@ -141,9 +144,9 @@ export class TitleFader {
     svg(color = '#ffffff'): string {
         const c = this.config;
         if (this.box <= 0 && this.textOpacity <= 0) return '';
-        const top = c.y - c.fontSize - 4;
+        const top = c.y - c.fontSize - (c.bandTop ?? 4);
         const x = this.scrolls ? c.startX - this.offset : c.startX + (c.endX - c.startX - this.textWidth) / 2;
-        const band = `<rect x="0" y="${top}" width="${c.size}" height="${c.fontSize + 16}" fill="#000" fill-opacity="${this.box.toFixed(2)}"/>`;
+        const band = `<rect x="0" y="${top}" width="${c.size}" height="${c.fontSize + (c.bandExtra ?? 16)}" fill="#000" fill-opacity="${this.box.toFixed(2)}"/>`;
         if (this.textOpacity <= 0) return band;
         return `${band}<text x="${x.toFixed(1)}" y="${c.y}" fill="${color}" fill-opacity="${this.textOpacity.toFixed(2)}" font-family="Arial,sans-serif" font-size="${c.fontSize}" font-weight="bold">${escapeXml(this.current)}</text>`;
     }
