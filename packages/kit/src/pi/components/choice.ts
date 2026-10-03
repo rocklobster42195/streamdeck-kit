@@ -46,3 +46,15 @@ export class PiChoice extends HTMLElement {
         );
     }
 }
+
+/**
+ * Read every `<pi-choice data-options='[{"value":"left","label":"pi.left","icon":"alignLeft"}]'>`
+ * and hand the parsed options to the element; icon names are looked up in `icons` (name → MDI
+ * path, from the plugin, so only the icons it uses are bundled).
+ */
+export function initChoiceOptions(icons: Record<string, string> = {}): void {
+    document.querySelectorAll<PiChoice>('pi-choice[data-options]').forEach((el) => {
+        const raw = JSON.parse(el.dataset.options ?? '[]') as PiChoiceOption[];
+        el.options = raw.map((o) => ({ ...o, icon: o.icon ? icons[o.icon] ?? o.icon : undefined }));
+    });
+}

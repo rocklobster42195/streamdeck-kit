@@ -25,7 +25,7 @@ import { PiSelect } from './select.js';
 import { PiThresholds } from './thresholds.js';
 import { PiToggle } from './toggle.js';
 
-export { PiChoice, type PiChoiceOption } from './choice.js';
+export { initChoiceOptions, PiChoice, type PiChoiceOption } from './choice.js';
 export { PiColor } from './color.js';
 export { closeColorPopover, openColorPopover, type ColorPopoverOptions } from './color-popover.js';
 export { PiField } from './field.js';
