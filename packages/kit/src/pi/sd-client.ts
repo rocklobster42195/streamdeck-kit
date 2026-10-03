@@ -138,6 +138,8 @@ export class StreamDeckPiClient {
         this.ready = true;
         for (const fn of this.listeners.ready) fn();
         this.listeners.ready.clear();
+        // The window opened after the PI got the plugin's state: ask for it again (through the PI)
+        this.sendToPlugin({ event: 'pi-ready' });
         return () => offs.forEach((off) => off());
     }
 
@@ -159,6 +161,9 @@ export class StreamDeckPiClient {
                     this.ready = true;
                     for (const fn of this.listeners.ready) fn();
                     this.listeners.ready.clear();
+                    // Tell the plugin's PI bridge this PI is open: it answers with its state
+                    // (preview, Panorama row, …). Plugins that send it themselves too are fine.
+                    this.sendToPlugin({ event: 'pi-ready' });
                 }
                 break;
             case 'sendToPropertyInspector':
