@@ -2,6 +2,7 @@
 // lives in the "/pi" entry point, the icon catalog in "/mdi".
 export * from './render/index.js';
 export * from './panorama/index.js';
+export * from './list/index.js';
 export * from './util/index.js';
 export * from './log.js';
 export type * from './protocol.js';

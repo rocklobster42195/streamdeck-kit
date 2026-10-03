@@ -87,6 +87,25 @@ vuMeter({ x: 40, y: 4, width: 120, height: 82, vu: needle.update(dbfsToVu(measur
 - `MeterBallistics` (digital) and `VuBallistics` (analog): how the shown level follows the measured one.
 - `vuMeter`: an analog VU meter with a cream face, arc scale from -20 to +3 VU, a red zone and a needle. `dbfsToVu` sets 0 VU to -18 dBFS by default.
 
+## List dial
+
+A smooth vertical list on a dial's touch strip: equal rows (cover, MDI icon or nothing on the left, title and a second line on the right), the row nearest the centre marked, the neighbours dimmed. One dial tick moves one row (two on a fast spin) and the list glides there; at the ends it gives a small rubber-band nudge. The active row (what is playing, the current device, the last scene) has its title in your accent colour and an icon on the right; folders get a chevron.
+
+Three layers: `ScrollList` (the pure scroll model), `listStrip()` (the pure layout) and `ListController`, which drives both on the shared frame ticker, adds the marker crossfade, a short overlay (e.g. a breadcrumb) and a marquee for the marked row's title. Your dial action stays your own:
+
+```ts
+const list = new ListController({ id: ev.action.id, redraw: () => render() });
+list.reset(items.length, currentIndex, "Favourites");   // new content (safe inside render)
+list.rotate(ev.payload.ticks);                          // on dialRotate
+const svg = list.render({                               // in your render
+    row: (i) => ({ title: items[i].name, subtitle: items[i].artist, image: coverFor(i), active: i === currentIndex }),
+    accent: "#009FDF",
+});
+play(items[list.marked]);                               // on dialDown
+```
+
+`row(i)` is asked for only around the centre (two rows beyond the visible ones), so load covers there. `state: "loading"` draws placeholder rows, `state: { message }` one sentence. Call `dispose()` when the list leaves the strip.
+
 ## Device frame
 
 `deviceFrame({ screenWidth, screenHeight, knobs: 4 })` draws a Stream Deck housing as SVG: a dark body, the screen well and, for the Stream Deck +, the knobs. It is meant for screenshots, READMEs and store pictures. Put your rendered deck at `screenX`/`screenY` on top:
