@@ -24,6 +24,8 @@ export type OpenRingOptions = {
     dim?: boolean;
     track?: string;
     dimColor?: string;
+    /** Show the zones as faint bands on the track (0..1, like the half arc's); none when unset. */
+    zoneOpacity?: number;
 };
 
 const START = 135;
@@ -49,6 +51,14 @@ export function openRing(o: OpenRingOptions): string[] {
     const frac = (v: number | undefined) => (v === undefined ? undefined : clamp01((v - o.min) / span));
     const dimColor = o.dimColor ?? "#6a6a70";
     const parts = [arcPath(o, 0, 1, o.track ?? "#2e2e33", width)];
+    // The colour ranges as faint bands, so it reads like a scale (e.g. CO2: green, yellow, red)
+    if (o.zoneOpacity !== undefined && !o.dim) {
+        o.zones.forEach((z, i) => {
+            const from = i === 0 ? 0 : (frac(z.from) ?? 0);
+            const to = i + 1 < o.zones.length ? (frac(o.zones[i + 1].from) ?? 1) : 1;
+            if (to > from) parts.push(arcPath(o, from, to, z.color, width).replace("/>", ` opacity="${o.zoneOpacity}"/>`));
+        });
+    }
     const f = frac(o.value);
     if (!o.dim && f !== undefined && f > 0.002) parts.push(arcPath(o, 0, f, zoneColor(o.value!, o.zones), width));
     const fd = frac(o.dot);

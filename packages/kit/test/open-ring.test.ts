@@ -27,4 +27,12 @@ describe('open ring gauge', () => {
         expect(parts.join('')).not.toContain('#F7A600');
         expect(parts.join('')).toContain('fill="#8a8a90"');
     });
+    it('shows the zones as faint bands when asked', () => {
+        const zones = [{ from: -Infinity, color: '#00ff00' }, { from: 1000, color: '#ffff00' }, { from: 1400, color: '#ff0000' }];
+        const plain = openRing({ cx: 72, cy: 74, r: 54, min: 400, max: 2000, value: 600, zones }).join('');
+        expect(plain).not.toContain('opacity="0.3"');
+        const banded = openRing({ cx: 72, cy: 74, r: 54, min: 400, max: 2000, value: 600, zones, zoneOpacity: 0.3 }).join('');
+        expect(banded.match(/opacity="0.3"/g)?.length).toBe(3);
+        expect(banded).toContain('stroke="#ff0000" stroke-width="6" stroke-linecap="round" opacity="0.3"');
+    });
 });
