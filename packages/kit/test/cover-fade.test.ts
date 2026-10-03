@@ -50,3 +50,16 @@ describe("CoverFader", () => {
         expect(f.frame("k", undefined, () => {})).toEqual({ mix: 1 });
     });
 });
+
+describe('CoverFader with data URIs', () => {
+    it('takes a ready image without fetching and crossfades to the next one', async () => {
+        const { CoverFader } = await import('../src/render/cover-fade.js');
+        const f = new CoverFader(800);
+        const first = f.frame('d1', 'data:image/png;base64,AAAA', () => {});
+        expect(first.cover).toBe('data:image/png;base64,AAAA');
+        const next = f.frame('d1', 'data:image/png;base64,BBBB', () => {});
+        expect(next.cover).toBe('data:image/png;base64,BBBB');
+        expect(next.previous).toBe('data:image/png;base64,AAAA');
+        f.forget('d1');
+    });
+});

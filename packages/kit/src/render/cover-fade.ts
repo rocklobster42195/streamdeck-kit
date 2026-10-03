@@ -25,14 +25,18 @@ export class CoverFader {
 
     constructor(private readonly fadeMs = FADE_MS) {}
 
-    /** `startMix`: a new cover starts its fade this far in (it was already faded in by a prediction). */
+    /**
+     * `url`: a cover URL (loaded through the cover cache) or a ready data URI. `startMix`: a new cover
+     * starts its fade this far in (it was already faded in by a prediction).
+     */
     frame(id: string, url: string | undefined, redraw: () => void, startMix = 0): CoverFrame {
         if (!url) {
             this.forget(id);
             return { mix: 1 };
         }
         const s = this.state.get(id);
-        const hit = getCachedCover(url);
+        // An image the plugin loaded itself (a data URI) needs no fetching
+        const hit = url.startsWith("data:") ? url : getCachedCover(url);
         if (!hit) {
             void loadCover(url).then((c) => c && redraw());
             return s ? this.current(s) : { mix: 1 };

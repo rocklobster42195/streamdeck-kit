@@ -14,3 +14,4 @@ export * from './device-frame.js';
 export * from './feedback.js';
 export * from './key-style.js';
 export * from './level-strip.js';
+export * from './volume-display.js';
