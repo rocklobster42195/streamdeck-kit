@@ -1,21 +1,23 @@
 // A level dial's touch-strip segment (200×100), the same in every plugin with levels (XR-C's
-// faders and sends, SA-C's output and apps, …), in four looks:
+// faders and sends, SA-C's output and apps, …), in five looks:
 //   "digital": name and value on top, LED bars lying (one per channel), a scale, and the position
 //              (volume, fader) as a slim bar underneath
 //   "classic": analog VU meters (one or two), the name and value as a caption
-//   "ring" / "pie": just the position as a ring or a pie, name and value next to it
+//   "ring" / "pie" / "open": just the position as a ring, a pie or an open ring ("horseshoe"),
+//              name and value next to it
 // Muted: the value turns into "MUTE" in red, the meter is dimmed. Inactive (e.g. an app that isn't
 // running): everything grey, no level. Over a Panorama effect (`background`) only the circle, each
 // text line and each meter row get a dark backing; the effect shows in the gaps.
 import { mdiVolumeOff } from '@mdi/js';
 import { arc } from './gauge/arc.js';
 import { meterBar, meterScaleMarks } from './gauge/bar.js';
+import { openRing } from './gauge/open-ring.js';
 import { pie } from './gauge/pie.js';
 import { METER_TICKS } from './gauge/scale.js';
 import { vuMeter } from './gauge/vu.js';
 import { escapeXml, mdi, scrimDisc, stripImage, text, textWidth } from './strip.js';
 
-export type LevelStyle = 'digital' | 'classic' | 'ring' | 'pie';
+export type LevelStyle = 'digital' | 'classic' | 'ring' | 'pie' | 'open';
 
 /** The name line: white (default), the name in the colour, or a coloured band (like a console's scribble strip). */
 export type LevelHeader = 'plain' | 'color' | 'strip';
@@ -40,7 +42,7 @@ export type LevelStripView = {
     vus: number[];
     /** A small note to the value, e.g. a send's tap ("PRE"). */
     caption?: string;
-    /** An image next to the name (in the ring for ring and pie), e.g. an app's icon (data URI). */
+    /** An image next to the name (in the circle for ring, pie and open ring), e.g. an app's icon (data URI). */
     icon?: string;
     header?: LevelHeader;
     /** For the band header: dark band with frame and text in the colour (an inverted scribble strip). */
@@ -62,7 +64,7 @@ export function levelStyleShowsMeter(style: LevelStyle): boolean {
 
 export function renderLevelStrip(v: LevelStripView): string {
     if (v.style === 'classic') return classic(v);
-    if (v.style === 'ring' || v.style === 'pie') return gauge(v);
+    if (v.style === 'ring' || v.style === 'pie' || v.style === 'open') return gauge(v);
     return digital(v);
 }
 
@@ -92,7 +94,7 @@ function slimBar(x: number, y: number, width: number, position: number, color: s
     return `<rect x="${x}" y="${y}" width="${width}" height="5" rx="2.5" fill="#2a2b30"/><rect x="${x}" y="${y}" width="${(width * position).toFixed(1)}" height="5" rx="2.5" fill="${color}"/>`;
 }
 
-/** Ring or pie with the position, the name and value next to it. */
+/** Ring, pie or open ring with the position, the name and value next to it. */
 function gauge(v: LevelStripView): string {
     const showMute = v.muted && !v.inactive;
     const color = v.inactive || v.muted ? GREY : v.color;
@@ -109,7 +111,13 @@ function gauge(v: LevelStripView): string {
           ]
         : [];
     const position = v.position ?? 0;
-    const parts = [...scrims, ...(v.style === 'pie' ? pie(50, 50, 38, v.muted ? 0 : position, color) : arc(50, 50, 34, position, color))];
+    const circle =
+        v.style === 'pie'
+            ? pie(50, 50, 38, v.muted ? 0 : position, color)
+            : v.style === 'open'
+              ? openRing({ cx: 50, cy: 50, r: 34, width: 8, min: 0, max: 1, value: position, zones: [{ from: -Infinity, color }] })
+              : arc(50, 50, 34, position, color);
+    const parts = [...scrims, ...circle];
     if (showMute) parts.push(mdi(mdiVolumeOff, 34, 34, 32, MUTED));
     else if (v.icon) parts.push(v.style === 'pie' ? image(v.icon, 30, 30, 40) : image(v.icon, 32, 32, 36));
     // A band next to the circle looks odd: "strip" colours the name like "color"

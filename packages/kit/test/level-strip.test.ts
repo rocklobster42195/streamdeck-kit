@@ -5,7 +5,7 @@ const svg = (uri: string) => Buffer.from(uri.split(',')[1], 'base64').toString()
 const view: LevelStripView = { style: 'digital', name: 'Vocals', valueText: '-3.5 dB', position: 0.7, color: '#E30018', muted: false, levels: [-20, -18], peaks: [-10, -9], vus: [-3, -2] };
 
 describe('level strip', () => {
-    for (const style of ['digital', 'classic', 'ring', 'pie'] as const) {
+    for (const style of ['digital', 'classic', 'ring', 'pie', 'open'] as const) {
         it(`${style}: shows the value, MUTE when muted, a backing only over an effect`, () => {
             expect(svg(renderLevelStrip({ ...view, style }))).toContain('-3.5 dB');
             expect(svg(renderLevelStrip({ ...view, style, muted: true }))).toContain('MUTE');
@@ -29,6 +29,7 @@ describe('level strip', () => {
     it('knows which looks need meter data, and black or white text on a colour', () => {
         expect(levelStyleShowsMeter('digital')).toBe(true);
         expect(levelStyleShowsMeter('pie')).toBe(false);
+        expect(levelStyleShowsMeter('open')).toBe(false);
         expect(inkOn('#FFDD00')).toBe('#000000');
         expect(inkOn('#005DA0')).toBe('#FFFFFF');
     });
