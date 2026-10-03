@@ -36,3 +36,14 @@ describe('cover board', () => {
         expect(calls).toBe(1);
     });
 });
+
+describe('readable cover colour', () => {
+    it('raises dark and pale colours, keeps bright ones and greys', async () => {
+        const { readableCoverColor } = await import('../src/panorama/covers.js');
+        expect(readableCoverColor([255, 0, 0])).toBe('#ff0000');
+        const dark = readableCoverColor([40, 10, 10]);
+        expect(parseInt(dark.slice(1, 3), 16)).toBeGreaterThanOrEqual(190);
+        expect(readableCoverColor([200, 190, 190]).slice(1, 3)).toBe('c8');
+        expect(readableCoverColor([50, 50, 50])).toBe('#bfbfbf');
+    });
+});

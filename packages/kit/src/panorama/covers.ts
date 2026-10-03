@@ -100,3 +100,28 @@ export function activeSource<T extends CoverEntry>(all: T[]): T | undefined {
     const latest = (list: T[]) => list.reduce<T | undefined>((a, b) => (!a || b.since > a.since ? b : a), undefined);
     return latest(all.filter((s) => s.playing)) ?? latest(all);
 }
+
+/**
+ * A cover colour made readable on black, the same in every sender: saturation and brightness
+ * raised to a minimum (HSV), so "on" and an effect stay distinguishable from grey.
+ */
+export function readableCoverColor([r, g, b]: [number, number, number], minSaturation = 0.35, minValue = 0.75): string {
+    const max = Math.max(r, g, b) / 255;
+    const min = Math.min(r, g, b) / 255;
+    const d = max - min;
+    let h = 0;
+    if (d > 0) {
+        const [rn, gn, bn] = [r / 255, g / 255, b / 255];
+        h = max === rn ? ((gn - bn) / d) % 6 : max === gn ? (bn - rn) / d + 2 : (rn - gn) / d + 4;
+        h *= 60;
+        if (h < 0) h += 360;
+    }
+    // A grey cover keeps its grey (no hue to raise)
+    const s = d === 0 ? 0 : Math.max(minSaturation, d / max);
+    const v = Math.max(minValue, max);
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const [r1, g1, b1] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    const hex = (n: number) => Math.round((n + v - c) * 255).toString(16).padStart(2, '0');
+    return `#${hex(r1)}${hex(g1)}${hex(b1)}`;
+}
