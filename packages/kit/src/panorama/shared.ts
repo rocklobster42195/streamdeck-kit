@@ -134,8 +134,15 @@ export class SharedPanorama {
     updateLive(context: string, live: Record<string, unknown>): void {
         const d = this.own.get(context);
         if (d) d.live = live;
+        // Others see that this dial colours its group (the Panorama section says where the colour comes from)
+        this.actions?.update(context, { liveColor: typeof live.color === "string" ? live.color : undefined });
         if (this.joined.has(context)) this.engine.updateLive(context, live);
         this.sendInputs(context);
+    }
+
+    /** The live settings this plugin passed in for one of its dials. */
+    liveOf(context: string): Record<string, unknown> | undefined {
+        return this.own.get(context)?.live;
     }
 
     setLevel(context: string, level: number | undefined): void {

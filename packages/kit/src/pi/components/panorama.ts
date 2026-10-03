@@ -1,7 +1,9 @@
 // <pi-panorama [summary]>: the Panorama of the dial's row (see the kit's panorama/rows.ts), the
 // same in every plugin. In the settings window: the row's effect, a map of the device's dials with
 // their plugin, name and checkbox ("in the Panorama"; also other plugins' dials), and the effect's
-// settings, once for the row. With `summary` (the short PI): one line, opening the window at it.
+// settings, once for the row, with the row's colour (the cover of a player on deckbus, fixed, or
+// the effect's own; the effects' own colour fields don't show). With `summary` (the short PI): one
+// line, opening the window at it.
 // Data comes from the plugin ("panorama-row"); changes go back as "panorama-set" / "panorama-member".
 import { escapeHtml } from '../dom.js';
 import { t } from '../i18n.js';
@@ -15,9 +17,18 @@ type Info = {
     settings: Record<string, unknown>;
     effects: { id: string; displayName: string; settingsSchema: Field[] }[];
     dials: { column: number; plugin: string; label: string; member: boolean; self: boolean }[];
+    color: string;
+    covers: { id: string; label: string; color: string; playing: boolean }[];
+    liveColorFrom?: string;
 };
 
 const NONE = 'none';
+const COVER = 'cover';
+const DEFAULT = 'default';
+const COLOR_KEY = 'rowColor';
+
+/** The colour tile a choice belongs to. */
+const colorMode = (c: string) => (c === DEFAULT ? DEFAULT : c.startsWith('#') ? 'fixed' : COVER);
 
 /** Translation with a fallback (effect names and field labels come from the effect in English). */
 function tr(key: string, fallback: string): string {
@@ -63,7 +74,7 @@ export class PiPanorama extends HTMLElement {
         this.hidden = false;
         if (this.hasAttribute('summary')) return this.renderSummary(info);
         // Rebuild only when the structure changed, so a slider being dragged keeps its place
-        const structure = JSON.stringify([info.effect, info.dials, info.effects.map((e) => e.id)]);
+        const structure = JSON.stringify([info.effect, info.dials, info.effects.map((e) => e.id), info.color, info.covers.map((c) => [c.id, c.label]), info.liveColorFrom]);
         if (structure === this.structure) return this.updateValues(info);
         this.structure = structure;
         const effect = info.effects.find((e) => e.id === info.effect);
@@ -84,12 +95,48 @@ export class PiPanorama extends HTMLElement {
                 <div class="pi-choice" style="--pi-choice-columns: 3">${options.join('')}</div>
                 <div class="pi-pano-map" style="--pi-pano-columns: ${columns}">${cells.join('')}</div>
                 <div class="pi-hint pi-padded">${escapeHtml(t('kit.panorama_map_hint'))}</div>
-                <div class="pi-pano-fields">${(effect?.settingsSchema ?? []).map((f) => this.fieldHtml(effect!.id, f, info.settings[f.key] ?? f.default)).join('')}</div>
+                ${info.effect === NONE ? '' : this.colorHtml(info)}
+                <div class="pi-pano-fields">${(effect?.settingsSchema ?? []).filter((f) => f.type !== 'color').map((f) => this.fieldHtml(effect!.id, f, info.settings[f.key] ?? f.default)).join('')}</div>
             </div>
             <div class="pi-hint pi-padded">${escapeHtml(t('kit.panorama_hint'))}</div>`;
         this.querySelectorAll<HTMLElement>('[data-effect]').forEach((el) => el.addEventListener('click', () => sd.sendToPlugin({ event: 'panorama-set', effect: el.dataset.effect })));
         this.querySelectorAll<HTMLInputElement>('.pi-pano-map input').forEach((el) => el.addEventListener('change', () => sd.sendToPlugin({ event: 'panorama-member', column: Number(el.dataset.column), member: el.checked })));
         this.wireFields();
+        this.wireColor(info);
+    }
+
+    /** The row's colour: Cover (with the player), fixed, or the effect's own. */
+    private colorHtml(info: Info): string {
+        const mode = colorMode(info.color);
+        const tiles = [
+            [COVER, t('kit.panorama_color_cover')],
+            ['fixed', t('kit.panorama_color_fixed')],
+            [DEFAULT, t('kit.panorama_color_default')],
+        ].map(([m, label]) => `<button type="button" class="pi-choice-tile" data-color-mode="${m}" aria-pressed="${m === mode}"><span>${escapeHtml(label)}</span></button>`);
+        let detail = '';
+        if (mode === COVER) {
+            const options = [`<option value="${COVER}">${escapeHtml(t('kit.panorama_color_active'))}</option>`, ...info.covers.map((c) => `<option value="${COVER}:${escapeHtml(c.id)}" ${info.color === `${COVER}:${c.id}` ? 'selected' : ''}>${c.playing ? '▶ ' : ''}${escapeHtml(c.label)}</option>`)];
+            detail = `<select class="pi-input" data-color-player>${options.join('')}</select>`;
+            if (!info.covers.length) detail += `<div class="pi-hint">${escapeHtml(t('kit.panorama_color_none'))}</div>`;
+        } else if (mode === 'fixed') detail = `<pi-swatch data-color-fixed value="${escapeHtml(info.color)}"></pi-swatch>`;
+        const live = info.liveColorFrom ? `<div class="pi-hint">${escapeHtml(t('kit.panorama_color_live', { from: info.liveColorFrom }))}</div>` : '';
+        return `<div class="pi-pano-field pi-pano-color"><span class="pi-label">${escapeHtml(t('kit.panorama_color'))}</span>
+            <div class="pi-choice" style="--pi-choice-columns: 3">${tiles.join('')}</div>${detail}${live}</div>`;
+    }
+
+    private wireColor(info: Info): void {
+        const set = (value: string) => sd.sendToPlugin({ event: 'panorama-set', settings: { [COLOR_KEY]: value } });
+        this.querySelectorAll<HTMLElement>('[data-color-mode]').forEach((el) =>
+            el.addEventListener('click', () => {
+                const mode = el.dataset.colorMode!;
+                if (mode === colorMode(info.color)) return;
+                // A fixed colour starts from the cover colour shown now, else white
+                if (mode === 'fixed') set(info.covers.find((c) => c.playing)?.color ?? info.covers[0]?.color ?? '#FFFFFF');
+                else set(mode);
+            }),
+        );
+        this.querySelector<HTMLSelectElement>('[data-color-player]')?.addEventListener('change', (e) => set((e.target as HTMLSelectElement).value));
+        this.querySelector<HTMLElement & { value: string }>('[data-color-fixed]')?.addEventListener('change', (e) => set((e.target as HTMLElement & { value: string }).value));
     }
 
     private renderSummary(info: Info): void {

@@ -6,3 +6,4 @@ export * from './shared.js';
 export * from './backgrounds.js';
 export * from './inputs.js';
 export * from './rows.js';
+export * from './covers.js';

@@ -10,11 +10,18 @@
 // ("panorama-member"). The PI's Panorama section (<pi-panorama>) talks to this class through the
 // plugin's PI bridge (attachPi).
 //
+// The row's colour (grill 2026-10-03, notes/2026-10-03-row-cover-color-grill.md) is one more row
+// setting, `rowColor`: the cover of a player (from the deckbus state "covers", whoever publishes
+// it), a fixed colour or the effect's own. Every plugin resolves it the same way into the effect's
+// colour fields, so it works with dials of plugins that have no cover themselves. Live colours
+// (e.g. HA-C's from a Home Assistant entity) still win.
+//
 // The plugin registers its dials (add/remove/changed), draws the slice only for members
 // (isMember + panorama.renderSlice) and keeps passing live values and levels to the panorama.
 import { peerActions, type ActionsState, type BusAction } from '../bus/actions.js';
 import type { DeckBus, PeerInfo } from '../bus/bus.js';
 import { BACKGROUND_AUTO, BACKGROUND_NONE } from './backgrounds.js';
+import { COVER_CHOICE, CoverBoard } from './covers.js';
 import { DEFAULT_EFFECT_ID, effectRegistry, listEffects, type EffectInfo } from './registry.js';
 import type { SharedPanorama } from './shared.js';
 
@@ -46,7 +53,22 @@ export type RowDial = {
 export type RowMapDial = { column: number; plugin: string; label: string; member: boolean; self: boolean };
 
 /** Pushed to the PI ("panorama-row"). */
-export type RowInfo = { event: 'panorama-row'; device: string; effect: string; settings: Record<string, unknown>; effects: EffectInfo[]; dials: RowMapDial[] };
+export type RowInfo = {
+    event: 'panorama-row';
+    device: string;
+    effect: string;
+    settings: Record<string, unknown>;
+    effects: EffectInfo[];
+    dials: RowMapDial[];
+    /** The row's colour choice (see covers.ts) and the players to choose from. */
+    color: string;
+    covers: { id: string; label: string; color: string; playing: boolean }[];
+    /** A dial that colours the row live right now ("HA-C · Wohnzimmer"); it wins over the choice. */
+    liveColorFrom?: string;
+};
+
+/** The row setting that holds the colour choice. */
+export const ROW_COLOR_KEY = 'rowColor';
 
 /** The parts of the bus rows use. */
 export type RowsBus = Pick<DeckBus, 'onPeers' | 'setState' | 'handle' | 'request'>;
@@ -88,11 +110,16 @@ export class PanoramaRows {
     private peers: PeerInfo[] = [];
     private pi: RowsPiBridge | undefined;
     private published = '';
+    /** The players' cover colours on the bus (a music plugin passes its own board and publishes into it). */
+    readonly covers: CoverBoard;
 
     constructor(
         private readonly panorama: SharedPanorama,
-        private readonly options: { name: string; actions?: Pick<ActionsState, 'update'>; defaultEffect?: string },
-    ) {}
+        private readonly options: { name: string; actions?: Pick<ActionsState, 'update'>; defaultEffect?: string; covers?: CoverBoard },
+    ) {
+        this.covers = options.covers ?? new CoverBoard(options.name);
+        this.covers.onChange(() => this.refreshAll());
+    }
 
     /** Share rows with the other plugins (call once the bus exists). */
     connect(bus: RowsBus): void {
@@ -108,6 +135,8 @@ export class PanoramaRows {
         );
         bus.onPeers((peers) => {
             this.peers = peers;
+            // Our own board has no bus of its own (a music plugin's board listens itself)
+            if (!this.options.covers) this.covers.setPeers(peers);
             this.refreshAll();
         });
         this.publish();
@@ -230,7 +259,39 @@ export class PanoramaRows {
             }
         }
         dials.sort((a, b) => a.column - b.column);
-        return { event: 'panorama-row', device: d.device, effect: row.effect, settings: row.settings, effects: listEffects(), dials };
+        const covers = this.covers.sources().map((s) => ({ id: s.id, label: `${s.name} · ${s.source}`, color: s.color, playing: s.playing }));
+        const color = typeof row.settings[ROW_COLOR_KEY] === 'string' ? (row.settings[ROW_COLOR_KEY] as string) : COVER_CHOICE;
+        return { event: 'panorama-row', device: d.device, effect: row.effect, settings: row.settings, effects: listEffects(), dials, color, covers, liveColorFrom: this.liveColorFrom(d.device) };
+    }
+
+    /** Who colours the row live right now: one of our dials or another plugin's ("HA-C · Wohnzimmer"). */
+    private liveColorFrom(device: string): string | undefined {
+        for (const [ctx, o] of this.dials) {
+            if (o.device === device && typeof this.panorama.liveOf(ctx)?.color === 'string') return `${this.options.name} · ${o.label()}`;
+        }
+        for (const peer of this.peers) {
+            const a = (peerActions(peer) as (BusAction & { label?: string; liveColor?: string })[]).find((x) => x.device === device && x.controller === 'Encoder' && typeof x.liveColor === 'string');
+            if (a) return `${peer.name}${a.label ? ` · ${a.label}` : ''}`;
+        }
+        return undefined;
+    }
+
+    /** The settings the effect gets: the row's, with the colour choice turned into the effect's colour fields. */
+    private effectSettings(effect: string, settings: Record<string, unknown>): Record<string, unknown> {
+        const { [ROW_COLOR_KEY]: choice, ...rest } = settings;
+        const def = effectRegistry.get(effect);
+        if (!def) return rest;
+        const schema = def.settingsSchema ?? [];
+        const resolved = this.covers.resolve(typeof choice === 'string' ? choice : undefined);
+        // Without a colour the effect's own, explicitly, so a cover colour shown before goes back
+        const own = (key: string) => (schema.find((f) => f.key === key)?.default ?? (def.defaultSettings as Record<string, unknown> | undefined)?.[key]) as string | undefined;
+        const out: Record<string, unknown> = { ...rest };
+        for (const key of ['color', 'primaryColor', 'landColor']) {
+            if (key !== 'color' && !schema.some((f) => f.key === key)) continue;
+            const value = resolved ?? own(key);
+            if (value !== undefined) out[key] = value;
+        }
+        return out;
     }
 
     // ---- keeping the row in agreement ---------------------------------------------------------
@@ -261,12 +322,13 @@ export class PanoramaRows {
             if (d.state().row?.stamp !== row.stamp || d.state().row?.effect !== row.effect) d.save({ panorama: row });
             const member = d.state().member !== false;
             this.options.actions?.update(ctx, { label: d.label(), panoramaMember: member } as Partial<BusAction>);
-            const key = JSON.stringify([effect, d.column, row.settings, member]);
+            const settings = effect ? this.effectSettings(effect, row.settings) : row.settings;
+            const key = JSON.stringify([effect, d.column, settings, member]);
             if (this.applied.get(ctx) === key) continue;
             this.applied.set(ctx, key);
             if (effect) {
-                this.panorama.join(ctx, device, d.column, effect, row.settings, d.redraw);
-                this.panorama.updateSettings(ctx, row.settings);
+                this.panorama.join(ctx, device, d.column, effect, settings, d.redraw);
+                this.panorama.updateSettings(ctx, settings);
             } else this.panorama.leave(ctx);
             d.redraw();
         }

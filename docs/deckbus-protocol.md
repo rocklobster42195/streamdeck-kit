@@ -107,8 +107,9 @@ Names that everyone can use the same way. Anything specific to one plugin is pre
 |---|---|---|
 | state | `status` | `{ "online": boolean, "detail"?: string }`: whether the peer's own device or service is reachable. |
 | state | `streams` | Streams the peer offers: `[{ "topic": "meters/ch09", "label": "Sonos", "stereo": true }]`. `"input": true` marks a microphone or other input; plugins that move with music leave those out. |
-| state | `actions` | The peer's visible actions: `[{ "device", "column", "row", "controller": "Keypad" \| "Encoder", "action", "effect"?, "label"?, "panoramaMember"? }]` (see below). |
+| state | `actions` | The peer's visible actions: `[{ "device", "column", "row", "controller": "Keypad" \| "Encoder", "action", "effect"?, "label"?, "panoramaMember"?, "liveColor"? }]` (see below). |
 | state | `panorama-rows` | The newest Panorama row the peer knows per device: `{ "<device>": { "effect", "settings": {…}, "stamp" } }` (see panorama). |
+| state | `covers` | The colour of what each player plays, from music plugins: `[{ "player", "name", "color": "#RRGGBB", "playing": boolean, "since": ms }]` (see covers). |
 | state | `mic` | `{ "muted": boolean }`: the state of the computer's default microphone, from a peer that controls it (SA-C). |
 | topic | `panorama/<device>/<column>` | One dial's slice of a shared Panorama: an SVG fragment (string, 200 × 100, no outer `<svg>`), one per effect tick, from the peer that leads the group (see below). |
 | topic | `panorama-in/<device>/<column>` | What a following dial puts into a shared Panorama: `{ "settings": {…}, "live": {…}, "level"?: 0..1 }`, to the peer that leads the group (see below). |
@@ -130,14 +131,29 @@ Where a peer's actions are visible right now, so plugins can tell who sits next 
 ```
 
 - `device` is the Stream Deck device id, `column` and `row` the position, `action` the action's UUID.
-- `effect`: the Panorama effect the action shows, if any. `label`: a short name for the dial (a channel, a player). `panoramaMember`: false when the dial doesn't show its row's effect. Peers may add other fields.
+- `effect`: the Panorama effect the action shows, if any. `label`: a short name for the dial (a channel, a player). `panoramaMember`: false when the dial doesn't show its row's effect. `liveColor`: the colour the dial puts into its row's effect from outside right now (e.g. a lamp's colour), which wins over the row's colour. Peers may add other fields.
 - Only actions on a page that is visible now; not those inside multi-actions. The list changes when the user switches pages, adds or moves actions.
 - Neighbours are actions on the same device and of the same controller kind next to each other: left and right, and for keys also up and down.
+
+### covers
+
+The colour of what is playing, so other plugins can use it (a Panorama row's colour, later a key's "on" colour) without their own music source.
+
+```json
+{"t":"state","key":"covers","value":[
+  {"player":"RINCON_38…","name":"Herrenzimmer","color":"#d9643a","playing":true,"since":1759500000000}
+]}
+```
+
+- One entry per player the peer knows. `color` is already readable on black (the sender raises the cover's accent colour to a minimum brightness and saturation), so every peer shows the same colour.
+- `since` is when the player last started playing; it stays while paused. The **active player** across all peers is the one playing with the highest `since`; when none plays, the one with the highest `since`.
+- A choice of colour is written as `cover` (the active player), `cover:<peer name>/<player>` (one player of one peer), `#RRGGBB` (fixed) or `default` (the effect's own colour).
 
 ### panorama
 
 One Panorama effect across adjacent dials of different plugins.
 
+- **The row's colour** is the row setting `rowColor`, a colour choice as in covers (default `cover`). Every peer turns it into the effect's colour fields (`color`, and `primaryColor` / `landColor` where the effect has them) from all peers' `covers`; without a colour the effect's own. Live colours from a dial still win.
 - **One effect per row:** all dials of a device form a row with one effect (`effect` "none" for none) and one set of `settings`. Every peer publishes the newest row it knows in `panorama-rows`; a row with a higher `stamp` (ms) wins and is taken over by every peer (the latest choice wins). A dial that doesn't take part (`panoramaMember: false`) stays in the group but draws nothing. Other peers' dials are checked or unchecked with the request `panorama-member`.
 - **Groups** are worked out by every peer the same way from all `actions`: dials (`"controller": "Encoder"`) on the same `device` in adjacent columns with the same `effect` form one group, whichever peer they belong to.
 - The peer with the group's **leftmost** dial **leads**: it runs the effect over the whole group (its width is all of the group's displays) and publishes every other peer's dial slice on `panorama/<device>/<column>`, one message per effect tick (the latest one wins for a slow subscriber). Settings are merged per key: **live** settings (from outside sources, e.g. a colour or speed from a Home Assistant entity) win over picked ones; within each, the leftmost dial that sets a key wins. The group moves with the highest `level`.
