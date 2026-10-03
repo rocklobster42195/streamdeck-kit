@@ -39,8 +39,8 @@ export type ListStripView = {
     previousMarked?: number;
     /** Short overlay at the top (e.g. the breadcrumb after changing level). */
     overlay?: { text: string; alpha: number };
-    /** Scroll the marked row's title when it doesn't fit. */
-    marquee?: { id: string; startedAt: number; now: number };
+    /** Scroll the marked row's title when it doesn't fit; `offset` from a MarqueeStepper. */
+    marquee?: { id: string; offset: number };
     /** Instead of rows: placeholders while loading, or one sentence (empty, error). */
     state?: 'loading' | { message: string };
 };
@@ -49,8 +49,8 @@ export const LIST_ROW_H = 40;
 const COVER = 32;
 const DIM = 0.5;
 /** Same pace as the track dials' titles (40 px/s read as too fast on hardware, 2026-10-03). */
-const MARQUEE_SPEED = 25;
-const MARQUEE_PAUSE_MS = 1500;
+export const LIST_MARQUEE_SPEED = 25;
+export const LIST_MARQUEE_PAUSE_MS = 1500;
 
 /** Title width available in a row (for deciding whether it needs a marquee). */
 export function listTitleWidth(row: ListRow, showImages = true): number {
@@ -102,7 +102,7 @@ function row(v: ListStripView, r: ListRow, i: number, top: number): string {
     if (r.subtitle) {
         const baseline = top + 18;
         if (i === v.marked && v.marquee) {
-            p.push(marqueeSvg({ id: `${v.marquee.id}-${i}`, text: r.title, x, y: baseline, width, fontSize: 13, weight: 'bold', color, startedAt: v.marquee.startedAt, now: v.marquee.now, speed: MARQUEE_SPEED, pauseMs: MARQUEE_PAUSE_MS }));
+            p.push(marqueeSvg({ id: `${v.marquee.id}-${i}`, text: r.title, x, y: baseline, width, fontSize: 13, weight: 'bold', color, startedAt: 0, now: 0, offset: v.marquee.offset }));
         } else {
             p.push(text(x, baseline, r.title, { size: 13, weight: 'bold', color, maxWidth: width }));
         }

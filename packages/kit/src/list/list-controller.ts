@@ -3,8 +3,9 @@
 // answers push/touch itself (`marked` is the selected row).
 import type { FrameTicker } from '../render/animation.js';
 import { frames as sharedFrames } from '../render/frames.js';
-import { marqueeNeeded } from '../render/marquee.js';
-import { listStrip, listTitleWidth, type ListStripView } from './list-strip.js';
+import { MarqueeStepper, marqueeNeeded } from '../render/marquee.js';
+import { measureArialWidth } from '../render/text-width.js';
+import { LIST_MARQUEE_PAUSE_MS, LIST_MARQUEE_SPEED, listStrip, listTitleWidth, type ListStripView } from './list-strip.js';
 import { ScrollList, type ScrollListOptions } from './scroll-list.js';
 
 export type ListControllerOptions = ScrollListOptions & {
@@ -30,9 +31,10 @@ export class ListController {
     private lastMarked = -1;
     private previousMarked = -1;
     private markedAt = 0;
-    private restSince = 0;
     private overlay?: { text: string; at: number };
     private marqueeOn = false;
+    /** Counted marquee steps: a late frame shows the next step instead of jumping. */
+    private readonly stepper = new MarqueeStepper(LIST_MARQUEE_SPEED, LIST_MARQUEE_PAUSE_MS);
 
     constructor(private readonly o: ListControllerOptions) {
         this.model = new ScrollList(o);
@@ -55,7 +57,7 @@ export class ListController {
     reset(length: number, index = 0, overlay?: string): void {
         this.model.reset(length, index);
         this.lastMarked = this.previousMarked = -1;
-        this.restSince = this.clock();
+        this.stepper.reset();
         this.overlay = overlay ? { text: overlay, at: this.clock() } : undefined;
         this.animate(false);
     }
@@ -82,8 +84,7 @@ export class ListController {
             this.markedAt = this.previousMarked < 0 ? 0 : now;
         }
         const moving = this.model.moving;
-        if (moving) this.restSince = 0;
-        else if (!this.restSince) this.restSince = now;
+        if (moving) this.stepper.reset();
 
         const fadeMs = this.o.markerFadeMs ?? 160;
         const markerAlpha = this.markedAt ? Math.min(1, (now - this.markedAt) / fadeMs) : 1;
@@ -99,7 +100,7 @@ export class ListController {
             markerAlpha,
             previousMarked: markerAlpha < 1 ? this.previousMarked : undefined,
             overlay: this.overlayNow(now),
-            marquee: this.marqueeOn ? { id: this.o.id, startedAt: this.restSince, now } : undefined,
+            marquee: this.marqueeOn && row ? { id: this.o.id, offset: this.stepper.offset(measureArialWidth(row.title, 13)) } : undefined,
         });
     }
 
@@ -132,6 +133,7 @@ export class ListController {
     private animate(now = true): void {
         if (now) this.o.redraw();
         this.ticker.run(this.tickerId, () => {
+            if (this.marqueeOn) this.stepper.tick();
             this.o.redraw();
             return this.busy();
         });
