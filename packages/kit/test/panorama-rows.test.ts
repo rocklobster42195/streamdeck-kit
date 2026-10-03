@@ -120,3 +120,21 @@ describe('Panorama per row', () => {
         expect(panorama.engine.isActive('a')).toBe(false);
     });
 });
+
+describe('PanoramaRows tuning', () => {
+    it('turns a range value of the row, clamped, and lists the tunables', async () => {
+        const { PanoramaRows } = await import('../src/panorama/rows.js');
+        const { SharedPanorama } = await import('../src/panorama/shared.js');
+        const { PanoramaEngine } = await import('../src/panorama/engine.js');
+        const rows = new PanoramaRows(new SharedPanorama(new PanoramaEngine({ defaultColor: '#fff' })), { name: 'T' });
+        let saved: Record<string, unknown> = {};
+        rows.add('a', { device: 'd', column: 0, label: () => 'A', state: () => ({ row: { effect: 'particles', settings: {}, stamp: 1 }, member: true }), save: (p) => (saved = { ...saved, ...p }), redraw: () => {} });
+        const list = rows.tunables('a');
+        expect(list.map((x) => x.key)).toEqual(['savedDensity', 'savedSpeed']);
+        const before = list[0].value;
+        expect(rows.tune('a', 'savedDensity', 3)).toBe(before + 3);
+        expect(rows.rowOf('d').settings.savedDensity).toBe(before + 3);
+        expect(rows.tune('a', 'savedDensity', 100000)).toBe(list[0].max);
+        expect(rows.tune('a', 'nope', 1)).toBeUndefined();
+    });
+});

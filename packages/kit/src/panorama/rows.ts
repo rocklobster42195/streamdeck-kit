@@ -178,6 +178,35 @@ export class PanoramaRows {
         this.refresh(device);
     }
 
+    /**
+     * The values of the row's effect a dial can turn (its range fields, e.g. particle density and
+     * speed), with their current value. Works whoever runs the effect (also for a dial that follows
+     * another plugin's), since turning changes the row (see tune).
+     */
+    tunables(context: string): { key: string; label: string; control?: string; min: number; max: number; value: number }[] {
+        const d = this.dials.get(context);
+        const effect = d ? this.effectOf(context) : undefined;
+        if (!d || !effect) return [];
+        const row = this.rowOf(d.device);
+        return (effectRegistry.get(effect)?.settingsSchema ?? []).flatMap((f) =>
+            f.type === 'range' ? [{ key: f.key, label: f.label, control: f.control, min: f.min, max: f.max, value: typeof row.settings[f.key] === 'number' ? (row.settings[f.key] as number) : f.default }] : [],
+        );
+    }
+
+    /** Turn one of the row's values by `ticks` steps (its field's step, else 1/50 of the range); returns the new value. */
+    tune(context: string, key: string, ticks: number): number | undefined {
+        const d = this.dials.get(context);
+        const effect = d ? this.effectOf(context) : undefined;
+        const field = effect ? effectRegistry.get(effect)?.settingsSchema?.find((f) => f.key === key) : undefined;
+        if (!d || !field || field.type !== 'range') return undefined;
+        const cur = this.rowOf(d.device).settings[key];
+        const step = field.step ?? (Number.isInteger(field.min) && Number.isInteger(field.max) ? 1 : (field.max - field.min) / 50);
+        const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+        const next = Number(Math.min(field.max, Math.max(field.min, (typeof cur === 'number' ? cur : field.default) + ticks * step)).toFixed(decimals));
+        this.setRow(d.device, { settings: { [key]: next } });
+        return next;
+    }
+
     /** Check or uncheck a dial of the row: ours directly, another plugin's through the bus. */
     async setMember(device: string, column: number, member: boolean): Promise<void> {
         if (this.setOwnMember(device, column, member)) return;
