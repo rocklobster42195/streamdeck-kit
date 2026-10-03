@@ -28,6 +28,8 @@ export type MarqueeOptions = {
     pauseMs?: number;
     /** Redraw interval the text moves in (ms). */
     tickMs?: number;
+    /** A counted offset (e.g. from MarqueeStepper) instead of one from startedAt/now. */
+    offset?: number;
 };
 
 const GAP = 28;
@@ -50,6 +52,44 @@ export function marqueeOffset(textWidth: number, startedAt: number, now: number,
     return Math.floor((t - pauseMs) / tickMs) * step;
 }
 
+/**
+ * Counted marquee steps: every tick() moves the text by whole pixels at a fixed rhythm — n px per
+ * tick, or 1 px every k ticks when slower — and a frame that reaches the device late shows the next
+ * step, not a jump. A time-based offset skips ahead after a late frame, which reads as an
+ * occasional hitch (sonos-controller, hardware 2026-10-03); fractional steps (0.5 px) judder.
+ */
+export class MarqueeStepper {
+    private ticks = 0;
+
+    constructor(
+        /** Pixels per second (rounded to whole pixels per tick). */
+        public speed = 40,
+        /** Still time at the start of every loop (ms). */
+        public pauseMs = 1500,
+        readonly tickMs = MARQUEE_TICK_MS,
+    ) {}
+
+    /** Start over (e.g. a new text). */
+    reset(): void {
+        this.ticks = 0;
+    }
+
+    tick(): void {
+        this.ticks++;
+    }
+
+    /** Offset in px for a text of this width; 0 during the pause at the start of each loop. */
+    offset(textWidth: number): number {
+        const perTick = (this.speed * this.tickMs) / 1000;
+        const px = perTick >= 1 ? Math.round(perTick) : 1;
+        const every = perTick >= 1 ? 1 : Math.max(1, Math.round(1 / Math.max(perTick, 1e-6)));
+        const pauseTicks = Math.round(this.pauseMs / this.tickMs);
+        const loop = pauseTicks + Math.ceil((textWidth + GAP) / px) * every;
+        const t = this.ticks % loop;
+        return t < pauseTicks ? 0 : Math.floor((t - pauseTicks) / every) * px;
+    }
+}
+
 /** SVG fragment: static text if it fits, otherwise two copies scrolling left under a fade mask. */
 export function marqueeSvg(o: MarqueeOptions): string {
     const color = o.color ?? '#ffffff';
@@ -58,8 +98,8 @@ export function marqueeSvg(o: MarqueeOptions): string {
     const textWidth = measureArialWidth(o.text, o.fontSize);
     if (textWidth <= o.width) return `<text x="${o.x}" y="${o.y}" ${attrs}>${text}</text>`;
 
-    const offset = marqueeOffset(textWidth, o.startedAt, o.now, o.speed, o.pauseMs, o.tickMs);
     const cycle = textWidth + GAP;
+    const offset = o.offset !== undefined ? o.offset % cycle : marqueeOffset(textWidth, o.startedAt, o.now, o.speed, o.pauseMs, o.tickMs);
     const safe = o.id.replace(/[^a-zA-Z0-9_-]/g, '_');
     const top = o.y - o.fontSize - 2;
     const h = o.fontSize + 6;

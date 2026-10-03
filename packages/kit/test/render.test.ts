@@ -60,3 +60,32 @@ describe('FrameTicker', () => {
         expect(t.running).toBe(false);
     });
 });
+
+describe('MarqueeStepper', () => {
+    it('moves in whole pixels at a fixed rhythm, slow speeds every few ticks', async () => {
+        const { MarqueeStepper } = await import('../src/render/marquee.js');
+        const slow = new MarqueeStepper(1000 / 150, 0, 80); // 1 px per 150 ms ≈ 0.53 px per 80 ms tick
+        const seen: number[] = [];
+        for (let i = 0; i < 8; i++) {
+            seen.push(slow.offset(300));
+            slow.tick();
+        }
+        expect(seen).toEqual([0, 0, 1, 1, 2, 2, 3, 3]);
+        const fast = new MarqueeStepper(25, 0, 80); // 2 px per tick
+        fast.tick();
+        fast.tick();
+        expect(fast.offset(300)).toBe(4);
+    });
+
+    it('pauses at the start of every loop and restarts on reset', async () => {
+        const { MarqueeStepper } = await import('../src/render/marquee.js');
+        const m = new MarqueeStepper(25, 160, 80); // two pause ticks
+        m.tick();
+        expect(m.offset(100)).toBe(0);
+        m.tick();
+        m.tick();
+        expect(m.offset(100)).toBe(2);
+        m.reset();
+        expect(m.offset(100)).toBe(0);
+    });
+});
