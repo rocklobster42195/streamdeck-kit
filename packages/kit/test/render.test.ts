@@ -89,3 +89,16 @@ describe('MarqueeStepper', () => {
         expect(m.offset(100)).toBe(0);
     });
 });
+
+describe('nowPlayingCard', () => {
+    it('shows the source when there is one, else title and artist, always the hint', async () => {
+        const { nowPlayingCard } = await import('../src/render/now-playing-card.js');
+        const dec = (u: string) => Buffer.from(u.split(',')[1], 'base64').toString();
+        const src = dec(nowPlayingCard({ title: 'T', source: { kind: 'Playlist', name: 'Evening', track: 'Song · Band' }, hint: 'Turn' }));
+        expect(src).toContain('Evening');
+        expect(src).toContain('Turn');
+        const plain = dec(nowPlayingCard({ title: 'Song', artist: 'Band', hint: 'Turn', cover: 'data:image/png;base64,AA' }));
+        expect(plain).toContain('Band');
+        expect(plain).toContain('data:image/png;base64,AA');
+    });
+});
