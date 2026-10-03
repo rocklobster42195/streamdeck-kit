@@ -32,7 +32,11 @@ describe('open ring gauge', () => {
         const plain = openRing({ cx: 72, cy: 74, r: 54, min: 400, max: 2000, value: 600, zones }).join('');
         expect(plain).not.toContain('opacity="0.3"');
         const banded = openRing({ cx: 72, cy: 74, r: 54, min: 400, max: 2000, value: 600, zones, zoneOpacity: 0.3 }).join('');
-        expect(banded.match(/opacity="0.3"/g)?.length).toBe(3);
-        expect(banded).toContain('stroke="#ff0000" stroke-width="6" stroke-linecap="round" opacity="0.3"');
+        // One faded group of opaque bands (no darker overlaps), square where they meet, round at the ends
+        expect(banded.match(/opacity="0.3"/g)?.length).toBe(1);
+        expect(banded).toContain('<g opacity="0.3">');
+        expect(banded).toContain('stroke="#00ff00" stroke-width="6" stroke-linecap="round"');
+        expect(banded).toContain('stroke="#ffff00" stroke-width="6" stroke-linecap="butt"');
+        expect(banded).toContain('<circle');
     });
 });
