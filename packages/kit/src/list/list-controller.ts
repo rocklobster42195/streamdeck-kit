@@ -50,6 +50,11 @@ export class ListController {
         return this.model.length;
     }
 
+    /** The row the list is moving to (or resting on). */
+    get index(): number {
+        return this.model.index;
+    }
+
     /**
      * New content (e.g. a level opened): jump to `index`; `overlay` shows briefly at the top. Safe to
      * call from inside the plugin's render (it doesn't redraw synchronously).
