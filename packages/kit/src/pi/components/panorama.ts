@@ -74,7 +74,7 @@ export class PiPanorama extends HTMLElement {
             if (!d) return `<div class="pi-pano-cell pi-pano-empty"><span class="pi-hint">${escapeHtml(t('kit.panorama_empty'))}</span></div>`;
             return `<label class="pi-pano-cell${d.self ? ' pi-pano-self' : ''}">
                 <input type="checkbox" data-column="${column}" ${d.member ? 'checked' : ''} ${info.effect === NONE ? 'disabled' : ''}/>
-                <span class="pi-pano-plugin">${escapeHtml(d.self ? t('kit.panorama_this') : d.plugin)}</span>
+                <span class="pi-pano-plugin">${escapeHtml(d.plugin)}</span>
                 <span class="pi-pano-label">${escapeHtml(d.label || d.plugin)}</span>
             </label>`;
         });
