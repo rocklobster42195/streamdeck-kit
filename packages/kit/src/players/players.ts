@@ -7,6 +7,11 @@ import type { DeckBus, PeerInfo } from '../bus/bus.js';
 
 export const PLAYERS_KEY = 'players';
 export const TRANSPORT_METHOD = 'transport';
+/**
+ * How long a transport command may take: longer than the bus's usual 3 s, since a device may have
+ * to wake up first (seen 2026-10-04: play/pause on an idle SHIELD through Music Assistant).
+ */
+export const TRANSPORT_TIMEOUT_MS = 10_000;
 
 export type PlayerKind = 'speaker' | 'app';
 export type RepeatMode = 'off' | 'all' | 'one';
@@ -179,6 +184,7 @@ export class PlayerBoard {
     private own: PlayerEntry[] = [];
     private peers: PeerInfo[] = [];
     private bus: Pick<DeckBus, 'setState' | 'request'> | undefined;
+    private failed: ((t: Transport, e: unknown) => void) | undefined;
     private handler: TransportHandler | undefined;
     private readonly listeners = new Set<() => void>();
     private last = '';
@@ -190,11 +196,16 @@ export class PlayerBoard {
         this.bus = bus;
         bus.handle(
             TRANSPORT_METHOD,
-            (params) => {
+            async (params) => {
                 if (!this.handler) throw new Error('transport: no players here');
                 const t = parseTransport(params);
                 if (!this.own.some((e) => e.player === t.player)) throw new Error(`transport: unknown player ${t.player}`);
-                return this.handler(t) ?? null;
+                try {
+                    return (await this.handler(t)) ?? null;
+                } catch (e) {
+                    this.failed?.(t, e);
+                    throw e;
+                }
             },
             o.allow ?? (() => true),
         );
@@ -217,8 +228,9 @@ export class PlayerBoard {
     }
 
     /** Carries out commands for this plugin's own players (from its own keys and from other plugins). */
-    serve(handler: TransportHandler): void {
+    serve(handler: TransportHandler, o: { failed?: (t: Transport, e: unknown) => void } = {}): void {
         this.handler = handler;
+        this.failed = o.failed;
     }
 
     /** Every player of the deck, merged by device (and by app), ours first. */
@@ -269,7 +281,7 @@ export class PlayerBoard {
             return this.handler(t);
         }
         if (!this.bus) throw new Error('transport: not on the bus');
-        return this.bus.request(route.peer, TRANSPORT_METHOD, t);
+        return this.bus.request(route.peer, TRANSPORT_METHOD, t, TRANSPORT_TIMEOUT_MS);
     }
 
     /** Called whenever the deck's players change. */
