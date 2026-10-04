@@ -121,6 +121,23 @@ describe('Panorama per row', () => {
     });
 });
 
+describe('PanoramaRows row colour for keys', () => {
+    it('resolves the row colour, also for a device with only other plugins’ dials, and tells listeners', () => {
+        const { rows, add } = setup();
+        const { bus, peers } = fakeBus();
+        rows.connect(bus);
+        let calls = 0;
+        rows.onRowColor(() => calls++);
+        add('a', 0);
+        rows.setRow('deck', { settings: { rowColor: '#112233' } });
+        expect(rows.rowColor('deck')).toBe('#112233');
+        expect(calls).toBeGreaterThan(0);
+        peers([peer('MA-C', { other: { effect: 'particles', settings: { rowColor: '#445566' }, stamp: 5 } })]);
+        expect(rows.rowColor('other')).toBe('#445566');
+        expect(rows.rowColor('nobody')).toBeUndefined();
+    });
+});
+
 describe('PanoramaRows tuning', () => {
     it('turns a range value of the row, clamped, and lists the tunables', async () => {
         const { PanoramaRows } = await import('../src/panorama/rows.js');

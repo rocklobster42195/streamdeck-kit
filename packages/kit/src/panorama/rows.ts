@@ -110,6 +110,7 @@ export class PanoramaRows {
     private peers: PeerInfo[] = [];
     private pi: RowsPiBridge | undefined;
     private published = '';
+    private readonly colorListeners = new Set<() => void>();
     /** The players' cover colours on the bus (a music plugin passes its own board and publishes into it). */
     readonly covers: CoverBoard;
 
@@ -183,6 +184,24 @@ export class PanoramaRows {
     /** The row on a device (Particles until someone chooses). */
     rowOf(device: string): PanoramaRow {
         return this.rows.get(device) ?? { effect: this.options.defaultEffect ?? DEFAULT_EFFECT_ID, settings: {}, stamp: 0 };
+    }
+
+    /**
+     * The row colour of a Stream Deck, resolved (a key's "Like the Panorama" colour, grill
+     * 2026-10-04): the row's colour choice turned into a colour, also on a device where this plugin
+     * has no dial (then the row as the other plugins share it). Undefined: the effect's own colour.
+     */
+    rowColor(device: string): string | undefined {
+        let row = this.rows.get(device);
+        for (const peer of this.peers) row = newer(row, (peer.state[STATE_KEY] as Record<string, PanoramaRow> | undefined)?.[device]);
+        const choice = row?.settings[ROW_COLOR_KEY];
+        return this.covers.resolve(typeof choice === 'string' ? choice : undefined);
+    }
+
+    /** Called when a row colour may have changed (a row, the peers or a cover colour changed). */
+    onRowColor(fn: () => void): () => void {
+        this.colorListeners.add(fn);
+        return () => this.colorListeners.delete(fn);
     }
 
     /** Whether the dial shows the effect (unchecked dials are silent members). */
@@ -305,7 +324,10 @@ export class PanoramaRows {
     }
 
     private refreshAll(): void {
-        for (const device of new Set([...this.dials.values()].map((d) => d.device))) this.refresh(device);
+        const devices = new Set([...this.dials.values()].map((d) => d.device));
+        for (const device of devices) this.refresh(device);
+        // Without own dials no refresh tells the listeners (keys follow other plugins' rows)
+        if (!devices.size) for (const fn of this.colorListeners) fn();
     }
 
     /** The newest row on a device (ours, our dials', the peers'), stored with our dials and run. */
@@ -334,6 +356,7 @@ export class PanoramaRows {
         }
         this.publish();
         this.pi?.schedulePush();
+        for (const fn of this.colorListeners) fn();
     }
 
     private publish(): void {
