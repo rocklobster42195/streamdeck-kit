@@ -11,14 +11,12 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 - **Key colour** `resolveKeyColor(choice, { cover, row })`: `grey` (default), `cover`, `row` or a fixed `#RRGGBB` for a key's icon; `<pi-key-color>` is its PI field (four tiles, the colour picker for Fixed; EN/DE/ES).
 - **One colour per speaker:** a device known to two plugins shows the colour of the plugin that talks to it directly, in `PlayerBoard` and in `CoverBoard` (covers carry `device` and `direct` now).
 
+- **Row colour for keys:** `PanoramaRows.rowColor(device)` resolves a Stream Deck's row colour (also where the plugin has no dial, from the other plugins' rows), `onRowColor()` tells when it may have changed.
+- **Player dropdown** `playerOptions(players)`: "Active player", "Active player, also apps", then every player of the deck (▶ while playing, the plugins that know it), for a `<pi-select>`. `<pi-select>` shows labels starting with `kit.` translated.
+
 ### Fixed
 
 - `readableCoverColor()` keeps near-greys grey: it raised the faint hue of e.g. a pale beige into salmon.
-
-### Added
-
-- **Row colour for keys:** `PanoramaRows.rowColor(device)` resolves a Stream Deck's row colour (also where the plugin has no dial, from the other plugins' rows), `onRowColor()` tells when it may have changed.
-- **Player dropdown** `playerOptions(players)`: "Active player", "Active player, also apps", then every player of the deck (▶ while playing, the plugins that know it), for a `<pi-select>`. `<pi-select>` shows labels starting with `kit.` translated.
 
 ## [0.1.0-alpha.1] — 2026-10-04
 
