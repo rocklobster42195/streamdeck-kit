@@ -12,6 +12,9 @@ import { sd } from '../sd-client.js';
 
 type ParamsFn = () => Record<string, string>;
 
+/** A label from the plugin; "kit.…" keys are the kit's own texts (e.g. "kit.player_active"). */
+const shown = (label: string) => (label.startsWith('kit.') ? t(label) : label);
+
 const paramSets = new Map<string, ParamsFn>();
 const live = new Set<PiSelect>();
 
@@ -98,7 +101,7 @@ export class PiSelect extends HTMLElement {
 
     private choose(item: OptionItem): void {
         const labelKey = this.getAttribute('label-setting');
-        const patch: Record<string, string> = { [this.key]: item.value, ...(labelKey ? { [labelKey]: item.label } : {}) };
+        const patch: Record<string, string> = { [this.key]: item.value, ...(labelKey ? { [labelKey]: shown(item.label) } : {}) };
         if (this.hasAttribute('global')) for (const [k, v] of Object.entries(patch)) sd.setGlobalSetting(k, v);
         else sd.setSettings(patch);
         this.setOpen(false);
@@ -109,7 +112,7 @@ export class PiSelect extends HTMLElement {
         const current = this.items?.find((i) => i.value === value);
         const labelKey = this.getAttribute('label-setting');
         const stored = labelKey ? (this.store[labelKey] as string | undefined) : undefined;
-        const label = current?.label ?? stored ?? (value || t(this.getAttribute('placeholder') ?? 'kit.choose'));
+        const label = (current && shown(current.label)) ?? stored ?? (value || t(this.getAttribute('placeholder') ?? 'kit.choose'));
         const button = this.querySelector<HTMLElement>('.pi-select-button')!;
         button.setAttribute('aria-expanded', String(this.open));
         const sub = current?.sub ? `<span class="pi-option-sub">${escapeHtml(current.sub)}</span>` : '';
@@ -130,7 +133,7 @@ export class PiSelect extends HTMLElement {
             .map((i, n) => {
                 const itemSub = i.sub ? `<span class="pi-option-sub">${escapeHtml(i.sub)}</span>` : '';
                 const check = i.value === value ? icon('check', 14) : '';
-                return `<button type="button" class="pi-option" role="option" data-n="${n}" aria-selected="${i.value === value}">${picture(i.image)}<span class="pi-select-text"><span class="pi-label">${escapeHtml(i.label)}</span>${itemSub}</span><span class="pi-option-check">${check}</span></button>`;
+                return `<button type="button" class="pi-option" role="option" data-n="${n}" aria-selected="${i.value === value}">${picture(i.image)}<span class="pi-select-text"><span class="pi-label">${escapeHtml(shown(i.label))}</span>${itemSub}</span><span class="pi-option-check">${check}</span></button>`;
             })
             .join('');
         list.querySelectorAll<HTMLElement>('.pi-option').forEach((el) => el.addEventListener('click', () => this.choose(this.items![Number(el.dataset.n)])));

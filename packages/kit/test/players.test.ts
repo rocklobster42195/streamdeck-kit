@@ -7,7 +7,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DeckBus, type PeerInfo } from '../src/bus/index.js';
 import { CoverBoard } from '../src/panorama/covers.js';
-import { KEY_GREY, PlayerBoard, SeekStepper, parseTransport, positionNow, resolveKeyColor, type PlayerEntry, type Transport } from '../src/players/index.js';
+import { KEY_GREY, PlayerBoard, SeekStepper, parseTransport, playerOptions, positionNow, resolveKeyColor, type PlayerEntry, type Transport } from '../src/players/index.js';
 
 const peer = (name: string, players: PlayerEntry[], slot = 1): PeerInfo => ({ id: `id.${name}`, name, version: '1', caps: [], slot, protocol: 1, state: { players } }) as unknown as PeerInfo;
 const speaker = (player: string, o: Partial<PlayerEntry> = {}): PlayerEntry => ({ player, name: player, kind: 'speaker', playing: false, since: 0, ...o });
@@ -99,6 +99,19 @@ describe('PlayerBoard', () => {
         expect(requests[0][1]).toBe('transport');
         expect(requests[0][2]).toEqual({ player: 'shield', command: 'volume', value: 20 });
         await expect(board.send('device:gone', 'next')).rejects.toThrow(/no such player/);
+    });
+
+    it('the dropdown: active entries first, then every player with the plugins that know it', () => {
+        const board = new PlayerBoard('SO-C');
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', name: 'Bad', direct: true, playing: true, since: 1 })]);
+        board.setPeers([peer('MA-C', [speaker('ma-bad', { device: 'RINCON_1', name: 'Bad' })]), peer('SA-C', [{ player: 's', name: 'Spotify', kind: 'app', app: 'Spotify', playing: false, since: 0 }])]);
+        expect(playerOptions(board.players())).toEqual([
+            { value: 'active', label: 'kit.player_active' },
+            { value: 'active:all', label: 'kit.player_active_all' },
+            { value: 'device:RINCON_1', label: '▶ Bad', sub: 'SO-C · MA-C' },
+            { value: 'app:Spotify', label: 'Spotify', sub: 'SA-C' },
+        ]);
+        expect(playerOptions(board.players(), { kind: 'speaker' }).map((o) => o.value)).toEqual(['active', 'device:RINCON_1']);
     });
 
     it('tells listeners only about real changes', () => {

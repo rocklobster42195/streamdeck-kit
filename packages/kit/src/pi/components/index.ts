@@ -7,6 +7,7 @@
 //   <pi-field setting="maToken" global type="password" label="pi.token"></pi-field>
 //   <pi-select setting="source" source="player-sources" with="player"></pi-select>   (list from the plugin)
 //   <pi-icon-picker setting="icon" default-icon="mdiBullhorn"></pi-icon-picker>
+//   <pi-key-color setting="keyColor"></pi-key-color>   (a key's colour: grey, cover, like the Panorama, fixed)
 //   <pi-panorama [summary]></pi-panorama>   (the Panorama of the dial's row, see panorama/rows.ts)
 //   <pi-more ready-when="entityId"></pi-more>   (the short PI's button into the settings window, see window.ts)
 //   <pi-thresholds setting="thresholds" base-setting="color" unit="°C" min-setting="min" max-setting="max"></pi-thresholds>
@@ -17,6 +18,7 @@ import { PiColor } from './color.js';
 import { PiSwatch } from './swatch.js';
 import { PiField } from './field.js';
 import { PiIconPicker } from './icon-picker.js';
+import { PiKeyColor } from './key-color.js';
 import { PiMore } from './more.js';
 import { PiPanorama } from './panorama.js';
 import { PiRange } from './range.js';
@@ -30,6 +32,7 @@ export { PiColor } from './color.js';
 export { closeColorPopover, openColorPopover, type ColorPopoverOptions } from './color-popover.js';
 export { PiField } from './field.js';
 export { PiIconPicker } from './icon-picker.js';
+export { PiKeyColor } from './key-color.js';
 export { PiMore } from './more.js';
 export { PiPanorama } from './panorama.js';
 export { PiRange } from './range.js';
@@ -49,6 +52,7 @@ export function definePiComponents(): void {
     // The swatch first: pi-color and pi-thresholds put swatches into their markup
     if (!customElements.get('pi-swatch')) customElements.define('pi-swatch', PiSwatch);
     if (!customElements.get('pi-color')) customElements.define('pi-color', PiColor);
+    if (!customElements.get('pi-key-color')) customElements.define('pi-key-color', PiKeyColor);
     if (!customElements.get('pi-select')) customElements.define('pi-select', PiSelect);
     if (!customElements.get('pi-icon-picker')) customElements.define('pi-icon-picker', PiIconPicker);
     if (!customElements.get('pi-thresholds')) customElements.define('pi-thresholds', PiThresholds);

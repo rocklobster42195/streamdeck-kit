@@ -132,6 +132,24 @@ function merge(id: string, routes: PlayerRoute[]): Player {
     };
 }
 
+/** An entry of the player dropdown (the PI's <pi-select>, see PiBridge.registerOptions). */
+export type PlayerOption = { value: string; label: string; sub?: string };
+
+/**
+ * The player dropdown: "Active player", "Active player, also apps", then every player of the deck
+ * (▶ while playing; second line: the plugins that know it). The active entries' labels are kit
+ * texts the PI translates. `kind` limits the list (e.g. "speaker" for a key that can't control apps).
+ */
+export function playerOptions(players: Player[], o: { kind?: PlayerKind } = {}): PlayerOption[] {
+    const out: PlayerOption[] = [{ value: ACTIVE_PLAYER, label: 'kit.player_active' }];
+    if (o.kind !== 'speaker') out.push({ value: ACTIVE_ANY_PLAYER, label: 'kit.player_active_all' });
+    for (const p of players) {
+        if (o.kind && p.kind !== o.kind) continue;
+        out.push({ value: p.id, label: `${p.playing ? '▶ ' : ''}${p.name}`, sub: [...new Set(p.routes.map((r) => r.source))].join(' · ') });
+    }
+    return out;
+}
+
 function valid(e: unknown): e is PlayerEntry {
     const p = e as PlayerEntry;
     return !!p && typeof p.player === 'string' && typeof p.name === 'string' && typeof p.playing === 'boolean' && typeof p.since === 'number';
