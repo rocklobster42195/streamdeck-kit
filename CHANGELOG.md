@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.2] — 2026-10-04
+
 ### Added
 
 - **Players on deckbus** (grill 2026-10-04): state `players` (a superset of `covers`: device, kind speaker/app, title, cover, position, volume, shuffle/repeat, what the player can do) and request `transport` (play/pause, next, previous, seek, volume, mute, shuffle, repeat), accepted by default and switchable per plugin; up to 10 s for an answer (a device may have to wake up). `PlayerBoard` publishes a plugin's players, merges everyone's by device (commands and the colour from the plugin that talks to the device directly, except seek, next, previous, shuffle and repeat, which go to the plugin whose media plays; title and cover from that one too), finds a key's player by its choice (`active`, `active:all`, `device:…`, `app:…`, `<plugin>/<player>`) and sends commands, to its own players directly and to others over the bus. `positionNow()` counts a playing position on. `CoverBoard` reads colours from `players` too.
