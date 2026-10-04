@@ -9,6 +9,8 @@
 import type { DeckBus, PeerInfo } from '../bus/bus.js';
 
 export const COVERS_KEY = 'covers';
+/** The "players" state (players/players.ts), read here for its colours. */
+const PLAYERS_STATE = 'players';
 
 /** One player as a music plugin publishes it. */
 export type CoverEntry = {
@@ -62,7 +64,9 @@ export class CoverBoard {
     sources(): CoverSource[] {
         const out: CoverSource[] = this.own.map((e) => ({ ...e, source: this.name, id: `${this.name}/${e.player}` }));
         for (const peer of this.peers) {
-            const list = peer.state[COVERS_KEY];
+            // A peer with "players" (a superset, docs "players") is read from there; older ones from "covers"
+            const players = peer.state[PLAYERS_STATE];
+            const list = Array.isArray(players) ? players : peer.state[COVERS_KEY];
             if (!Array.isArray(list)) continue;
             for (const e of list as CoverEntry[]) {
                 if (e && typeof e.player === 'string' && typeof e.color === 'string') out.push({ ...e, source: peer.name, id: `${peer.name}/${e.player}` });

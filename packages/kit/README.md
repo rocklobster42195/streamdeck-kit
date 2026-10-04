@@ -163,6 +163,27 @@ bus.broadcast("alert", { text: "Doorbell" });
 - **Stream data:** the latest value wins when a peer is slow; nothing piles up.
 - **Tools in the repository:** `tools/bus-monitor.mjs` shows who is on the bus and what they send; `tools/bus-fake-meters.mjs` is a fake meter source for testing.
 
+### Players
+
+Media keys that work with any player on the deck: every plugin publishes what it can play (speakers, apps), and a key picks a player or "the active player", not a plugin. One device known to two plugins (a Sonos speaker seen directly and through Music Assistant) is one player: commands go to the plugin that talks to it directly, title and cover come from the one whose media plays.
+
+```ts
+import { PlayerBoard, SeekStepper, positionNow, resolveKeyColor } from "@rocklobster42195/streamdeck-kit";
+
+const players = new PlayerBoard("SO-C");
+players.connect(bus, { allow: () => settings.othersMayControl !== false }); // "transport" is on by default
+players.serve(({ player, command, value }) => speakers.get(player)?.run(command, value)); // own players, from own keys and other plugins
+players.publish([{ player: "RINCON_…", device: "RINCON_…", name: "Bad", kind: "speaker", direct: true, playing: true, since: Date.now(), color: "#d9643a", can: ["play-pause", "next", "seek"] }]);
+
+const p = players.resolve(keySettings.player ?? "active"); // "active", "active:all", "device:…", "app:Spotify", "MA-C/shield"
+await players.send(p, "play-pause");
+
+// Next/Previous key: a long press switches to seeking, quick taps add up to one seek
+const seek = new SeekStepper({ position: () => positionNow(p), duration: () => p.duration, seek: (s) => players.send(p, "seek", s), onChange: redraw });
+
+const icon = resolveKeyColor(keySettings.color, { cover: p?.color, row: rowColour }); // "grey" | "cover" | "row" | "#RRGGBB"
+```
+
 ## Icon catalog (`/mdi`)
 
 `@rocklobster42195/streamdeck-kit/mdi` provides `searchMdi(query)`, `mdiPath(name)` and `mdiLabel(name)` over all [Material Design Icons](https://pictogrammers.com/library/mdi/), so users can pick any icon for a key. It imports the whole icon set, which adds about 3 MB to the plugin bundle. That is why it has its own entry point.

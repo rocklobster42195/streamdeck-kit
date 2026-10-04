@@ -110,10 +110,12 @@ Names that everyone can use the same way. Anything specific to one plugin is pre
 | state | `actions` | The peer's visible actions: `[{ "device", "column", "row", "controller": "Keypad" \| "Encoder", "action", "effect"?, "label"?, "panoramaMember"?, "liveColor"? }]` (see below). |
 | state | `panorama-rows` | The newest Panorama row the peer knows per device: `{ "<device>": { "effect", "settings": {…}, "stamp" } }` (see panorama). |
 | state | `covers` | The colour of what each player plays, from music plugins: `[{ "player", "name", "color": "#RRGGBB", "playing": boolean, "since": ms }]` (see covers). |
+| state | `players` | What each peer can play and control: `[{ "player", "device"?, "name", "kind", … }]` (see players). Replaces `covers`. |
 | state | `mic` | `{ "muted": boolean }`: the state of the computer's default microphone, from a peer that controls it (SA-C). |
 | topic | `panorama/<device>/<column>` | One dial's slice of a shared Panorama: an SVG fragment (string, 200 × 100, no outer `<svg>`), one per effect tick, from the peer that leads the group (see below). |
 | topic | `panorama-in/<device>/<column>` | What a following dial puts into a shared Panorama: `{ "settings": {…}, "live": {…}, "level"?: 0..1 }`, to the peer that leads the group (see below). |
 | topic | `meters/<name>` | Audio levels in dBFS with one decimal, about 20 per second: `{ "l": -18.5, "r": -20.1 }`; mono sends only `l`. |
+| request | `transport` | `{ "player", "command", "value"? }`: play/pause, next, seek, volume … on one of the peer's players (see players). |
 | request | `panorama-member` | `{ "device", "column", "member": boolean }`: check or uncheck the peer's dial at that place in its row's Panorama. |
 | request | `duck` | Lower a level for a while: `{ "target", "by" (dB), "rampMs", "maxMs" }`. The receiver restores it on `unduck`, after `maxMs`, or when the sender leaves the bus. |
 | request | `unduck` | `{ "target" }`: end a duck. |
@@ -148,6 +150,54 @@ The colour of what is playing, so other plugins can use it (a Panorama row's col
 - One entry per player the peer knows. `color` is already readable on black (the sender raises the cover's accent colour to a minimum brightness and saturation), so every peer shows the same colour.
 - `since` is when the player last started playing; it stays while paused. The **active player** across all peers is the one playing with the highest `since`; when none plays, the one with the highest `since`.
 - A choice of colour is written as `cover` (the active player), `cover:<peer name>/<player>` (one player of one peer), `#RRGGBB` (fixed) or `default` (the effect's own colour).
+
+### players
+
+What each peer can play, so any plugin's keys can control any player on the deck: an SO-C user who sets up Music Assistant later finds the same keys already working with MA's players (grill 2026-10-04). `players` is a superset of `covers`; a peer that publishes `players` doesn't need `covers` (peers read both while older versions are around).
+
+```json
+{"t":"state","key":"players","value":[
+  {"player":"RINCON_000E58CEAB4401400","device":"RINCON_000E58CEAB4401400","name":"Badezimmer","kind":"speaker","direct":true,
+   "playing":true,"since":1759500000000,"color":"#d9643a","media":true,
+   "title":"Song","artist":"Artist","album":"Album","cover":"http://192.168.7.212:1400/getaa?…",
+   "position":42.5,"duration":215,"at":1759500042500,"volume":12,"muted":false,"shuffle":false,"repeat":"off",
+   "can":["play-pause","next","previous","seek","volume","mute","shuffle","repeat"]}
+]}
+```
+
+- `player` is the peer's own id for it. `device` names the physical device when other peers can know it too (a Sonos speaker's `RINCON_…`; Music Assistant uses the same id for Sonos speakers). Entries of different peers with the same `device` are **one player**.
+- `kind`: `speaker` (a room, a speaker, a group) or `app` (media on this computer, e.g. a Windows media session). For `app`, `app` names the application ("Spotify"), so a choice survives the app restarting.
+- `direct`: the peer talks to the device itself (SO-C for Sonos), not through a server. For one `device`, commands go to a `direct` peer when there is one.
+- `media`: what plays right now comes from this peer (its queue or session). For one `device`, title, cover and position come from the peer with `media` true; else from the one commands go to.
+- `playing` and `since` as in covers (the active player is the one playing with the highest `since`, else the highest `since`); a peer only counts a player as started after about 2 s of real playback. `color` as in covers.
+- `position` and `duration` in seconds, `at` the time (ms) `position` was true, so others can count on while `playing`. Missing `duration`: nothing to seek (radio, a stream).
+- `volume` 0–100, `repeat` `off` | `all` | `one`. A group is one entry (its coordinator), named like "Küche + 2".
+- `can` lists the commands the player takes now; keys grey out what's missing.
+- Missing fields mean unknown. Peers may add their own fields.
+
+A key stores its player as a **player choice**: `active` (the active speaker), `active:all` (the active player including apps), `device:<device>`, `app:<app>`, or `<peer name>/<player>` for one without either.
+
+The `transport` request asks the peer that owns the player to do something:
+
+```json
+{"t":"req","id":9,"method":"transport","params":{"player":"RINCON_000E58CEAB4401400","command":"seek","value":102.5}}
+{"t":"res","id":9,"ok":true}
+```
+
+| command | value |
+|---|---|
+| `play-pause`, `play`, `pause`, `next`, `previous` | — |
+| `seek` | target position in seconds |
+| `volume` | 0–100 |
+| `volume-by` | change in steps, e.g. `-2` |
+| `mute` | boolean |
+| `shuffle` | boolean |
+| `repeat` | `off` \| `all` \| `one` |
+
+- `transport` is **accepted by default** from every peer (only the person at this computer sends it, and it does nothing a remote couldn't). A plugin offers a switch to turn it off ("Other plugins may control my players"); then it answers `not allowed`.
+- Unknown players or commands the player can't take are refused with an error.
+
+The kit implements both sides as `PlayerBoard` (publish, merge by `device`, active player, choices, routing) and `serveTransport()`.
 
 ### panorama
 
