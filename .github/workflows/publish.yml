@@ -45,3 +45,13 @@ jobs:
           fi
           case "$V" in *-alpha.*) TAG=alpha ;; *) TAG=latest ;; esac
           npm publish -w @rocklobster42195/streamdeck-kit --tag "$TAG"
+
+      # While there is no finished version yet, "latest" follows the alphas (so a plain install gets
+      # the newest one); once a finished version is out, alphas leave "latest" alone. Needs "Allow npm
+      # dist-tag" for this workflow's Trusted Publisher on npmjs.com.
+      - name: Move latest along with the alphas
+        run: |
+          V=$(node -p "require('./packages/kit/package.json').version")
+          case "$V" in *-alpha.*) ;; *) exit 0 ;; esac
+          LATEST=$(npm view @rocklobster42195/streamdeck-kit dist-tags.latest 2>/dev/null || true)
+          case "$LATEST" in *-*|"") npm dist-tag add "@rocklobster42195/streamdeck-kit@$V" latest ;; *) echo "::notice::latest stays at $LATEST" ;; esac
