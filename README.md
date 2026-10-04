@@ -2,7 +2,7 @@
 
 Shared building blocks for Stream Deck plugins: rendering, animation, Panorama effects and a property inspector kit. They are carved out of [MA-C (Music Assistant Controller)](https://github.com/rocklobster42195/streamdeck-music-assistant-controller) so that Sonos Controller and the plugins that follow can use the same code.
 
-**Package documentation:** [packages/kit/README.md](packages/kit/README.md), published on npm as [`@rocklobster42195/streamdeck-kit`](https://www.npmjs.com/package/@rocklobster42195/streamdeck-kit).
+**Package documentation:** [packages/kit/README.md](packages/kit/README.md), published on npm as [`@rocklobster42195/streamdeck-kit`](https://www.npmjs.com/package/@rocklobster42195/streamdeck-kit) (alpha: the API still changes often).
 
 This is an unofficial community project. It is not affiliated with or endorsed by Elgato or Corsair.
 

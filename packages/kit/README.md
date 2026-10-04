@@ -9,14 +9,14 @@ Building blocks for [Elgato Stream Deck](https://www.elgato.com/stream-deck) plu
 
 It is used by [MA-C (Music Assistant Controller)](https://github.com/rocklobster42195/streamdeck-music-assistant-controller) and will be used by [Sonos Controller](https://github.com/rocklobster42195/streamdeck-sonos-controller) and the plugins that follow them.
 
-> **Status: early (0.x).** The API follows what these plugins need and may still change between minor versions.
+> **Alpha.** The API changes often and without notice, also between alpha versions. The kit is built for the plugins named above; if you use it in your own plugin, pin an exact version.
 
 This is an unofficial community package. It is not affiliated with or endorsed by Elgato or Corsair.
 
 ## Install
 
 ```sh
-npm install @rocklobster42195/streamdeck-kit
+npm install @rocklobster42195/streamdeck-kit@alpha
 ```
 
 Node 20 or later (the Stream Deck plugin runtime). The package is ESM only.

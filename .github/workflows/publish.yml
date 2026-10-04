@@ -35,11 +35,13 @@ jobs:
             echo "::error::Tag ${GITHUB_REF_NAME} does not match package version $V"; exit 1
           fi
 
-      # 0.1.0 was published by hand (a package needs to exist before Trusted Publishing can be set up)
+      # 0.1.0-alpha.1 was published by hand (a package needs to exist before Trusted Publishing can be set up).
+      # Alpha versions (x.y.z-alpha.n) go under the "alpha" dist-tag, releases under "latest".
       - name: Publish to npm
         run: |
           V=$(node -p "require('./packages/kit/package.json').version")
           if npm view "@rocklobster42195/streamdeck-kit@$V" version >/dev/null 2>&1; then
             echo "::notice::$V is already on npm, nothing to publish"; exit 0
           fi
-          npm publish -w @rocklobster42195/streamdeck-kit
+          case "$V" in *-alpha.*) TAG=alpha ;; *) TAG=latest ;; esac
+          npm publish -w @rocklobster42195/streamdeck-kit --tag "$TAG"

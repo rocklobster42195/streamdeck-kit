@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+First public version, released as an **alpha** (`0.1.0-alpha.1`, npm dist-tag `alpha`): the API still changes often and without notice.
+
 ### Added
 
 - **The row's colour** (grill 2026-10-03): the Panorama section has one colour field for every effect — **Cover** (the active player, or one chosen player), **fixed** or **the effect's own**; the effects' own colour fields don't show any more. It is a row setting (`rowColor`), so it works in a row without a music dial (e.g. only SA-C and XR-C). The colours come from the new deckbus state **`covers`** (`CoverBoard`: music plugins publish their players' colours, everyone resolves a choice; active player = the one that started playing last). A dial's live colour (e.g. HA-C's from a lamp) still wins; the section says where it comes from (`liveColor` in `actions`).

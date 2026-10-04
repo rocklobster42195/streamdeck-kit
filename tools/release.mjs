@@ -2,8 +2,11 @@
 // CHANGELOG's [Unreleased] into a version section, commits, tags v<version> and
 // pushes. The "Publish" workflow then checks and publishes the tag (npm Trusted Publishing, no token).
 //
-//   npm run release:<patch|minor|major>   (or: node tools/release.mjs <bump> [--dry-run])
+//   npm run release:<alpha|patch|minor|major>   (or: node tools/release.mjs <bump> [--dry-run])
 //
+// alpha: 0.1.0-alpha.1 → 0.1.0-alpha.2 (from a release: 0.1.0 → 0.1.1-alpha.1).
+// patch from an alpha drops the label (0.1.0-alpha.3 → 0.1.0); minor/major count from its base.
+// Alpha versions are published under npm's "alpha" dist-tag (see .github/workflows/publish.yml).
 // While no v* tag exists, the version in package.json is released as it is.
 
 import { execSync } from "node:child_process";
@@ -16,8 +19,8 @@ const pkgPath = path.join(root, "packages", "kit", "package.json");
 const changelogPath = path.join(root, "CHANGELOG.md");
 const bump = process.argv[2];
 const dryRun = process.argv.includes("--dry-run");
-if (!["patch", "minor", "major"].includes(bump)) {
-    console.error("Usage: node tools/release.mjs <patch|minor|major> [--dry-run]");
+if (!["alpha", "patch", "minor", "major"].includes(bump)) {
+    console.error("Usage: node tools/release.mjs <alpha|patch|minor|major> [--dry-run]");
     process.exit(1);
 }
 
@@ -29,14 +32,26 @@ if (!dryRun && git("status --porcelain --untracked-files=no")) {
 
 const pkgRaw = fs.readFileSync(pkgPath, "utf8");
 const current = JSON.parse(pkgRaw).version;
-let [a, b, c] = current.split(".").map(Number);
+const [base, pre] = current.split("-");
+let [a, b, c] = base.split(".").map(Number);
+let alpha = pre ? Number(/^alpha\.(\d+)$/.exec(pre)?.[1]) : 0;
+if (Number.isNaN(alpha)) {
+    console.error(`  ❌ Unknown pre-release label in ${current} (expected -alpha.<n>).`);
+    process.exit(1);
+}
 const first = !git("tag --list v*");
 if (!first) {
-    if (bump === "patch") c++;
-    else if (bump === "minor") [b, c] = [b + 1, 0];
-    else [a, b, c] = [a + 1, 0, 0];
+    if (bump === "alpha") {
+        if (pre) alpha++;
+        else [c, alpha] = [c + 1, 1];
+    } else {
+        if (bump === "patch") c = pre ? c : c + 1;
+        else if (bump === "minor") [b, c] = [b + 1, 0];
+        else [a, b, c] = [a + 1, 0, 0];
+        alpha = 0;
+    }
 }
-const version = `${a}.${b}.${c}`;
+const version = `${a}.${b}.${c}${alpha ? `-alpha.${alpha}` : ""}`;
 const tag = `v${version}`;
 console.log(`\nstreamdeck-kit ${current} → ${version} (tag ${tag})${first ? " — first release" : ""}`);
 if (git(`tag --list ${tag}`)) {

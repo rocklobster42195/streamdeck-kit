@@ -13,6 +13,7 @@
         "test": "vitest run",
         "lint": "eslint packages",
         "check": "npm run build && npm test && npm run lint",
+        "release:alpha": "npm run check && node tools/release.mjs alpha",
         "release:patch": "npm run check && node tools/release.mjs patch",
         "release:minor": "npm run check && node tools/release.mjs minor",
         "release:major": "npm run check && node tools/release.mjs major"
