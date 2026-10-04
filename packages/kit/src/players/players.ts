@@ -118,6 +118,10 @@ function merge(id: string, routes: PlayerRoute[]): Player {
         kind: v.kind,
         app: v.app ?? f.app,
         direct: v.direct,
+        // The colour from the plugin that talks to the device directly: plugins work a cover's colour
+        // out differently (SO-C from the image, MA-C from Music Assistant's palette), and the direct
+        // one's dials already show its own (seen 2026-10-04: blue from SO-C, salmon from MA-C)
+        color: v.color ?? f.color,
         playing: routes.some((r) => r.entry.playing),
         since: Math.max(...routes.map((r) => r.entry.since)),
         volume: v.volume ?? f.volume,

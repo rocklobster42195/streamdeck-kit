@@ -38,7 +38,7 @@ describe('positionNow', () => {
 describe('PlayerBoard', () => {
     it('one device seen by two plugins is one player: commands direct, media from whoever plays it', () => {
         const board = new PlayerBoard('SO-C');
-        board.publish([speaker('RINCON_1', { device: 'RINCON_1', name: 'Bad', direct: true, playing: true, since: 5, title: 'Sonos title', volume: 12, can: ['play-pause', 'seek'] })]);
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', name: 'Bad', direct: true, playing: true, since: 5, title: 'Sonos title', color: '#0000ff', volume: 12, can: ['play-pause', 'seek'] })]);
         board.setPeers([peer('MA-C', [speaker('ma-bad', { device: 'RINCON_1', name: 'Badezimmer (MA)', media: true, playing: true, since: 7, title: 'MA title', color: '#ff0000', volume: 99 })])]);
         const [bad, ...rest] = board.players();
         expect(rest).toEqual([]);
@@ -47,7 +47,8 @@ describe('PlayerBoard', () => {
         expect(bad.via.source).toBe('SO-C');
         expect(bad.from.source).toBe('MA-C');
         expect(bad.title).toBe('MA title');
-        expect(bad.color).toBe('#ff0000');
+        // The colour from the direct plugin (the same as its own dials)
+        expect(bad.color).toBe('#0000ff');
         expect(bad.volume).toBe(12);
         expect(bad.can).toEqual(['play-pause', 'seek']);
         expect(bad.since).toBe(7);

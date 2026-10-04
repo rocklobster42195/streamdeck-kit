@@ -22,6 +22,10 @@ export type CoverEntry = {
     playing: boolean;
     /** When it last started playing (ms); kept while paused, so "the last one that played" works. */
     since: number;
+    /** The physical device, when other plugins can know it too (see players: "device"). */
+    device?: string;
+    /** The plugin talks to the device directly (its colour wins for that device). */
+    direct?: boolean;
 };
 
 /** An entry with the plugin it comes from. */
@@ -60,8 +64,13 @@ export class CoverBoard {
         this.changed();
     }
 
-    /** Every player of every plugin, ours first. */
+    /** Every player of every plugin, ours first; one device known to two plugins once (the direct one's colour). */
     sources(): CoverSource[] {
+        const all = this.allSources();
+        return all.filter((s) => !s.device || s.direct || !all.some((o) => o !== s && o.device === s.device && o.direct));
+    }
+
+    private allSources(): CoverSource[] {
         const out: CoverSource[] = this.own.map((e) => ({ ...e, source: this.name, id: `${this.name}/${e.player}` }));
         for (const peer of this.peers) {
             // A peer with "players" (a superset, docs "players") is read from there; older ones from "covers"
@@ -109,6 +118,9 @@ export function activeSource<T extends CoverEntry>(all: T[]): T | undefined {
  * A cover colour made readable on black, the same in every sender: saturation and brightness
  * raised to a minimum (HSV), so "on" and an effect stay distinguishable from grey.
  */
+/** Below this saturation a colour counts as grey (its hue isn't raised). */
+const NEAR_GREY = 0.1;
+
 export function readableCoverColor([r, g, b]: [number, number, number], minSaturation = 0.35, minValue = 0.75): string {
     const max = Math.max(r, g, b) / 255;
     const min = Math.min(r, g, b) / 255;
@@ -120,8 +132,10 @@ export function readableCoverColor([r, g, b]: [number, number, number], minSatur
         h *= 60;
         if (h < 0) h += 360;
     }
-    // A grey cover keeps its grey (no hue to raise)
-    const s = d === 0 ? 0 : Math.max(minSaturation, d / max);
+    // A grey (or almost grey) cover keeps its grey: raising the faint hue of a near-grey made
+    // e.g. a pale beige (208,203,201) salmon (seen 2026-10-04)
+    const sat = max === 0 ? 0 : d / max;
+    const s = sat < NEAR_GREY ? sat : Math.max(minSaturation, sat);
     const v = Math.max(minValue, max);
     const c = v * s;
     const x = c * (1 - Math.abs(((h / 60) % 2) - 1));

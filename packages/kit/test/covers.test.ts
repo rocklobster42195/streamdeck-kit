@@ -27,6 +27,16 @@ describe('cover board', () => {
         expect(board.sources().map((s) => s.id)).toEqual(['MA-C/kitchen', 'SO-C/kitchen']);
     });
 
+    it('one device known to two plugins counts once, with the direct plugin’s colour', () => {
+        const board = new CoverBoard('SA-C');
+        board.setPeers([
+            peer('MA-C', [{ ...entry('ma-bad', '#d09c87', true, 9), device: 'RINCON_1' }]),
+            peer('SO-C', [{ ...entry('RINCON_1', '#72a9bf', true, 5), device: 'RINCON_1', direct: true }]),
+        ]);
+        expect(board.sources().map((s) => s.id)).toEqual(['SO-C/RINCON_1']);
+        expect(board.resolve('cover')).toBe('#72a9bf');
+    });
+
     it('tells listeners only about real changes', () => {
         const board = new CoverBoard('SA-C');
         let calls = 0;
@@ -45,5 +55,9 @@ describe('readable cover colour', () => {
         expect(parseInt(dark.slice(1, 3), 16)).toBeGreaterThanOrEqual(190);
         expect(readableCoverColor([200, 190, 190]).slice(1, 3)).toBe('c8');
         expect(readableCoverColor([50, 50, 50])).toBe('#bfbfbf');
+        // A near-grey stays near-grey instead of turning salmon
+        const pale = readableCoverColor([208, 203, 201]);
+        const [r, g, b] = [1, 3, 5].map((i) => parseInt(pale.slice(i, i + 2), 16));
+        expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThan(20);
     });
 });
