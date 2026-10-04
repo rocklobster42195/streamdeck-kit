@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.1] — 2026-10-04
+
 First public version, released as an **alpha** (`0.1.0-alpha.1`, npm dist-tag `alpha`): the API still changes often and without notice.
 
 ### Added
