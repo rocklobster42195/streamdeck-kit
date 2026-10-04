@@ -70,6 +70,18 @@ export type Player = PlayerEntry & {
 export type Transport = { player: string; command: TransportCommand; value?: unknown };
 export type TransportHandler = (t: Transport) => unknown;
 
+/**
+ * Commands about what plays (not about the device): they go to the plugin whose media plays.
+ * Seen 2026-10-04: a Sonos speaker playing Music Assistant's stream can't seek in it through
+ * Sonos; MA has to start its stream at the new position.
+ */
+export const MEDIA_COMMANDS: readonly TransportCommand[] = ['seek', 'next', 'previous', 'shuffle', 'repeat'];
+
+/** Where a command for a merged player goes: its media's plugin for media commands, else the direct one. */
+export function routeFor(p: Player, command: TransportCommand): PlayerRoute {
+    return MEDIA_COMMANDS.includes(command) && p.from.entry.media ? p.from : p.via;
+}
+
 /** "active": the active speaker; "active:all": including apps. */
 export const ACTIVE_PLAYER = 'active';
 export const ACTIVE_ANY_PLAYER = 'active:all';
@@ -250,13 +262,14 @@ export class PlayerBoard {
     async send(target: string | Player | undefined, command: TransportCommand, value?: unknown): Promise<unknown> {
         const p = typeof target === 'string' || target === undefined ? this.resolve(target) : target;
         if (!p) throw new Error('transport: no such player');
-        const t = parseTransport({ player: p.via.entry.player, command, value });
-        if (!p.via.peer) {
+        const route = routeFor(p, command);
+        const t = parseTransport({ player: route.entry.player, command, value });
+        if (!route.peer) {
             if (!this.handler) throw new Error('transport: no players here');
             return this.handler(t);
         }
         if (!this.bus) throw new Error('transport: not on the bus');
-        return this.bus.request(p.via.peer, TRANSPORT_METHOD, t);
+        return this.bus.request(route.peer, TRANSPORT_METHOD, t);
     }
 
     /** Called whenever the deck's players change. */

@@ -115,6 +115,20 @@ describe('PlayerBoard', () => {
         expect(playerOptions(board.players(), { kind: 'speaker' }).map((o) => o.value)).toEqual(['active', 'device:RINCON_1']);
     });
 
+    it('media commands go to the plugin whose media plays, device commands to the direct one', async () => {
+        const got: Transport[] = [];
+        const requests: unknown[][] = [];
+        const board = new PlayerBoard('SO-C');
+        board.serve((t) => void got.push(t));
+        board.connect({ onPeers: () => () => {}, setState: () => {}, handle: () => {}, request: async (...args: unknown[]) => void requests.push(args) } as never);
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', direct: true, playing: true, since: 1 })]);
+        board.setPeers([peer('MA-C', [speaker('RINCON_1', { device: 'RINCON_1', media: true, playing: true, since: 1 })])]);
+        await board.send('device:RINCON_1', 'seek', 60);
+        await board.send('device:RINCON_1', 'volume', 10);
+        expect(requests.map((r) => (r[2] as Transport).command)).toEqual(['seek']);
+        expect(got.map((t) => t.command)).toEqual(['volume']);
+    });
+
     it('tells listeners only about real changes', () => {
         const board = new PlayerBoard('SO-C');
         let calls = 0;
