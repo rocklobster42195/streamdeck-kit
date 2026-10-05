@@ -111,7 +111,8 @@ Names that everyone can use the same way. Anything specific to one plugin is pre
 | state | `panorama-rows` | The newest Panorama row the peer knows per device: `{ "<device>": { "effect", "settings": {…}, "stamp" } }` (see panorama). |
 | state | `covers` | The colour of what each player plays, from music plugins: `[{ "player", "name", "color": "#RRGGBB", "playing": boolean, "since": ms }]` (see covers). |
 | state | `players` | What each peer can play and control: `[{ "player", "device"?, "name", "kind", … }]` (see players). Replaces `covers`. |
-| state | `mic` | `{ "muted": boolean }`: the state of the computer's default microphone, from a peer that controls it (SA-C). |
+| state | `mic` | `{ "muted": boolean, "users"?: [{ "app", "name" }] }`: the state of the computer's default microphone, from a peer that controls it (SA-C); `users` are the apps recording from it now. |
+| state | `call` | `{ "active": true, "app", "name", "since": ms }` or `{ "active": false }`: whether the computer is in a call (Teams, Discord, Zoom …), from a peer that can tell (SA-C: Windows' ducking notification for communications streams, else a known call app on the mic). Ends a moment (~2 s) after the last sign of the call. Others may pause or duck music, or show it. |
 | topic | `panorama/<device>/<column>` | One dial's slice of a shared Panorama: an SVG fragment (string, 200 × 100, no outer `<svg>`), one per effect tick, from the peer that leads the group (see below). |
 | topic | `panorama-in/<device>/<column>` | What a following dial puts into a shared Panorama: `{ "settings": {…}, "live": {…}, "level"?: 0..1 }`, to the peer that leads the group (see below). |
 | topic | `meters/<name>` | Audio levels in dBFS with one decimal, about 20 per second: `{ "l": -18.5, "r": -20.1 }`; mono sends only `l`. |

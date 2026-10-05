@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Added
+
+- deckbus protocol: state **`call`** (whether the computer is in a call, with the app) and **`mic.users`** (the apps recording from the mic), first from SA-C.
+
 ## [0.1.0-alpha.3] — 2026-10-05
 
 ### Added
