@@ -173,6 +173,7 @@ What each peer can play, so any plugin's keys can control any player on the deck
 - `position` and `duration` in seconds, `at` the time (ms) `position` was true, so others can count on while `playing`. Missing `duration`: nothing to seek (radio, a stream).
 - `volume` 0–100, `repeat` `off` | `all` | `one`. A group is one entry (its coordinator), named like "Küche + 2".
 - `can` lists the commands the player takes now; keys grey out what's missing.
+- `cover` is a URL every plugin on this computer can load (`http`/`https`). A peer that only has the image's bytes (SA-C: Windows media sessions) serves it itself on `127.0.0.1` (the kit's `CoverServer`).
 - Missing fields mean unknown. Peers may add their own fields.
 
 A key stores its player as a **player choice**: `active` (the active speaker), `active:all` (the active player including apps), `device:<device>`, `app:<app>`, or `<peer name>/<player>` for one without either.
