@@ -233,6 +233,17 @@ export class PlayerBoard {
         this.failed = o.failed;
     }
 
+    /** This plugin's own players, as published. */
+    ownPlayers(): readonly PlayerEntry[] {
+        return this.own;
+    }
+
+    /** A command for one of this plugin's own players (by its own id), straight to the handler. */
+    async command(player: string, command: TransportCommand, value?: unknown): Promise<unknown> {
+        if (!this.handler) throw new Error('transport: no players here');
+        return this.handler(parseTransport({ player, command, value }));
+    }
+
     /** Every player of the deck, merged by device (and by app), ours first. */
     players(): Player[] {
         const groups = new Map<string, PlayerRoute[]>();

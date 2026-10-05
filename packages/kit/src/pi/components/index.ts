@@ -19,6 +19,7 @@ import { PiSwatch } from './swatch.js';
 import { PiField } from './field.js';
 import { PiIconPicker } from './icon-picker.js';
 import { PiKeyColor } from './key-color.js';
+import { PiCallReaction } from './call-reaction.js';
 import { PiMore } from './more.js';
 import { PiPanorama } from './panorama.js';
 import { PiRange } from './range.js';
@@ -33,6 +34,7 @@ export { closeColorPopover, openColorPopover, type ColorPopoverOptions } from '.
 export { PiField } from './field.js';
 export { PiIconPicker } from './icon-picker.js';
 export { PiKeyColor } from './key-color.js';
+export { PiCallReaction } from './call-reaction.js';
 export { PiMore } from './more.js';
 export { PiPanorama } from './panorama.js';
 export { PiRange } from './range.js';
@@ -53,6 +55,7 @@ export function definePiComponents(): void {
     if (!customElements.get('pi-swatch')) customElements.define('pi-swatch', PiSwatch);
     if (!customElements.get('pi-color')) customElements.define('pi-color', PiColor);
     if (!customElements.get('pi-key-color')) customElements.define('pi-key-color', PiKeyColor);
+    if (!customElements.get('pi-call-reaction')) customElements.define('pi-call-reaction', PiCallReaction);
     if (!customElements.get('pi-select')) customElements.define('pi-select', PiSelect);
     if (!customElements.get('pi-icon-picker')) customElements.define('pi-icon-picker', PiIconPicker);
     if (!customElements.get('pi-thresholds')) customElements.define('pi-thresholds', PiThresholds);

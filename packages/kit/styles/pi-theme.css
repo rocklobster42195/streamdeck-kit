@@ -114,6 +114,10 @@ body[data-connection="down"] .pi-needs-connection { opacity: 0.45; pointer-event
 .pi-choice-tile:hover { border-color: #55555c; }
 .pi-choice-tile[aria-pressed="true"] { background: var(--pi-selected); border-color: var(--pi-accent); color: var(--pi-text); }
 .pi-choice-tile[aria-pressed="true"] svg { color: var(--pi-accent); }
+.pi-call-row { padding: 8px 12px 0; }
+.pi-call-row .pi-choice { padding: 6px 0 4px; }
+.pi-call-row .pi-choice-tile { min-height: 34px; }
+.pi-call-hint { padding: 8px 12px 10px; }
 .pi-choice-tile:focus-visible { outline: 2px solid var(--pi-accent); outline-offset: 2px; }
 
 /* Range slider (<pi-range>) */
