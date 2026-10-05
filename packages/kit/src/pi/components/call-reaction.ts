@@ -3,6 +3,7 @@ import { t } from '../i18n.js';
 import { sd } from '../sd-client.js';
 
 type Row = { player: string; name: string; mode?: 'pause' | 'duck' };
+type Message = { event?: string; available?: boolean; players?: Row[] };
 
 const SETTING = 'callReaction';
 const EVENT = 'kit-call-players';
@@ -16,23 +17,32 @@ const MODES = [
  * <pi-call-reaction> — "When a call starts on this computer" (players/call-reaction.ts): one row
  * per player of the plugin (pushed as "kit-call-players"), each Nothing / Pause / Lower; writes the
  * global setting `callReaction` ({ "<player>": "pause" | "duck" }). A call comes from another
- * plugin on deckbus (SA-C), so the hint says so.
+ * plugin on deckbus (SA-C), so the hint says so; without such a plugin the whole section hides
+ * (the choices stay).
  */
 export class PiCallReaction extends HTMLElement {
     private rows: Row[] = [];
     private off?: () => void;
 
     connectedCallback(): void {
-        this.off = sd.onMessage((msg: { event?: string; players?: Row[] }) => {
+        this.off = sd.onMessage((msg: Message) => {
             if (msg?.event !== EVENT || !Array.isArray(msg.players)) return;
             this.rows = msg.players;
+            this.show(msg.available === true);
             this.render();
         });
+        this.show(false);
         this.render();
     }
 
     disconnectedCallback(): void {
         this.off?.();
+    }
+
+    /** The whole section (its title too) only while some plugin reports calls. */
+    private show(on: boolean): void {
+        const section = this.closest('pi-section') as HTMLElement | null;
+        (section ?? this).hidden = !on;
     }
 
     private render(): void {

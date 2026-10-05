@@ -99,3 +99,16 @@ describe('CallReaction', () => {
         expect(board.sent).toEqual(['kitchen pause']);
     });
 });
+
+describe('availability', () => {
+    it('shows the section only while some plugin reports calls', async () => {
+        let changes = 0;
+        const r = new CallReaction(fakeBoard([entry('kitchen', true)]), quiet, () => changes++);
+        expect(r.piMessage().available).toBe(false);
+        await r.setPeers(noCall);
+        expect(r.piMessage()).toEqual({ event: 'kit-call-players', available: true, players: [{ player: 'kitchen', name: 'kitchen' }] });
+        await r.setPeers([]);
+        expect(r.piMessage().available).toBe(false);
+        expect(changes).toBe(2);
+    });
+});

@@ -17,6 +17,11 @@ export const CALL_PLAYERS_EVENT = 'kit-call-players';
 export type CallPlayerRow = { player: string; name: string; mode?: CallMode };
 type Log = { info(m: string): void; warn(m: string): void };
 
+/** Whether some peer can tell about calls at all (has the state "call"): only then the settings show the section. */
+export function callsAvailable(peers: readonly PeerInfo[]): boolean {
+    return peers.some((p) => p.state.call !== undefined && p.state.call !== null);
+}
+
 /** The call some peer reports now, if any. */
 export function callOf(peers: readonly PeerInfo[]): { app?: string; name?: string } | undefined {
     for (const p of peers) {
@@ -36,13 +41,16 @@ export function parseCallChoices(raw: unknown): Record<string, CallMode> {
 export class CallReaction {
     private choices: Record<string, CallMode> = {};
     private inCall = false;
+    private available = false;
     /** Players this paused, and players this lowered (from → to). */
     private readonly paused = new Set<string>();
     private readonly ducked = new Map<string, { from: number; to: number }>();
 
+    /** `changed`: told when calls become available or go away (e.g. to push the PI again). */
     constructor(
         private readonly board: Pick<PlayerBoard, 'ownPlayers' | 'command'>,
         private readonly log: Log = console,
+        private readonly changed: () => void = () => {},
     ) {}
 
     connect(bus: Pick<DeckBus, 'onPeers'>): void {
@@ -54,6 +62,11 @@ export class CallReaction {
         this.choices = parseCallChoices(raw);
     }
 
+    /** The PI message: players, choices, and whether some plugin reports calls (else the section hides). */
+    piMessage(): { event: typeof CALL_PLAYERS_EVENT; available: boolean; players: CallPlayerRow[] } {
+        return { event: CALL_PLAYERS_EVENT, available: this.available, players: this.rows() };
+    }
+
     /** For the settings window: this plugin's players and their choice. */
     rows(): CallPlayerRow[] {
         return this.board.ownPlayers().map((p) => ({ player: p.player, name: p.name, ...(this.choices[p.player] ? { mode: this.choices[p.player] } : {}) }));
@@ -61,6 +74,11 @@ export class CallReaction {
 
     /** The peers now (from connect(), or from whoever listens to the bus). */
     setPeers(peers: readonly PeerInfo[]): Promise<void> {
+        const available = callsAvailable(peers);
+        if (available !== this.available) {
+            this.available = available;
+            this.changed();
+        }
         const call = callOf(peers);
         if (!!call === this.inCall) return Promise.resolve();
         this.inCall = !!call;
