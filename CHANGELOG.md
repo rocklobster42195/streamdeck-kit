@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.3] — 2026-10-05
+
 ### Added
 
 - **`CoverServer`**: serves images a plugin only has as bytes (Windows' media sessions; later images behind a login) on `127.0.0.1` and a free port, so `loadCover()` and other plugins' keys load them like any cover URL. Keyed by content by default, the newest 16 stay, never keeps the process alive. First used by SA-C's Windows players.
