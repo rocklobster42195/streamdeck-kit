@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.4] — 2026-10-05
+
 ### Added
 
 - **"When a call starts on this computer"** `CallReaction`: a music plugin pauses or lowers (to a quarter) its chosen players while a peer reports a call, and puts back only what it did, unless the user changed it meanwhile; choices per player in the global setting `callReaction`, `<pi-call-reaction>` is the settings window's section (EN/DE/ES). `PlayerBoard.ownPlayers()` and `command()` for a plugin's own players.
