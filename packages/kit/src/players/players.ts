@@ -143,7 +143,11 @@ function latest<T extends { playing: boolean; since: number }>(all: T[]): T | un
 function merge(id: string, routes: PlayerRoute[]): Player {
     const via = routes.find((r) => r.entry.direct) ?? routes.find((r) => !r.peer) ?? routes[0];
     const media = routes.filter((r) => r.entry.media);
-    const from = media.find((r) => r.entry.playing) ?? media[0] ?? via;
+    const playing = media.filter((r) => r.entry.playing);
+    // What plays (the device's own first: a radio from the Sonos app while Music Assistant still
+    // believes its queue plays); nothing playing: the device's own media if it had some (the
+    // stopped radio, not Music Assistant's old queue — seen 2026-10-09), else another's
+    const from = (playing.includes(via) ? via : playing[0]) ?? (via.entry.media ? via : undefined) ?? media[0] ?? via;
     const v = via.entry;
     const f = from.entry;
     return {

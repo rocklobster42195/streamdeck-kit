@@ -71,6 +71,20 @@ describe('PlayerBoard', () => {
         expect(board.resolve('device:RINCON_1')!.can).toEqual(['play-pause', 'play', 'pause', 'seek', 'volume', 'mute']);
     });
 
+    it("the device's own media wins: a radio from the Sonos app, playing or stopped, not Music Assistant's old queue", () => {
+        const board = new PlayerBoard('MA-C');
+        // MA still believes its queue plays (its state comes late)
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', media: true, playing: true, since: 20, title: 'Old MA track' })]);
+        board.setPeers([peer('SO-C', [speaker('RINCON_1', { device: 'RINCON_1', direct: true, media: true, playing: true, since: 10, title: 'Radio' })])]);
+        expect(board.resolve('device:RINCON_1')?.title).toBe('Radio');
+        board.setPeers([peer('SO-C', [speaker('RINCON_1', { device: 'RINCON_1', direct: true, media: true, playing: false, since: 10, title: 'Radio' })])]);
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', media: true, playing: false, since: 20, title: 'Old MA track' })]);
+        expect(board.resolve('device:RINCON_1')?.title).toBe('Radio');
+        // MA's stream on the speaker (the device says it isn't its own media): MA's, also paused
+        board.setPeers([peer('SO-C', [speaker('RINCON_1', { device: 'RINCON_1', direct: true, media: false, playing: false, since: 10 })])]);
+        expect(board.resolve('device:RINCON_1')?.title).toBe('Old MA track');
+    });
+
     it("a key bound to a group's member finds the group", () => {
         const board = new PlayerBoard('SO-C');
         board.publish([speaker('RINCON_1', { device: 'RINCON_1', name: 'Bad + 1', direct: true, members: ['RINCON_1', 'RINCON_2'] })]);
