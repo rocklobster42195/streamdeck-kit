@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.7] — 2026-10-09
+
 ### Fixed
 
 - **Shared Panorama: a dial of a plugin that restarted stayed black** until the plugin leading the row restarted too. When the new process joined before the old one was gone, the leader dropped and re-added that dial within one debounced regrouping; its group stayed the same, so the dial's link to it was never set again and its slice was never drawn.
