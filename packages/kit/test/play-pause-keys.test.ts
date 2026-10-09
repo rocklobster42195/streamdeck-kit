@@ -115,6 +115,24 @@ describe('PlayPauseKeys', () => {
         expect(titles.at(-1)).toBe('');
     });
 
+    it('fades the paused look in after a press, without fading on the first picture', async () => {
+        const { k, images, now } = make({ playing: true, cover: 'data:image/png;base64,AA', can: ['play', 'pause'] });
+        k.show('a', {});
+        expect(images.at(-1)).not.toContain('fill="#000" opacity="0.');
+        await k.press('a');
+        now.t += 100;
+        k.show('a', {});
+        const mid = Number(/<rect width="144" height="144" fill="#000" opacity="([\d.]+)"/.exec(images.at(-1)!)?.[1]);
+        expect(mid).toBeGreaterThan(0);
+        expect(mid).toBeLessThan(0.55);
+        now.t += 1000;
+        k.show('a', {});
+        expect(images.at(-1)).toContain('<rect width="144" height="144" fill="#000" opacity="0.55"/>');
+        const paused = make({ playing: false, cover: 'data:image/png;base64,AA' });
+        paused.k.show('b', {});
+        expect(paused.images.at(-1)).toContain('opacity="0.55"');
+    });
+
     it('fills the corners the user picked', () => {
         const { k, images } = make({ playing: true, source: 'Spotify', battery: 15 });
         k.show('a', { topLeft: 'marker', topRight: 'battery', marker: 'sofa' });

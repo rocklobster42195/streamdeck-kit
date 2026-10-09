@@ -9,6 +9,8 @@ export type PlayPauseView = {
     /** No player to control (none chosen, gone, plugin away): a dimmed play symbol. */
     unavailable?: boolean;
     playing: boolean;
+    /** How far the paused look (dimmed cover, play symbol) is in, 0..1, while it fades; default by `playing`. */
+    dim?: number;
     /** Waiting for the device (starting). */
     loading?: boolean;
     /** The cover as a data: URI; with `previousCover` and `coverMix` while two crossfade. */
@@ -38,10 +40,12 @@ export function renderPlayPauseKey(v: PlayPauseView): string {
         const mix = v.previousCover ? Math.min(1, Math.max(0, v.coverMix ?? 1)) : 1;
         if (mix < 1) parts.push(`<image href="${v.previousCover}" width="${S}" height="${S}" preserveAspectRatio="xMidYMid slice"/>`);
         parts.push(`<image href="${v.cover}" width="${S}" height="${S}" preserveAspectRatio="xMidYMid slice"${mix < 1 ? ` opacity="${mix.toFixed(2)}"` : ''}/>`);
-        if (!v.playing) {
-            // Paused: the cover stays, dimmed, with a play symbol (press to resume)
-            parts.push(`<rect width="${S}" height="${S}" fill="#000" opacity="0.55"/>`, `<circle cx="72" cy="72" r="30" fill="#000" opacity="0.55"/>`);
-            parts.push(icon(v.loading ? mdiTimerSand : mdiPlay, 48, 48, 48, v.accent));
+        const dim = Math.min(1, Math.max(0, v.dim ?? (v.playing ? 0 : 1)));
+        if (dim > 0) {
+            // Paused: the cover stays, dimmed, with a play symbol (press to resume); fades in and out
+            const shade = (0.55 * dim).toFixed(2);
+            parts.push(`<rect width="${S}" height="${S}" fill="#000" opacity="${shade}"/>`, `<circle cx="72" cy="72" r="30" fill="#000" opacity="${shade}"/>`);
+            parts.push(icon(v.loading ? mdiTimerSand : mdiPlay, 48, 48, 48, v.accent, dim));
         }
     } else {
         parts.push(icon(v.loading ? mdiTimerSand : v.playing ? mdiMusicNote : mdiPlay, 36, 36, 72, v.iconColor));
@@ -93,6 +97,6 @@ function parseColor(c: string): [number, number, number] | undefined {
     return m ? [+m[1], +m[2], +m[3]] : undefined;
 }
 
-function icon(path: string, x: number, y: number, size: number, fill: string): string {
-    return `<path transform="translate(${x} ${y}) scale(${size / 24})" fill="${fill}" d="${path}"/>`;
+function icon(path: string, x: number, y: number, size: number, fill: string, opacity = 1): string {
+    return `<path transform="translate(${x} ${y}) scale(${size / 24})" fill="${fill}"${opacity < 1 ? ` opacity="${opacity.toFixed(2)}"` : ''} d="${path}"/>`;
 }

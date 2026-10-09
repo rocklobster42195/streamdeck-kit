@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Changed
+
+- Play/Pause key: the paused look (dimmed cover, play symbol) fades in when it pauses and out when it plays again (500 ms); a key's first picture doesn't fade. `renderPlayPauseKey()` takes `dim` (0..1).
+
 ## [0.1.0-alpha.14] — 2026-10-09
 
 ### Changed

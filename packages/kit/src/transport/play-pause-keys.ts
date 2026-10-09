@@ -7,6 +7,7 @@
 // pause by what the key shows (a toggle on a server that learns of a pause late paused twice), the
 // new state shows at once until the device confirms it, and a paused key keeps its position.
 import { mdiApplicationOutline } from '@mdi/js';
+import { AnimatedValue } from '../render/animation.js';
 import { getCachedCover, loadCover } from '../render/cover-cache.js';
 import { CoverFader } from '../render/cover-fade.js';
 import { frames } from '../render/frames.js';
@@ -49,6 +50,8 @@ export const PLAY_PAUSE_DEFAULTS: Required<Pick<PlayPauseKeySettings, 'topLeft' 
 /** How long the key shows a pressed state before the device has confirmed it. */
 const HOLD_PLAY_MS = 8000;
 const HOLD_PAUSE_MS = 40_000;
+/** How long the paused look (dimmed cover, play symbol) takes to fade in or out. */
+const DIM_FADE_MS = 500;
 
 export type PlayPauseKeysOptions = {
     board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'>;
@@ -68,6 +71,8 @@ type Key = {
     fader?: TitleFader;
     /** A pressed state shown until the device confirms it. */
     pressed?: { playing: boolean; until: number; position?: number };
+    /** The paused look, fading in and out (0 playing … 1 paused). */
+    dim?: AnimatedValue;
     last?: string;
     lastTitle?: string;
 };
@@ -100,6 +105,7 @@ export class PlayPauseKeys {
         this.keys.delete(id);
         this.covers.forget(id);
         frames.stop(`play-pause-title-${id}`);
+        frames.stop(`play-pause-dim-${id}`);
     }
 
     /** The player a key controls now. */
@@ -179,8 +185,19 @@ export class PlayPauseKeys {
             if (pos !== undefined) progress = pos / p.duration;
         }
 
+        // The paused look fades in and out; the first picture of a key just is what it is
+        const target = playing ? 0 : 1;
+        if (!k.dim) k.dim = new AnimatedValue(target, DIM_FADE_MS, this.now);
+        else k.dim.set(target);
+        if (k.dim.animating)
+            frames.run(`play-pause-dim-${id}`, () => {
+                this.render(id);
+                return !!this.keys.get(id)?.dim?.animating;
+            });
+
         return renderPlayPauseKey({
             playing,
+            dim: k.dim.value(),
             cover: cover?.cover,
             previousCover: cover?.previous,
             coverMix: cover?.mix,
