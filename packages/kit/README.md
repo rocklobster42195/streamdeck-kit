@@ -197,6 +197,20 @@ keys.hide(id);                                    // willDisappear
 await keys.press(id);                             // keyDown; rejects without a player → showAlert()
 ```
 
+With the Stream Deck SDK, `PlayPauseKeyAction` from `/keys` is the whole action; the plugin gives it its UUID and players:
+
+```ts
+import { action } from "@elgato/streamdeck";
+import { PlayPauseKeyAction } from "@rocklobster42195/streamdeck-kit/keys";
+
+@action({ UUID: "com.example.my-plugin.play-pause-key" })
+export class PlayPauseKey extends PlayPauseKeyAction {
+    constructor() {
+        super({ board: players, markerPath: (name) => mdiPath(name), rowColor: (deviceId) => rows.rowColor(deviceId), migrate: fromOldSettings });
+    }
+}
+```
+
 In the settings panel, `<pi-corners>` picks the two corners (and when the battery shows); the player, colour and marker use `<pi-select source="players">`, `<pi-key-color>` and `<pi-icon-picker>`. Player entries carry `source`, `sourceIcon`, `battery` and `charging` for the corners.
 
 ## Icon catalog (`/mdi`)

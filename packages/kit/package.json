@@ -35,6 +35,10 @@
             "types": "./dist/mdi/index.d.ts",
             "import": "./dist/mdi/index.js"
         },
+        "./keys": {
+            "types": "./dist/keys/index.d.ts",
+            "import": "./dist/keys/index.js"
+        },
         "./styles/*": "./styles/*",
         "./package.json": "./package.json"
     },
