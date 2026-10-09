@@ -46,13 +46,27 @@ function parse(dataUri: string): Parsed | null {
     return { viewBox, attrs, inner: root[2] };
 }
 
-/** The SVG picture as a group fitted into the box at (x, y), size × size; '' when it can't be read. */
-export function svgGroup(dataUri: string, x: number, y: number, size: number): string {
-    const p = parseSvgDataUri(dataUri);
-    if (!p) return '';
+/**
+ * The SVG picture as a group fitted into the box at (x, y), size × size; '' when it can't be read.
+ * `color` paints a one-colour logo in that colour (every fill and stroke but "none").
+ */
+export function svgGroup(dataUri: string, x: number, y: number, size: number, color?: string): string {
+    const parsed = parseSvgDataUri(dataUri);
+    if (!parsed) return '';
+    const p = color ? recolor(parsed, color) : parsed;
     const [vx, vy, vw, vh] = p.viewBox;
     const scale = size / Math.max(vw, vh);
     const dx = x + (size - vw * scale) / 2;
     const dy = y + (size - vh * scale) / 2;
     return `<g transform="translate(${dx.toFixed(2)} ${dy.toFixed(2)}) scale(${scale.toFixed(5)}) translate(${-vx} ${-vy})"${p.attrs}>${p.inner}</g>`;
+}
+
+function recolor(p: Parsed, color: string): Parsed {
+    const paint = (s: string) =>
+        s
+            .replace(/\b(fill|stroke)="(?!none)[^"]*"/g, `$1="${color}"`)
+            .replace(/\b(fill|stroke)\s*:\s*(?!none)[^;"]+/g, `$1:${color}`);
+    // A logo without any fill of its own is black by default: give the group the colour
+    const attrs = /\bfill=/.test(p.attrs) ? paint(p.attrs) : `${paint(p.attrs)} fill="${color}"`;
+    return { ...p, attrs, inner: paint(p.inner) };
 }

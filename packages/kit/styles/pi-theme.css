@@ -118,6 +118,14 @@ body[data-connection="down"] .pi-needs-connection { opacity: 0.45; pointer-event
 .pi-call-row .pi-choice { padding: 6px 0 4px; }
 .pi-call-row .pi-choice-tile { min-height: 34px; }
 .pi-call-hint { padding: 8px 12px 10px; }
+/* <pi-corners>: a label and its tiles per row, with the card's inner spacing */
+.pi-corner-row { padding: 10px 12px 4px; display: flex; flex-direction: column; gap: 6px; }
+.pi-corner-row .pi-choice { padding: 0 0 6px; }
+.pi-corners [hidden] { display: none; }
+/* <pi-key-color>: its label and hint sit straight in the card */
+pi-key-color > .pi-label { display: block; padding: 10px 12px 0; }
+pi-key-color > .pi-hint { padding: 0 12px 10px; }
+pi-key-color > .pi-row { padding-top: 0; }
 .pi-choice-tile:focus-visible { outline: 2px solid var(--pi-accent); outline-offset: 2px; }
 
 /* Range slider (<pi-range>) */

@@ -4,6 +4,15 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Changed
+
+- `<pi-corners>` picks the marker's icon too, inside its card, while a corner shows the marker (the marker no longer needs its own section). Built once and then only updated, so a marker search in progress survives a settings change.
+- The corners' marker and service logos share one colour (`CORNER_COLOR`); a one-colour SVG logo is painted in it (`svgGroup(…, color)`).
+
+### Fixed
+
+- Settings panel: the labels and hint of `<pi-key-color>` and `<pi-corners>` started right at the card's edge; they have the card's inner spacing now.
+
 ## [0.1.0-alpha.9] — 2026-10-09
 
 ### Added

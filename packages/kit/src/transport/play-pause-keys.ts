@@ -14,7 +14,7 @@ import { KEY_TIERS } from '../render/key-style.js';
 import { SONOS_TITLE_FADER, TitleFader } from '../render/title-fader.js';
 import { KEY_GREY, resolveKeyColor } from '../players/key-color.js';
 import { ACTIVE_PLAYER, positionNow, type Player, type PlayerBoard, type TransportCommand } from '../players/players.js';
-import { batteryBadge, type BatteryMode, type CornerBadge, type CornerChoice } from './corners.js';
+import { CORNER_COLOR, batteryBadge, type BatteryMode, type CornerBadge, type CornerChoice } from './corners.js';
 import { renderPlayPauseKey } from './play-pause-render.js';
 import { serviceIcon } from './service-icons.js';
 
@@ -49,7 +49,6 @@ export const PLAY_PAUSE_DEFAULTS: Required<Pick<PlayPauseKeySettings, 'topLeft' 
 /** How long the key shows a pressed state before the device has confirmed it. */
 const HOLD_PLAY_MS = 8000;
 const HOLD_PAUSE_MS = 40_000;
-const MARKER_COLOR = '#b8b8be';
 
 export type PlayPauseKeysOptions = {
     board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'>;
@@ -229,7 +228,7 @@ export class PlayPauseKeys {
                 if (!p.source) return undefined;
                 // Only a name (Sonos): a known service's logo, else a radio, a folder or a note; an app without its icon
                 const icon = serviceIcon(p.source);
-                return { kind: 'icon', path: p.kind === 'app' && !icon.logo ? mdiApplicationOutline : icon.path, color: '#e0e0e0' };
+                return { kind: 'icon', path: p.kind === 'app' && !icon.logo ? mdiApplicationOutline : icon.path, color: CORNER_COLOR };
             }
             default:
                 return undefined;
@@ -239,6 +238,6 @@ export class PlayPauseKeys {
     private marker(s: PlayPauseKeySettings, choice: CornerChoice, dim: boolean): CornerBadge | undefined {
         if (choice !== 'marker' || !s.marker) return undefined;
         const path = this.o.markerPath?.(s.marker);
-        return path ? { kind: 'icon', path, color: dim ? KEY_TIERS.unavailable : MARKER_COLOR } : undefined;
+        return path ? { kind: 'icon', path, color: dim ? KEY_TIERS.unavailable : CORNER_COLOR } : undefined;
     }
 }

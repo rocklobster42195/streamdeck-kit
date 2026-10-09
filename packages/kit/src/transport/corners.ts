@@ -30,6 +30,9 @@ import { KEY_SIZE } from '../render/key-style.js';
 import { isSvgDataUri, svgGroup } from '../render/svg-inline.js';
 
 export type CornerChoice = 'none' | 'marker' | 'source' | 'battery';
+
+/** One colour for what sits in the corners (marker, service logos), so the two match. */
+export const CORNER_COLOR = '#e0e0e0';
 export const CORNER_CHOICES: readonly CornerChoice[] = ['none', 'marker', 'source', 'battery'];
 
 /** What one corner shows, ready to draw. */
@@ -69,7 +72,7 @@ export function cornerSvg(badge: CornerBadge | undefined, side: 'left' | 'right'
     const y = cy - pic / 2;
     const disc = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#101010" opacity="0.8"/>`;
     if (badge.kind === 'icon') return `${disc}<path transform="translate(${x} ${y}) scale(${pic / 24})" fill="${badge.color}" d="${badge.path}"/>`;
-    if (isSvgDataUri(badge.href)) return disc + svgGroup(badge.href, x, y, pic);
+    if (isSvgDataUri(badge.href)) return disc + svgGroup(badge.href, x, y, pic, CORNER_COLOR);
     const id = `corner-${side}`;
     return `${disc}<clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${pic / 2}"/></clipPath><image href="${badge.href}" x="${x}" y="${y}" width="${pic}" height="${pic}" clip-path="url(#${id})" preserveAspectRatio="xMidYMid slice"/>`;
 }
