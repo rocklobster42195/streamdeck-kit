@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.19] — 2026-10-09
+
 ### Added
 
 - Volume key: with a `preset` on another command (mute, louder, quieter), a long press sets the preset volume, unmuted (sonos-controller's keys did that); without one the key acts at once.
