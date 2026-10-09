@@ -39,6 +39,8 @@ pi-section { display: flex; flex-direction: column; gap: 6px; }
 .pi-card { background: var(--pi-card); border: 1px solid var(--pi-card-border); border-radius: var(--pi-radius); display: flex; flex-direction: column; }
 .pi-card > * + * { border-top: 1px solid var(--pi-card-border); }
 .pi-card > .pi-field + .pi-field { border-top: none; }
+/* A hint straight in a card (e.g. under a <pi-choice>) gets the card's inner spacing */
+.pi-card > .pi-hint { padding: 8px 12px 10px; }
 .pi-padded { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
 
 /* Text */

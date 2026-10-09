@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Fixed
+
+- Settings panel: a hint straight in a card (e.g. the seek step's under its tiles) started at the card's edge; it has the card's inner spacing now.
+
 ## [0.1.0-alpha.16] — 2026-10-09
 
 ### Added
