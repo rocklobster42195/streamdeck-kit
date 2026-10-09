@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.18] — 2026-10-09
+
 ### Added
 
 - **Universal Volume key** (grill 2026-10-09, family style): `VolumeKeys` (SDK-free), `renderVolumeKey()`, `volumeIcon()` and `VolumeKeyAction` (`/keys`). Louder and quieter from the volume the key shows (absolute `volume`, or `volume-by` for a player that only takes steps), mute as a ring, pie or open ring (grey with a red speaker while muted), a preset volume that is "on" while the volume is at it (and unmutes). Pressed values show at once until the player confirms them. Settings `player`, `command` (`up`, `down`, `mute`, `preset`), `step`, `preset`, `showVolume`, `gauge`, `keyColor`, `marker`.
