@@ -17,3 +17,4 @@ export * from './key-style.js';
 export * from './level-strip.js';
 export * from './volume-display.js';
 export * from './now-playing-card.js';
+export * from './svg-inline.js';

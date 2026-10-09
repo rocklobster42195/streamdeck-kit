@@ -8,7 +8,7 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ### Added
 
-- **Universal Play/Pause key** (grill 2026-10-09): `PlayPauseKeys` (all of a plugin's Play/Pause keys on the `PlayerBoard`: which player, the picture, explicit play or pause by what the key shows, the pressed state shown until the device confirms it, the position frozen while paused), `renderPlayPauseKey()` (sonos-controller's key: cover, dimmed with ▶ while paused, scrolling title, progress pill) and two corners the user fills: nothing, marker, source or battery (`batteryBadge()`, `cornerSvg()`). `<pi-corners>` picks them in the settings panel (EN/DE/ES).
+- **Universal Play/Pause key** (grill 2026-10-09): `PlayPauseKeys` (all of a plugin's Play/Pause keys on the `PlayerBoard`: which player, the picture, explicit play or pause by what the key shows, the pressed state shown until the device confirms it, the position frozen while paused), `renderPlayPauseKey()` (sonos-controller's key: cover, dimmed with ▶ while paused, scrolling title, progress pill) and two corners the user fills: nothing, marker, source or battery (`batteryBadge()`, `cornerSvg()`). `<pi-corners>` picks them in the settings panel (EN/DE/ES). A `sourceIcon` that is an SVG data URI (a music service's logo) is drawn inline (`svgGroup()`), since Stream Deck draws no nested SVG.
 
 ## [0.1.0-alpha.7] — 2026-10-09
 

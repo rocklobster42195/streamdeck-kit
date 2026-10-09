@@ -136,6 +136,15 @@ describe('corners and picture', () => {
         expect(batteryBadge(undefined, false, 'always')).toBeUndefined();
     });
 
+    it('an SVG picture goes in as a group (Stream Deck draws no nested SVG), fitted into the corner', () => {
+        const logo = `data:image/svg+xml;base64,${Buffer.from('<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 24" fill="#fff"><path d="M0 0h48v24H0z"/></svg>').toString('base64')}`;
+        const svg = cornerSvg({ kind: 'image', href: logo }, 'left');
+        expect(svg).toContain('<g transform=');
+        expect(svg).toContain('fill="#fff"');
+        expect(svg).not.toContain('<image');
+        expect(svg).not.toContain('<svg');
+    });
+
     it('a picture corner is clipped to a circle on the left or right', () => {
         expect(cornerSvg({ kind: 'image', href: 'data:image/png;base64,AA' }, 'right')).toContain('cx="120"');
         expect(cornerSvg(undefined, 'left')).toBe('');
