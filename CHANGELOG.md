@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.9] — 2026-10-09
+
 ### Added
 
 - Play/Pause key corners: a `sourceIcon` that is an SVG data URI (a music service's logo) is drawn inline (`svgGroup()`), since Stream Deck draws no nested SVG and doesn't load one through an image.
