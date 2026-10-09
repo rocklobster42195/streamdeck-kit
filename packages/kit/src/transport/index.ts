@@ -2,3 +2,4 @@
 export * from './corners.js';
 export * from './play-pause-render.js';
 export * from './play-pause-keys.js';
+export * from './service-icons.js';

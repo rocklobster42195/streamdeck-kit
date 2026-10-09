@@ -6,7 +6,7 @@
 // Lessons from Music Assistant on Sonos (2026-10-09) built in: a press sends an explicit play or
 // pause by what the key shows (a toggle on a server that learns of a pause late paused twice), the
 // new state shows at once until the device confirms it, and a paused key keeps its position.
-import { mdiApplicationOutline, mdiMusicNote } from '@mdi/js';
+import { mdiApplicationOutline } from '@mdi/js';
 import { getCachedCover, loadCover } from '../render/cover-cache.js';
 import { CoverFader } from '../render/cover-fade.js';
 import { frames } from '../render/frames.js';
@@ -16,6 +16,7 @@ import { KEY_GREY, resolveKeyColor } from '../players/key-color.js';
 import { ACTIVE_PLAYER, positionNow, type Player, type PlayerBoard, type TransportCommand } from '../players/players.js';
 import { batteryBadge, type BatteryMode, type CornerBadge, type CornerChoice } from './corners.js';
 import { renderPlayPauseKey } from './play-pause-render.js';
+import { serviceIcon } from './service-icons.js';
 
 /** A Play/Pause key's settings, the same in every plugin. */
 export type PlayPauseKeySettings = {
@@ -225,7 +226,10 @@ export class PlayPauseKeys {
                     if (data) return { kind: 'image', href: data };
                     void loadCover(p.sourceIcon).then((c) => c && this.renderAll());
                 }
-                return p.source ? { kind: 'icon', path: p.kind === 'app' ? mdiApplicationOutline : mdiMusicNote, color: '#e0e0e0' } : undefined;
+                if (!p.source) return undefined;
+                // Only a name (Sonos): a known service's logo, else a radio, a folder or a note; an app without its icon
+                const icon = serviceIcon(p.source);
+                return { kind: 'icon', path: p.kind === 'app' && !icon.logo ? mdiApplicationOutline : icon.path, color: '#e0e0e0' };
             }
             default:
                 return undefined;

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mdiBatteryAlert, mdiSofa } from '@mdi/js';
-import { PlayPauseKeys, batteryBadge, cornerSvg, renderPlayPauseKey, readableBar, type Player, type PlayerEntry, type TransportCommand } from '../src/index.js';
+import { PlayPauseKeys, serviceIcon, batteryBadge, cornerSvg, renderPlayPauseKey, readableBar, type Player, type PlayerEntry, type TransportCommand } from '../src/index.js';
 
 const svgOf = (dataUri: string) => Buffer.from(dataUri.slice(dataUri.indexOf(',') + 1), 'base64').toString();
 
@@ -124,6 +124,21 @@ describe('PlayPauseKeys', () => {
         k.show('a', { topLeft: 'none', topRight: 'source' });
         expect(images.at(-1)).not.toContain(mdiSofa);
         expect(images.at(-1)).toContain('<circle cx="120" cy="24"');
+    });
+});
+
+describe('service logos by name', () => {
+    it('finds a service however a plugin spells it; radio, own files and unknown ones get a symbol', () => {
+        const spotify = serviceIcon('Spotify');
+        expect(spotify.logo).toBe(true);
+        expect(serviceIcon('apple_music').logo).toBe(true);
+        expect(serviceIcon('Apple Music').path).toBe(serviceIcon('applemusic').path);
+        expect(serviceIcon('TIDAL').logo).toBe(true);
+        expect(serviceIcon('Ytmusic').path).toBe(serviceIcon('YouTube Music').path);
+        expect(serviceIcon('Sonos Radio').logo).toBe(true);
+        expect(serviceIcon('TuneIn').logo).toBe(false);
+        expect(serviceIcon('Radiobrowser').path).toBe(serviceIcon('TuneIn').path);
+        expect(serviceIcon('Filesystem smb').path).not.toBe(serviceIcon('Something new').path);
     });
 });
 

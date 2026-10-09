@@ -9,6 +9,7 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 ### Added
 
 - Play/Pause key corners: a `sourceIcon` that is an SVG data URI (a music service's logo) is drawn inline (`svgGroup()`), since Stream Deck draws no nested SVG and doesn't load one through an image.
+- **Service logos by name** (`serviceIcon()`): small monochrome logos of 14 music services (Spotify, Apple Music, TIDAL, Deezer, YouTube Music, SoundCloud, Plex, Audible, Sonos, Jellyfin, Napster, Pandora, iHeartRadio, Bandcamp; from Simple Icons, CC0) for the source corner when a plugin knows the service only by its name (Sonos); radio services get a radio, one's own files a folder, others a note. Spellings like "apple_music", "TIDAL", "ytmusic" or "Sonos Radio" are found too.
 
 ## [0.1.0-alpha.8] — 2026-10-09
 
