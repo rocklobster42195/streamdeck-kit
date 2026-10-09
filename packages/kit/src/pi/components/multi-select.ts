@@ -3,7 +3,8 @@ import { t } from '../i18n.js';
 import { nextRequestId } from '../requests.js';
 import { sd } from '../sd-client.js';
 
-type Item = { value: string; label: string; sub?: string; icon?: string };
+/** `image`: a picture URL (e.g. an app's icon as a data URI). */
+type Item = { value: string; label: string; sub?: string; image?: string };
 
 /**
  * <pi-multi-select setting="apps" source="apps" [label-setting="appNames"] [empty="pi.no_apps"]> —
@@ -62,7 +63,7 @@ export class PiMultiSelect extends HTMLElement {
         this.innerHTML = rows
             .map(
                 (r) => `<div class="pi-row">
-                    ${r.icon ? `<img class="pi-multi-icon" src="${escapeHtml(r.icon)}" alt=""/>` : ''}
+                    ${r.image ? `<img class="pi-multi-icon" src="${escapeHtml(r.image)}" alt=""/>` : ''}
                     <div class="pi-row-text">
                         <span class="pi-label">${escapeHtml(r.label)}</span>
                         ${r.away ? `<span class="pi-hint">${escapeHtml(t('kit.multi_away'))}</span>` : r.sub ? `<span class="pi-hint">${escapeHtml(r.sub)}</span>` : ''}
