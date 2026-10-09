@@ -200,7 +200,7 @@ export class PlaybackKeys {
         const on = grey ? (this.o.accent ?? p?.color ?? KEY_TIERS.available) : color;
         const can = !!p && (!p.can || p.can.includes(transportOf(command)));
         let view: PlaybackView;
-        let title = '';
+        const title = '';
         if (k.seeker?.active && p) {
             const offset = k.seeker.offset;
             view = { icon: command === 'next' ? mdiFastForward : mdiRewind, color: on, caption: offset ? `${offset > 0 ? '+' : '−'}${clock(Math.abs(offset))}` : clock(positionNow(p, this.now()) ?? 0) };
