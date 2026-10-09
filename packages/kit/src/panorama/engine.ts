@@ -166,6 +166,11 @@ export class PanoramaEngine {
             if (this.groups.has(key)) continue;
             this.createGroup(key, ctxs);
         }
+        // Every member back to its group, also in groups that stayed: a display that left and came
+        // back within one debounced sync lost its link (leave() drops it) while its group stayed the
+        // same, and was never drawn again (seen 2026-10-09: another plugin's dial in a shared
+        // Panorama stayed black after that plugin restarted)
+        for (const [key, ctxs] of grouping) for (const ctx of ctxs) o.panoramaContextGroupKey.set(ctx, key);
         o.notifyGroupRender([...grouping.values()].flat());
     }
 

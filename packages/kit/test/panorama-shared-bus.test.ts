@@ -58,4 +58,45 @@ describe('shared Panorama over deckbus', () => {
         const virtual = 'virtual:panorama/deck/1';
         await until(() => left.shared.engine.orchestrator.contextLiveSettings.get(virtual)?.color === '#FF0000');
     }, 10000);
+
+    // Seen 2026-10-09: after MA-C, SO-C and SA-C restarted, their dials stayed black until XR-C
+    // (leading the row) restarted too
+    for (const overlap of [false, true]) {
+        it(`a following plugin that restarts${overlap ? ' (the new process up before the old one is gone)' : ''} gets the slices again`, async () => {
+            const namespace = `deckbus-test-${crypto.randomBytes(4).toString('hex')}`;
+            const keyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deckbus-key-'));
+            const plugin = async (id: string, name: string, column: number) => {
+                const bus = new DeckBus({ id, name, version: '1.0.0', namespace, keyDir, scanMs: 50, slots: 4, timeoutMs: 300 });
+                const actions = new ActionsState(bus, 20);
+                const shared = new SharedPanorama(new PanoramaEngine(), actions);
+                const stop = () => {
+                    shared.dispose();
+                    bus.stop();
+                };
+                stops.push(stop);
+                actions.set(`${id}-dial`, { device: 'deck', column, row: 0, controller: 'Encoder', action: `${id}.dial` });
+                let redraws = 0;
+                shared.join(`${id}-dial`, 'deck', column, 'particles', {}, () => redraws++);
+                expect(await bus.start()).toBe(true);
+                shared.connect(bus);
+                return { bus, shared, stop, redraws: () => redraws };
+            };
+            const leader = await plugin('xrc', 'XR-C', 0);
+            const first = await plugin('mac', 'MA-C', 1);
+            await until(() => first.redraws() > 2);
+
+            let second;
+            if (overlap) {
+                second = await plugin('mac', 'MA-C', 1);
+                first.stop();
+            } else {
+                first.stop();
+                await new Promise((r) => setTimeout(r, 200));
+                second = await plugin('mac', 'MA-C', 1);
+            }
+            await until(() => second.shared.role('mac-dial').role === 'follower');
+            await until(() => second.redraws() > 2 && second.shared.renderSlice('mac-dial').length > 0);
+            expect(leader.shared.role('xrc-dial')).toEqual({ role: 'leader' });
+        }, 10000);
+    }
 });
