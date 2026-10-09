@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.12] — 2026-10-09
+
 ### Added
 
 - **`PlayPauseKeyAction`** (new entry point `/keys`, the kit's part that uses the Stream Deck SDK): the universal Play/Pause key as a whole action. A plugin subclasses it with its UUID and passes its players; optional `migrate` (older settings), `unavailable` (a picture while no player is found, e.g. "set up"), `onDraw` (e.g. a settings-panel header) and `refresh()`.
