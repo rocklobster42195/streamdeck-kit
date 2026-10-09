@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.5] — 2026-10-09
+
 ### Added
 
 - **Multi-state key** (from HA-C, SA-C grill 2026-10-05): `stateOptions()`, `nextIndex()` and `renderMultiStateKey()` (the state's icon in its colour, its name, one dot per state); `<pi-states>` edits the list (value typed or, with `value-source`, picked from the plugin's list; name, colour, icon; move up, remove), `registerStatesCurrent()` lets a plugin offer the value its device reports now.
