@@ -1,10 +1,13 @@
 // The universal Volume key as a Stream Deck action (grill 2026-10-09), as PlayPauseKeyAction: a
 // plugin gives it its UUID and players.
-import streamDeck, { SingletonAction, type DidReceiveSettingsEvent, type KeyAction, type KeyDownEvent, type WillAppearEvent, type WillDisappearEvent } from '@elgato/streamdeck';
+import streamDeck, { SingletonAction, type DidReceiveSettingsEvent, type KeyAction, type KeyDownEvent, type KeyUpEvent, type WillAppearEvent, type WillDisappearEvent } from '@elgato/streamdeck';
 import type { JsonObject } from '@elgato/utils';
 import { VolumeKeys, type VolumeKeySettings, type VolumeKeysOptions } from '../transport/volume-keys.js';
 
 type Settings = VolumeKeySettings & JsonObject;
+
+/** How long a press must be held to set the preset volume (on keys that have one). */
+const LONG_PRESS_MS = 500;
 
 export type VolumeKeyActionOptions<S extends Settings> = Omit<VolumeKeysOptions, 'draw' | 'rowColor'> & {
     rowColor?: (deviceId: string) => string | undefined;
@@ -16,6 +19,8 @@ export type VolumeKeyActionOptions<S extends Settings> = Omit<VolumeKeysOptions,
 export class VolumeKeyAction<S extends Settings = Settings> extends SingletonAction<S> {
     private readonly shown = new Map<string, { action: KeyAction<S>; settings: S; image?: string; title?: string }>();
     protected readonly keys: VolumeKeys;
+    private readonly holds = new Map<string, ReturnType<typeof setTimeout>>();
+    private readonly longDone = new Set<string>();
 
     constructor(private readonly options: VolumeKeyActionOptions<S>) {
         super();
@@ -47,6 +52,9 @@ export class VolumeKeyAction<S extends Settings = Settings> extends SingletonAct
     }
 
     override onWillDisappear(ev: WillDisappearEvent<S>): void {
+        clearTimeout(this.holds.get(ev.action.id));
+        this.holds.delete(ev.action.id);
+        this.longDone.delete(ev.action.id);
         this.shown.delete(ev.action.id);
         this.keys.hide(ev.action.id);
     }
@@ -59,11 +67,36 @@ export class VolumeKeyAction<S extends Settings = Settings> extends SingletonAct
     }
 
     override async onKeyDown(ev: KeyDownEvent<S>): Promise<void> {
+        const id = ev.action.id;
+        // A key with a preset on another command: a long press sets it, a short one acts on release
+        if (!this.keys.hasLongPress(id)) return this.run(ev.action, () => this.keys.press(id));
+        this.longDone.delete(id);
+        clearTimeout(this.holds.get(id));
+        this.holds.set(
+            id,
+            setTimeout(() => {
+                this.holds.delete(id);
+                this.longDone.add(id);
+                void this.run(ev.action, () => this.keys.pressPreset(id));
+            }, LONG_PRESS_MS),
+        );
+    }
+
+    override async onKeyUp(ev: KeyUpEvent<S>): Promise<void> {
+        const id = ev.action.id;
+        const timer = this.holds.get(id);
+        clearTimeout(timer);
+        this.holds.delete(id);
+        if (this.longDone.delete(id) || !timer) return;
+        await this.run(ev.action, () => this.keys.press(id));
+    }
+
+    private async run(action: { showAlert(): Promise<void> }, fn: () => Promise<void>): Promise<void> {
         try {
-            await this.keys.press(ev.action.id);
+            await fn();
         } catch (e) {
             streamDeck.logger.warn('[volume] press failed', e);
-            await ev.action.showAlert();
+            await action.showAlert();
         }
     }
 

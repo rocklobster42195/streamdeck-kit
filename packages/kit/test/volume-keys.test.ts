@@ -65,6 +65,18 @@ describe('VolumeKeys', () => {
         expect(preset.fake.sent).toEqual([['mute', false], ['volume', 25]]);
     });
 
+    it('a preset on another command: a long press sets it (unmuted); none: no long press', async () => {
+        const { k, fake } = make({ volume: 40, muted: true });
+        k.show('a', { command: 'mute', preset: 18 });
+        expect(k.hasLongPress('a')).toBe(true);
+        await k.pressPreset('a');
+        expect(fake.sent).toEqual([['mute', false], ['volume', 18]]);
+        k.show('a', { command: 'mute' });
+        expect(k.hasLongPress('a')).toBe(false);
+        k.show('a', { command: 'preset', preset: 18 });
+        expect(k.hasLongPress('a')).toBe(false);
+    });
+
     it('without a player or a volume: dimmed, and a press rejects', async () => {
         const { k, images } = make(undefined);
         k.show('a', { command: 'up' });

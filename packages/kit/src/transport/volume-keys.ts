@@ -18,7 +18,7 @@ export type VolumeKeySettings = {
     command?: VolumeCommand;
     /** Percent per press for up/down (default 5). */
     step?: number | string;
-    /** Target volume for "preset" (default 20). */
+    /** Target volume for "preset" (default 20); on the other commands, what a long press sets (none: no long press). */
     preset?: number | string;
     /** Show the volume on the key (default on). */
     showVolume?: boolean;
@@ -79,13 +79,24 @@ export class VolumeKeys {
         return k ? this.o.board.resolve(k.settings.player || this.o.defaultPlayer || ACTIVE_PLAYER) : undefined;
     }
 
-    async press(id: string): Promise<void> {
+    /** Whether a long press does something (sets the preset volume): a preset on another command. */
+    hasLongPress(id: string): boolean {
+        const s = this.keys.get(id)?.settings;
+        return !!s && s.command !== 'preset' && s.preset !== undefined && s.preset !== '';
+    }
+
+    /** A long press: the preset volume, unmuted (sonos-controller's keys did this). */
+    async pressPreset(id: string): Promise<void> {
+        return this.press(id, 'preset');
+    }
+
+    async press(id: string, as?: VolumeCommand): Promise<void> {
         const k = this.keys.get(id);
         const p = this.player(id);
         if (!k || !p) throw new Error('volume: no player');
         const can = (c: string) => !p.can || p.can.includes(c as never);
         const { volume, muted } = this.shown(k, p);
-        const command = k.settings.command ?? 'up';
+        const command = as ?? k.settings.command ?? 'up';
         const sends: (() => Promise<unknown>)[] = [];
         if (command === 'mute') {
             if (!can('mute')) throw new Error(`volume: ${p.name} can't mute`);
