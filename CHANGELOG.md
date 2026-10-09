@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.11] — 2026-10-09
+
 ### Changed
 
 - `<pi-corners>` starts with picking the icon ("my icon", formerly "marker"), always shown; its tile then shows that icon, so it's clear what it is. New kit text `kit.corners_title` for the card ("Icons at the top" / "Symbole oben" / "Iconos arriba"). `<pi-icon-picker>` fires `pi-icon` with the chosen icon's path.
