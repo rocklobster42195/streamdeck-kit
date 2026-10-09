@@ -220,3 +220,20 @@ pi-panorama { display: flex; flex-direction: column; gap: 6px; }
 .pi-pano-range { display: flex; align-items: center; gap: 10px; }
 .pi-pano-range input { flex-grow: 1; }
 .pi-pano-summary { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; padding: 10px 12px; width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; border: 1px solid var(--pi-control-border); }
+
+/* <pi-states>: the Multi-state key's list */
+.pi-states { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px 10px; }
+.pi-state-row { display: flex; gap: 6px; align-items: center; }
+.pi-state-row .pi-input { padding: 6px 8px; min-width: 0; }
+.pi-state-value { flex: 0 0 64px; font-family: Consolas, "SF Mono", monospace; font-size: 12px; }
+select.pi-state-value { flex: 0 1 120px; font-family: inherit; }
+.pi-state-label { flex: 1 1 auto; }
+.pi-state-row .pi-color { width: 34px; height: 30px; }
+.pi-state-row .pi-icon-button { height: 30px; width: 30px; flex: none; font-size: 15px; }
+.pi-state-row .pi-icon-button:disabled { opacity: 0.3; cursor: default; }
+.pi-state-picker { display: flex; flex-direction: column; gap: 6px; padding: 4px 0 8px; }
+.pi-state-picker .pi-icon-grid { padding: 0; }
+.pi-state-actions { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 4px; }
+
+/* <pi-multi-select> */
+.pi-multi-icon { width: 24px; height: 24px; flex: none; }
