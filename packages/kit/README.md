@@ -211,6 +211,8 @@ export class PlayPauseKey extends PlayPauseKeyAction {
 }
 ```
 
+The Volume key too: `VolumeKeyAction` (`/keys`) with `VolumeKeys`; settings `command` (`up`, `down`, `mute`, `preset`), `step`, `preset`, `showVolume`, `gauge` (`ring`, `pie`, `open`), `player`, `keyColor`, `marker`.
+
 The Playback Control key works the same way: `PlaybackControlKeyAction` (`/keys`) with `PlaybackKeys` behind it; settings `command` (`next`, `previous`, `shuffle`, `repeat`, `crossfade`, `dont_stop`), `seekStep`, `player`, `keyColor`, `marker`.
 
 In the settings panel, `<pi-corners>` picks the two corners (and when the battery shows); the player, colour and marker use `<pi-select source="players">`, `<pi-key-color>` and `<pi-icon-picker>`. Player entries carry `source`, `sourceIcon`, `battery` and `charging` for the corners.

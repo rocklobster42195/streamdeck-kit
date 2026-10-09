@@ -4,3 +4,4 @@ export * from './play-pause-render.js';
 export * from './play-pause-keys.js';
 export * from './service-icons.js';
 export * from './playback-keys.js';
+export * from './volume-keys.js';
