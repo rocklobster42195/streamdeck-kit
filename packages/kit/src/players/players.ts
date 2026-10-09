@@ -1,8 +1,9 @@
 // Players on deckbus (docs/deckbus-protocol.md, "players"; grill 2026-10-04): every plugin with
 // something playable publishes its players, and any plugin's keys can control any of them. One
 // physical device seen by two plugins (a Sonos speaker via SO-C and via MA-C) is one player:
-// commands go to the plugin that talks to it directly, title and cover come from the plugin whose
-// media plays. Kept SDK-free.
+// the device's plugin (the one that talks to it directly) says whether it plays and takes volume and
+// mute; the media's plugin (whose queue or session plays) gives title, cover, colour and position
+// and takes every command about what plays (grill 2026-10-09). Kept SDK-free.
 import type { DeckBus, PeerInfo } from '../bus/bus.js';
 
 export const PLAYERS_KEY = 'players';
@@ -55,6 +56,14 @@ export type PlayerEntry = {
     repeat?: RepeatMode;
     /** The commands the player takes now. */
     can?: TransportCommand[];
+    /** Where what plays comes from, for people: "Spotify", "Sonos Radio", "Line-In", an app's name. */
+    source?: string;
+    /** A square picture of the source: an image URL this computer can load, or a data: URI. */
+    sourceIcon?: string;
+    /** Battery charge 0–100, for a device that runs on one. */
+    battery?: number;
+    /** The battery is charging. */
+    charging?: boolean;
 };
 
 /** Where an entry comes from: a peer, or this plugin itself (no peer). */
@@ -78,9 +87,11 @@ export type TransportHandler = (t: Transport) => unknown;
 /**
  * Commands about what plays (not about the device): they go to the plugin whose media plays.
  * Seen 2026-10-04: a Sonos speaker playing Music Assistant's stream can't seek in it through
- * Sonos; MA has to start its stream at the new position.
+ * Sonos; MA has to start its stream at the new position. Seen 2026-10-09: a Sonos "Next" in MA's
+ * stream works once, then leaves the speaker buffering; a Sonos "Play" after a pause ends in an
+ * error and silence. Only volume and mute stay with the device.
  */
-export const MEDIA_COMMANDS: readonly TransportCommand[] = ['seek', 'next', 'previous', 'shuffle', 'repeat'];
+export const MEDIA_COMMANDS: readonly TransportCommand[] = ['play-pause', 'play', 'pause', 'seek', 'next', 'previous', 'shuffle', 'repeat'];
 
 /** Where a command for a merged player goes: its media's plugin for media commands, else the direct one. */
 export function routeFor(p: Player, command: TransportCommand): PlayerRoute {
@@ -120,7 +131,13 @@ function latest<T extends { playing: boolean; since: number }>(all: T[]): T | un
     return pick(all.filter((p) => p.playing)) ?? pick(all);
 }
 
-/** Merges routes of one player: commands to a direct route, media from the route whose media plays. */
+/**
+ * Merges routes of one player. The device's route (direct, else our own, else the first) says
+ * whether it plays and has volume, mute and battery; the media's route (media and playing, else
+ * media) has title, cover, colour, position, source, shuffle and repeat. Rules from the grill
+ * 2026-10-09: Music Assistant reported "playing" all through a pause on a Sonos speaker, while
+ * the speaker itself (SO-C) knew within a second; the colour follows the cover it belongs to.
+ */
 function merge(id: string, routes: PlayerRoute[]): Player {
     const via = routes.find((r) => r.entry.direct) ?? routes.find((r) => !r.peer) ?? routes[0];
     const media = routes.filter((r) => r.entry.media);
@@ -135,22 +152,32 @@ function merge(id: string, routes: PlayerRoute[]): Player {
         kind: v.kind,
         app: v.app ?? f.app,
         direct: v.direct,
-        // The colour from the plugin that talks to the device directly: plugins work a cover's colour
-        // out differently (SO-C from the image, MA-C from Music Assistant's palette), and the direct
-        // one's dials already show its own (seen 2026-10-04: blue from SO-C, salmon from MA-C)
-        color: v.color ?? f.color,
-        playing: routes.some((r) => r.entry.playing),
+        color: f.color ?? v.color,
+        // The device knows; without a direct plugin, any route that plays
+        playing: v.direct ? v.playing : routes.some((r) => r.entry.playing),
         since: Math.max(...routes.map((r) => r.entry.since)),
         volume: v.volume ?? f.volume,
         muted: v.muted ?? f.muted,
-        shuffle: v.shuffle ?? f.shuffle,
-        repeat: v.repeat ?? f.repeat,
-        can: v.can,
+        battery: v.battery ?? f.battery,
+        charging: v.charging ?? f.charging,
+        shuffle: f.shuffle ?? v.shuffle,
+        repeat: f.repeat ?? v.repeat,
+        can: canOf(via, from),
         id,
         routes,
         via,
         from,
     };
+}
+
+/** What a merged player takes: commands about what plays as its media's plugin says, the rest as the device's. */
+function canOf(via: PlayerRoute, from: PlayerRoute): TransportCommand[] | undefined {
+    if (from === via || !from.entry.media) return via.entry.can;
+    if (!via.entry.can && !from.entry.can) return undefined;
+    const device = (via.entry.can ?? []).filter((c) => !MEDIA_COMMANDS.includes(c));
+    // A media plugin that doesn't say: unknown, so as the device says
+    const media = (from.entry.can ?? via.entry.can ?? []).filter((c) => MEDIA_COMMANDS.includes(c));
+    return [...media, ...device];
 }
 
 /** An entry of the player dropdown (the PI's <pi-select>, see PiBridge.registerOptions). */

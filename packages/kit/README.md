@@ -165,7 +165,7 @@ bus.broadcast("alert", { text: "Doorbell" });
 
 ### Players
 
-Media keys that work with any player on the deck: every plugin publishes what it can play (speakers, apps), and a key picks a player or "the active player", not a plugin. One device known to two plugins (a Sonos speaker seen directly and through Music Assistant) is one player: commands go to the plugin that talks to it directly, title and cover come from the one whose media plays.
+Media keys that work with any player on the deck: every plugin publishes what it can play (speakers, apps), and a key picks a player or "the active player", not a plugin. One device known to two plugins (a Sonos speaker seen directly and through Music Assistant) is one player: the plugin that talks to it directly says whether it plays and takes volume and mute; the one whose media plays gives title, cover, colour and position and takes play, pause, skip and seek.
 
 ```ts
 import { PlayerBoard, SeekStepper, positionNow, resolveKeyColor } from "@rocklobster42195/streamdeck-kit";

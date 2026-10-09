@@ -47,11 +47,28 @@ describe('PlayerBoard', () => {
         expect(bad.via.source).toBe('SO-C');
         expect(bad.from.source).toBe('MA-C');
         expect(bad.title).toBe('MA title');
-        // The colour from the direct plugin (the same as its own dials)
-        expect(bad.color).toBe('#0000ff');
+        // The colour of the cover it belongs to: the media's
+        expect(bad.color).toBe('#ff0000');
         expect(bad.volume).toBe(12);
         expect(bad.can).toEqual(['play-pause', 'seek']);
         expect(bad.since).toBe(7);
+    });
+
+    it('the device says whether it plays; the media gives source, shuffle and repeat; the device its battery', () => {
+        const board = new PlayerBoard('SO-C');
+        // MA still reports "playing" during a pause; the speaker knows better
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', direct: true, playing: false, since: 5, battery: 40, charging: true, shuffle: false, source: 'Line-In' })]);
+        board.setPeers([peer('MA-C', [speaker('RINCON_1', { device: 'RINCON_1', media: true, playing: true, since: 5, source: 'Spotify', sourceIcon: 'data:image/png;base64,AA', shuffle: true, repeat: 'all' })])]);
+        const p = board.resolve('device:RINCON_1')!;
+        expect(p.playing).toBe(false);
+        expect(p).toMatchObject({ battery: 40, charging: true, source: 'Spotify', sourceIcon: 'data:image/png;base64,AA', shuffle: true, repeat: 'all' });
+    });
+
+    it('takes commands about what plays as the media says, volume and mute as the device says', () => {
+        const board = new PlayerBoard('SO-C');
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', direct: true, can: ['play-pause', 'next', 'volume', 'mute'] })]);
+        board.setPeers([peer('MA-C', [speaker('RINCON_1', { device: 'RINCON_1', media: true, can: ['play-pause', 'play', 'pause', 'seek', 'volume'] })])]);
+        expect(board.resolve('device:RINCON_1')!.can).toEqual(['play-pause', 'play', 'pause', 'seek', 'volume', 'mute']);
     });
 
     it('without a direct plugin, commands go to the one that knows it', () => {
@@ -125,7 +142,10 @@ describe('PlayerBoard', () => {
         board.setPeers([peer('MA-C', [speaker('RINCON_1', { device: 'RINCON_1', media: true, playing: true, since: 1 })])]);
         await board.send('device:RINCON_1', 'seek', 60);
         await board.send('device:RINCON_1', 'volume', 10);
-        expect(requests.map((r) => (r[2] as Transport).command)).toEqual(['seek']);
+        // Play and pause too: a Sonos "Play" in Music Assistant's stream ends in silence
+        await board.send('device:RINCON_1', 'pause');
+        await board.send('device:RINCON_1', 'play-pause');
+        expect(requests.map((r) => (r[2] as Transport).command)).toEqual(['seek', 'pause', 'play-pause']);
         expect(got.map((t) => t.command)).toEqual(['volume']);
     });
 

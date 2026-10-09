@@ -162,18 +162,27 @@ What each peer can play, so any plugin's keys can control any player on the deck
    "playing":true,"since":1759500000000,"color":"#d9643a","media":true,
    "title":"Song","artist":"Artist","album":"Album","cover":"http://192.168.7.212:1400/getaa?…",
    "position":42.5,"duration":215,"at":1759500042500,"volume":12,"muted":false,"shuffle":false,"repeat":"off",
-   "can":["play-pause","next","previous","seek","volume","mute","shuffle","repeat"]}
+   "can":["play-pause","next","previous","seek","volume","mute","shuffle","repeat"],
+   "source":"Spotify","sourceIcon":"data:image/png;base64,…","battery":80,"charging":false}
 ]}
 ```
 
 - `player` is the peer's own id for it. `device` names the physical device when other peers can know it too (a Sonos speaker's `RINCON_…`; Music Assistant uses the same id for Sonos speakers). Entries of different peers with the same `device` are **one player**.
 - `kind`: `speaker` (a room, a speaker, a group) or `app` (media on this computer, e.g. a Windows media session). For `app`, `app` names the application ("Spotify"), so a choice survives the app restarting.
-- `direct`: the peer talks to the device itself (SO-C for Sonos), not through a server. For one `device`, commands go to a `direct` peer when there is one, except commands about what plays (`seek`, `next`, `previous`, `shuffle`, `repeat`): those go to the peer with `media` true (a Sonos speaker playing Music Assistant's stream can't seek in it through Sonos).
-- `media`: what plays right now comes from this peer (its queue or session). For one `device`, title, cover and position come from the peer with `media` true; else from the one commands go to. The `color` comes from the `direct` peer when it has one (peers work a cover's colour out differently), so a speaker shows one colour everywhere.
-- `playing` and `since` as in covers (the active player is the one playing with the highest `since`, else the highest `since`); a peer only counts a player as started after about 2 s of real playback. `color` as in covers.
+- `direct`: the peer talks to the device itself (SO-C for Sonos), not through a server. `media`: what plays right now comes from this peer (its queue or session). One `device` can have two owners, the **device's** peer (`direct`, else the one commands went to before) and the **media's** peer (`media` true, the one that plays first). They split it like this (grill 2026-10-09):
+
+  | From the device's peer | From the media's peer |
+  |---|---|
+  | `playing` (the device knows: Music Assistant reported a Sonos speaker "playing" all through a pause) | `title`, `artist`, `album`, `cover`, `color`, `position`, `duration`, `at`, `source`, `sourceIcon`, `shuffle`, `repeat` |
+  | `volume`, `muted`, `battery`, `charging` | |
+  | commands `volume`, `volume-by`, `mute` | commands `play-pause`, `play`, `pause`, `next`, `previous`, `seek`, `shuffle`, `repeat` (Sonos commands break Music Assistant's stream: a second Next leaves the speaker buffering, a Play after a pause ends in silence) |
+
+  `can` follows the same split. Without a `media` peer, or when one peer is both, everything comes from it; without a `direct` peer, a player plays when any peer says so.
+- `playing` and `since` as in covers (the active player is the one playing with the highest `since`, else the highest `since`); a peer only counts a player as started after about 2 s of real playback. `color` as in covers, the cover's colour (so it comes with the cover from the media's peer).
 - `position` and `duration` in seconds, `at` the time (ms) `position` was true, so others can count on while `playing`. Missing `duration`: nothing to seek (radio, a stream).
 - `volume` 0–100, `repeat` `off` | `all` | `one`. A group is one entry (its coordinator), named like "Küche + 2".
 - `can` lists the commands the player takes now; keys grey out what's missing.
+- `source` says for people where what plays comes from ("Spotify", "Sonos Radio", "Line-In", an app's name), `sourceIcon` is a square picture of it (an image URL every plugin on this computer can load, or a `data:` URI). `battery` 0–100 and `charging` for a device that runs on a battery. Keys show them as badges.
 - `cover` is a URL every plugin on this computer can load (`http`/`https`). A peer that only has the image's bytes (SA-C: Windows media sessions) serves it itself on `127.0.0.1` (the kit's `CoverServer`).
 - Missing fields mean unknown. Peers may add their own fields.
 
