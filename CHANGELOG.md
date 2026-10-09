@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.20] — 2026-10-09
+
 ### Added
 
 - `<pi-multi-select>`: from 9 rows on, a search field above the list (label, second line and value; chosen rows stay in sight).
