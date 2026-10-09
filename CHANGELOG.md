@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.6] — 2026-10-09
+
 ### Changed
 
 - **Players: device and media split** (grill 2026-10-09). When one device has two owners (a Sonos speaker playing Music Assistant's stream: SO-C for the device, MA-C for the media), whether it plays comes from the device's plugin (MA reported "playing" all through a pause), the colour from the media's plugin (the cover it belongs to), shuffle and repeat too, and **play, pause and play-pause go to the media's plugin** like next and seek (Sonos commands break MA's stream). `can` follows the split. Only volume and mute stay with the device.
