@@ -184,6 +184,21 @@ const seek = new SeekStepper({ position: () => positionNow(p), duration: () => p
 const icon = resolveKeyColor(keySettings.color, { cover: p?.color, row: rowColour }); // "grey" | "cover" | "row" | "#RRGGBB"
 ```
 
+### Transport keys
+
+The same Play/Pause key in every plugin: `PlayPauseKeys` does what all of a plugin's Play/Pause keys show and send, on the `PlayerBoard`; the plugin keeps a thin action class (its own UUID, its old settings migrated). The key shows the cover, dimmed with a play symbol while paused, an optional scrolling title and progress pill, and two corners the user fills (`topLeft`, `topRight`: `none`, `marker`, `source` or `battery`). A press sends an explicit `play` or `pause` by what the key shows (a peer that only knows `play-pause` gets that), and the key shows the new state at once until the device confirms it.
+
+```ts
+import { PlayPauseKeys, type PlayPauseKeySettings } from "@rocklobster42195/streamdeck-kit";
+
+const keys = new PlayPauseKeys({ board: players, draw: (id, image) => actions.get(id)?.setImage(image), markerPath: (name) => mdiPath(name), rowColor: (id) => rows.rowColor(deviceOf(id)) });
+keys.show(id, settings as PlayPauseKeySettings); // willAppear / settings changed
+keys.hide(id);                                    // willDisappear
+await keys.press(id);                             // keyDown; rejects without a player → showAlert()
+```
+
+In the settings panel, `<pi-corners>` picks the two corners (and when the battery shows); the player, colour and marker use `<pi-select source="players">`, `<pi-key-color>` and `<pi-icon-picker>`. Player entries carry `source`, `sourceIcon`, `battery` and `charging` for the corners.
+
 ## Icon catalog (`/mdi`)
 
 `@rocklobster42195/streamdeck-kit/mdi` provides `searchMdi(query)`, `mdiPath(name)` and `mdiLabel(name)` over all [Material Design Icons](https://pictogrammers.com/library/mdi/), so users can pick any icon for a key. It imports the whole icon set, which adds about 3 MB to the plugin bundle. That is why it has its own entry point.

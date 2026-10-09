@@ -19,6 +19,7 @@ import { PiSwatch } from './swatch.js';
 import { PiField } from './field.js';
 import { PiIconPicker } from './icon-picker.js';
 import { PiKeyColor } from './key-color.js';
+import { PiCorners } from './corners.js';
 import { PiCallReaction } from './call-reaction.js';
 import { PiStates } from './states.js';
 import { PiMultiSelect } from './multi-select.js';
@@ -36,6 +37,7 @@ export { closeColorPopover, openColorPopover, type ColorPopoverOptions } from '.
 export { PiField } from './field.js';
 export { PiIconPicker } from './icon-picker.js';
 export { PiKeyColor } from './key-color.js';
+export { PiCorners } from './corners.js';
 export { PiCallReaction } from './call-reaction.js';
 export { PiStates, registerStatesCurrent } from './states.js';
 export { PiMultiSelect } from './multi-select.js';
@@ -59,6 +61,7 @@ export function definePiComponents(): void {
     if (!customElements.get('pi-swatch')) customElements.define('pi-swatch', PiSwatch);
     if (!customElements.get('pi-color')) customElements.define('pi-color', PiColor);
     if (!customElements.get('pi-key-color')) customElements.define('pi-key-color', PiKeyColor);
+    if (!customElements.get('pi-corners')) customElements.define('pi-corners', PiCorners);
     if (!customElements.get('pi-call-reaction')) customElements.define('pi-call-reaction', PiCallReaction);
     if (!customElements.get('pi-states')) customElements.define('pi-states', PiStates);
     if (!customElements.get('pi-multi-select')) customElements.define('pi-multi-select', PiMultiSelect);
