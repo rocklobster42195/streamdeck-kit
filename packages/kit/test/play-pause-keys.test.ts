@@ -104,6 +104,17 @@ describe('PlayPauseKeys', () => {
         expect(widthOf(paused)).toBeGreaterThan(0);
     });
 
+    it("shows the player's name as the title when asked", () => {
+        const titles: string[] = [];
+        const fake = fakeBoard({ playing: true, name: 'Küche + 2' });
+        const k = new PlayPauseKeys({ board: fake.board as never, draw: (_id, _img, title) => titles.push(title) });
+        keys.push(k);
+        k.show('a', { showName: true });
+        expect(titles.at(-1)).toBe('Küche + 2');
+        k.show('a', {});
+        expect(titles.at(-1)).toBe('');
+    });
+
     it('fills the corners the user picked', () => {
         const { k, images } = make({ playing: true, source: 'Spotify', battery: 15 });
         k.show('a', { topLeft: 'marker', topRight: 'battery', marker: 'sofa' });

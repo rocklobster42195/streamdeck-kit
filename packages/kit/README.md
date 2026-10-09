@@ -191,7 +191,7 @@ The same Play/Pause key in every plugin: `PlayPauseKeys` does what all of a plug
 ```ts
 import { PlayPauseKeys, type PlayPauseKeySettings } from "@rocklobster42195/streamdeck-kit";
 
-const keys = new PlayPauseKeys({ board: players, draw: (id, image) => actions.get(id)?.setImage(image), markerPath: (name) => mdiPath(name), rowColor: (id) => rows.rowColor(deviceOf(id)) });
+const keys = new PlayPauseKeys({ board: players, draw: (id, image, title) => { const a = actions.get(id); void a?.setImage(image); void a?.setTitle(title); }, markerPath: (name) => mdiPath(name), rowColor: (id) => rows.rowColor(deviceOf(id)) });
 keys.show(id, settings as PlayPauseKeySettings); // willAppear / settings changed
 keys.hide(id);                                    // willDisappear
 await keys.press(id);                             // keyDown; rejects without a player → showAlert()

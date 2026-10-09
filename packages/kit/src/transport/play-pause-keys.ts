@@ -31,6 +31,8 @@ export type PlayPauseKeySettings = {
     showCover?: boolean;
     showTitle?: boolean;
     showProgress?: boolean;
+    /** The player's name as the key's Stream Deck title. */
+    showName?: boolean;
 };
 
 /** What a new key starts with (grill Q8c: marker left, source right). */
@@ -50,8 +52,8 @@ const MARKER_COLOR = '#b8b8be';
 
 export type PlayPauseKeysOptions = {
     board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'>;
-    /** Shows a key's picture (the plugin calls action.setImage). */
-    draw: (id: string, image: string) => void;
+    /** Shows a key's picture and title (the plugin calls action.setImage / setTitle; title "" clears it). */
+    draw: (id: string, image: string, title: string) => void;
     /** The player of a key without one: "active" (speakers) by default; SA-C: "active:all". */
     defaultPlayer?: string;
     /** The Panorama row colour of a key's Stream Deck (for keyColor "row"). */
@@ -67,6 +69,7 @@ type Key = {
     /** A pressed state shown until the device confirms it. */
     pressed?: { playing: boolean; until: number; position?: number };
     last?: string;
+    lastTitle?: string;
 };
 
 export class PlayPauseKeys {
@@ -89,7 +92,7 @@ export class PlayPauseKeys {
         const k = this.keys.get(id);
         if (k) k.settings = settings;
         else this.keys.set(id, { settings });
-        if (k) k.last = undefined;
+        if (k) k.last = k.lastTitle = undefined;
         this.render(id);
     }
 
@@ -155,9 +158,11 @@ export class PlayPauseKeys {
         const p = this.player(id);
         const image = p ? this.view(id, k, s, p) : renderPlayPauseKey({ unavailable: true, playing: false, iconColor: KEY_TIERS.unavailable, accent: KEY_GREY, left: this.marker(s, s.topLeft, true), right: this.marker(s, s.topRight, true) });
         if (!p) frames.stop(`play-pause-title-${id}`);
-        if (image === k.last) return;
+        const title = k.settings.showName && p ? p.name : '';
+        if (image === k.last && title === k.lastTitle) return;
         k.last = image;
-        this.o.draw(id, image);
+        k.lastTitle = title;
+        this.o.draw(id, image, title);
     }
 
     private view(id: string, k: Key, s: PlayPauseKeySettings & typeof PLAY_PAUSE_DEFAULTS, p: Player): string {
