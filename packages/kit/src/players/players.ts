@@ -16,9 +16,9 @@ export const TRANSPORT_TIMEOUT_MS = 10_000;
 
 export type PlayerKind = 'speaker' | 'app';
 export type RepeatMode = 'off' | 'all' | 'one';
-export type TransportCommand = 'play-pause' | 'play' | 'pause' | 'next' | 'previous' | 'seek' | 'volume' | 'volume-by' | 'mute' | 'shuffle' | 'repeat';
+export type TransportCommand = 'play-pause' | 'play' | 'pause' | 'next' | 'previous' | 'seek' | 'volume' | 'volume-by' | 'mute' | 'shuffle' | 'repeat' | 'crossfade' | 'autoplay';
 
-export const TRANSPORT_COMMANDS: readonly TransportCommand[] = ['play-pause', 'play', 'pause', 'next', 'previous', 'seek', 'volume', 'volume-by', 'mute', 'shuffle', 'repeat'];
+export const TRANSPORT_COMMANDS: readonly TransportCommand[] = ['play-pause', 'play', 'pause', 'next', 'previous', 'seek', 'volume', 'volume-by', 'mute', 'shuffle', 'repeat', 'crossfade', 'autoplay'];
 
 /** One player as a plugin publishes it. Missing fields mean unknown. */
 export type PlayerEntry = {
@@ -56,6 +56,10 @@ export type PlayerEntry = {
     muted?: boolean;
     shuffle?: boolean;
     repeat?: RepeatMode;
+    /** Tracks fade into each other (Music Assistant's crossfade). */
+    crossfade?: boolean;
+    /** Similar music goes on when the queue ends (Music Assistant's "Don't stop the music"). */
+    autoplay?: boolean;
     /** The commands the player takes now. */
     can?: TransportCommand[];
     /** Where what plays comes from, for people: "Spotify", "Sonos Radio", "Line-In", an app's name. */
@@ -93,7 +97,7 @@ export type TransportHandler = (t: Transport) => unknown;
  * stream works once, then leaves the speaker buffering; a Sonos "Play" after a pause ends in an
  * error and silence. Only volume and mute stay with the device.
  */
-export const MEDIA_COMMANDS: readonly TransportCommand[] = ['play-pause', 'play', 'pause', 'seek', 'next', 'previous', 'shuffle', 'repeat'];
+export const MEDIA_COMMANDS: readonly TransportCommand[] = ['play-pause', 'play', 'pause', 'seek', 'next', 'previous', 'shuffle', 'repeat', 'crossfade', 'autoplay'];
 
 /** Where a command for a merged player goes: its media's plugin for media commands, else the direct one. */
 export function routeFor(p: Player, command: TransportCommand): PlayerRoute {
@@ -115,7 +119,7 @@ export function parseTransport(params: unknown): Transport {
         if (typeof value !== 'number' || !Number.isFinite(value)) throw new Error(`transport: ${command} needs a number`);
     };
     if (command === 'seek' || command === 'volume' || command === 'volume-by') num();
-    if ((command === 'mute' || command === 'shuffle') && typeof value !== 'boolean') throw new Error(`transport: ${command} needs true or false`);
+    if ((command === 'mute' || command === 'shuffle' || command === 'crossfade' || command === 'autoplay') && typeof value !== 'boolean') throw new Error(`transport: ${command} needs true or false`);
     if (command === 'repeat' && value !== 'off' && value !== 'all' && value !== 'one') throw new Error('transport: repeat needs off, all or one');
     return value === undefined ? { player: p.player, command } : { player: p.player, command, value };
 }
@@ -169,6 +173,8 @@ function merge(id: string, routes: PlayerRoute[]): Player {
         charging: v.charging ?? f.charging,
         shuffle: f.shuffle ?? v.shuffle,
         repeat: f.repeat ?? v.repeat,
+        crossfade: f.crossfade ?? v.crossfade,
+        autoplay: f.autoplay ?? v.autoplay,
         can: canOf(via, from),
         id,
         routes,

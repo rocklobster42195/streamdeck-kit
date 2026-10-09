@@ -181,7 +181,7 @@ What each peer can play, so any plugin's keys can control any player on the deck
   `can` follows the same split. Without a `media` peer, or when one peer is both, everything comes from it; without a `direct` peer, a player plays when any peer says so.
 - `playing` and `since` as in covers (the active player is the one playing with the highest `since`, else the highest `since`); a peer only counts a player as started after about 2 s of real playback. `color` as in covers, the cover's colour (so it comes with the cover from the media's peer).
 - `position` and `duration` in seconds, `at` the time (ms) `position` was true, so others can count on while `playing`. Missing `duration`: nothing to seek (radio, a stream).
-- `volume` 0–100, `repeat` `off` | `all` | `one`. A group is one entry (its coordinator), named like "Küche + 2".
+- `volume` 0–100, `repeat` `off` | `all` | `one`. `crossfade` and `autoplay` (tracks fade into each other; similar music goes on when the queue ends — Music Assistant's "Don't stop the music"), both `true`/`false`, with the commands of the same names. A group is one entry (its coordinator), named like "Küche + 2".
 - `can` lists the commands the player takes now; keys grey out what's missing.
 - `source` says for people where what plays comes from ("Spotify", "Sonos Radio", "Line-In", an app's name), `sourceIcon` is a square picture of it (an image URL every plugin on this computer can load, or a `data:` URI). `battery` 0–100 and `charging` for a device that runs on a battery. Keys show them as badges.
 - `cover` is a URL every plugin on this computer can load (`http`/`https`). A peer that only has the image's bytes (SA-C: Windows media sessions) serves it itself on `127.0.0.1` (the kit's `CoverServer`).

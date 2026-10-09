@@ -4,6 +4,11 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Added
+
+- **Universal Playback Control key** (grill 2026-10-09, the "family" style chosen by the user): `PlaybackKeys` (SDK-free) and `PlaybackControlKeyAction` (`/keys`). One key per command: next, previous, shuffle, repeat (off → all → one), and where the player has them crossfade and "Don't stop the music"; toggles flip at once with the "on" plate and frame until the player confirms; Next/Previous held half a second switch seek mode (taps add up to one seek, the key shows the jump). Settings `player`, `command`, `seekStep`, `keyColor`, `marker`; option `accent` for a grey key's "on" colour.
+- Players: commands and fields `crossfade` and `autoplay` (Music Assistant's crossfade and "Don't stop the music"), both about what plays.
+
 ## [0.1.0-alpha.15] — 2026-10-09
 
 ### Changed
