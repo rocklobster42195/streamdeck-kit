@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Added
+
+- Player entries: `members` (the devices playing in a group); `resolve("device:<member>")` finds the group a speaker plays in, so a key bound to one room keeps controlling it while it is grouped.
+
 ## [0.1.0-alpha.12] — 2026-10-09
 
 ### Added

@@ -26,6 +26,8 @@ export type PlayerEntry = {
     player: string;
     /** The physical device, when other plugins can know it too (Sonos: "RINCON_…"). */
     device?: string;
+    /** For a group: the devices playing in it, its own included (a key bound to a member finds the group). */
+    members?: string[];
     /** For people: "Badezimmer", "Küche + 2", "Spotify". */
     name: string;
     kind: PlayerKind;
@@ -148,6 +150,7 @@ function merge(id: string, routes: PlayerRoute[]): Player {
         ...f,
         player: v.player,
         device: v.device ?? f.device,
+        members: v.members ?? f.members,
         name: v.name,
         kind: v.kind,
         app: v.app ?? f.app,
@@ -305,7 +308,12 @@ export class PlayerBoard {
         const c = choice || ACTIVE_PLAYER;
         if (c === ACTIVE_PLAYER) return this.active(false);
         if (c === ACTIVE_ANY_PLAYER) return this.active(true);
-        return this.players().find((p) => p.id === c);
+        const all = this.players();
+        const hit = all.find((p) => p.id === c);
+        if (hit || !c.startsWith('device:')) return hit;
+        // A speaker that plays in another one's group: that group
+        const device = c.slice('device:'.length);
+        return all.find((p) => p.members?.includes(device));
     }
 
     /** Sends a command to a player (by choice or merged player); rejects when it can't. */

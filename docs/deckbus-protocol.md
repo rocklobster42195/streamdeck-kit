@@ -167,6 +167,7 @@ What each peer can play, so any plugin's keys can control any player on the deck
 ]}
 ```
 
+- `members` (optional): for a group, the `device`s playing in it, its own included; a key whose choice is `device:<a member>` controls the group.
 - `player` is the peer's own id for it. `device` names the physical device when other peers can know it too (a Sonos speaker's `RINCON_…`; Music Assistant uses the same id for Sonos speakers). Entries of different peers with the same `device` are **one player**.
 - `kind`: `speaker` (a room, a speaker, a group) or `app` (media on this computer, e.g. a Windows media session). For `app`, `app` names the application ("Spotify"), so a choice survives the app restarting.
 - `direct`: the peer talks to the device itself (SO-C for Sonos), not through a server. `media`: what plays right now comes from this peer (its queue or session). One `device` can have two owners, the **device's** peer (`direct`, else the one commands went to before) and the **media's** peer (`media` true, the one that plays first). They split it like this (grill 2026-10-09):

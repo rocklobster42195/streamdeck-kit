@@ -71,6 +71,13 @@ describe('PlayerBoard', () => {
         expect(board.resolve('device:RINCON_1')!.can).toEqual(['play-pause', 'play', 'pause', 'seek', 'volume', 'mute']);
     });
 
+    it("a key bound to a group's member finds the group", () => {
+        const board = new PlayerBoard('SO-C');
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', name: 'Bad + 1', direct: true, members: ['RINCON_1', 'RINCON_2'] })]);
+        expect(board.resolve('device:RINCON_2')?.id).toBe('device:RINCON_1');
+        expect(board.resolve('device:RINCON_9')).toBeUndefined();
+    });
+
     it('without a direct plugin, commands go to the one that knows it', () => {
         const board = new PlayerBoard('SA-C');
         board.setPeers([peer('MA-C', [speaker('ma-bad', { device: 'RINCON_1', name: 'Bad' })])]);
