@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.10] — 2026-10-09
+
 ### Changed
 
 - `<pi-corners>` picks the marker's icon too, inside its card, while a corner shows the marker (the marker no longer needs its own section). Built once and then only updated, so a marker search in progress survives a settings change.
