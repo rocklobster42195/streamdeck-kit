@@ -2,7 +2,8 @@
 //                 [reset-label="…"] [hint="…"]>
 // Pick a Material Design Icon for a key: a search field with suggestions as icon tiles (the search
 // runs in the plugin, see mdiOptions in "/mdi"), the current choice with its preview, and a button
-// back to the key's default icon (or to none, for optional icons like a marker).
+// back to the key's default icon (or to none, for optional icons like a marker). Fires "pi-icon"
+// ({ detail: { path } }, path undefined while none is chosen) when the chosen icon's picture changes.
 import type { KitPiPush, OptionItem } from '../../protocol.js';
 import { escapeHtml } from '../dom.js';
 import { t } from '../i18n.js';
@@ -18,6 +19,7 @@ export class PiIconPicker extends HTMLElement {
     private query = '';
     private timer: ReturnType<typeof setTimeout> | undefined;
     private offs: (() => void)[] = [];
+    private announced: string | undefined;
 
     private get key(): string {
         return this.getAttribute('setting') ?? 'icon';
@@ -94,6 +96,11 @@ export class PiIconPicker extends HTMLElement {
         this.querySelector('.pi-icon-current')!.innerHTML = cur?.icon ? svg(cur.icon, 28) : '';
         this.querySelector('.pi-icon-name')!.textContent = this.value && cur ? cur.label : t(this.getAttribute('none-label') ?? 'kit.icon_default_name');
         this.querySelector<HTMLButtonElement>('.pi-icon-reset')!.hidden = !this.value;
+        const path = this.value ? cur?.icon : undefined;
+        if (path !== this.announced) {
+            this.announced = path;
+            this.dispatchEvent(new CustomEvent('pi-icon', { detail: { path } }));
+        }
         const grid = this.querySelector<HTMLElement>('.pi-icon-grid')!;
         if (this.query && !this.results.length) {
             grid.innerHTML = `<div class="pi-hint">${escapeHtml(t('kit.icon_none_found'))}</div>`;

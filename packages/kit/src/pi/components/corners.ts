@@ -20,9 +20,10 @@ const BATTERY: { value: string; label: string }[] = [
  * <pi-corners [left-setting="topLeft"] [right-setting="topRight"] [battery-setting="battery"]
  *             [marker-setting="marker"] [default-left="marker"] [default-right="source"]> — what
  * the two top corners of a transport key show (grill 2026-10-09): nothing, the key's marker, the
- * source of what plays, or the battery. With a marker in a corner the card also picks the marker's
- * icon; with the battery, when it shows (only when low, or always). Built once and then only
- * updated, so a marker search in progress survives a settings change.
+ * source of what plays, or the battery. The card starts with picking "my icon" (the marker); its
+ * tile then shows that icon, so it's clear what it means. With the battery in a corner, also when
+ * it shows (only when low, or always). Built once and then only updated, so an icon search in
+ * progress survives a settings change.
  */
 export class PiCorners extends HTMLElement {
     private unsubscribe?: () => void;
@@ -38,10 +39,15 @@ export class PiCorners extends HTMLElement {
                 )
                 .join('')}</div></div>`;
         this.innerHTML =
+            `<pi-icon-picker class="pi-corner-marker" setting="${escapeHtml(this.key('marker'))}" none-label="kit.marker_none" reset-label="kit.marker_remove" hint="kit.marker_hint"></pi-icon-picker>` +
             row('left', 'kit.corner_left', CORNERS, 4) +
             row('right', 'kit.corner_right', CORNERS, 4) +
-            row('battery', 'kit.corner_battery_when', BATTERY, 2) +
-            `<pi-icon-picker class="pi-corner-marker" setting="${escapeHtml(this.key('marker'))}" none-label="kit.marker_none" reset-label="kit.marker_remove" hint="kit.marker_hint"></pi-icon-picker>`;
+            row('battery', 'kit.corner_battery_when', BATTERY, 2);
+        // "My icon" shows the icon picked above
+        this.querySelector('.pi-corner-marker')!.addEventListener('pi-icon', (e) => {
+            const path = (e as CustomEvent<{ path?: string }>).detail.path ?? mdiTagOutline;
+            this.querySelectorAll('.pi-choice-tile[data-value="marker"] path').forEach((p) => p.setAttribute('d', path));
+        });
         this.querySelectorAll<HTMLElement>('.pi-choice-tile').forEach((el) =>
             el.addEventListener('click', () => {
                 sd.setSetting(this.key(el.dataset.name as Name), el.dataset.value);
@@ -69,6 +75,5 @@ export class PiCorners extends HTMLElement {
         this.querySelectorAll<HTMLElement>('.pi-choice-tile').forEach((el) => el.setAttribute('aria-pressed', String(this.value(el.dataset.name as Name) === el.dataset.value)));
         const shows = (what: string) => this.value('left') === what || this.value('right') === what;
         this.querySelector<HTMLElement>('[data-row="battery"]')!.hidden = !shows('battery');
-        this.querySelector<HTMLElement>('.pi-corner-marker')!.hidden = !shows('marker');
     }
 }
