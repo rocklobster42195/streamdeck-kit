@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.14] — 2026-10-09
+
 ### Changed
 
 - Players: what a merged player shows comes from the device's own media first, when it plays or, with nothing playing, when it had some (a radio started in the Sonos app, playing or stopped), not from another plugin that still believes its queue plays (Music Assistant learns of it late).
