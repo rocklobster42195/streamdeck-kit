@@ -6,15 +6,20 @@ import { sd } from '../sd-client.js';
 /** `image`: a picture URL (e.g. an app's icon as a data URI). */
 type Item = { value: string; label: string; sub?: string; image?: string };
 
+/** From this many rows on, the list gets a search field. */
+const SEARCH_FROM = 9;
+
 /**
  * <pi-multi-select setting="apps" source="apps" [label-setting="appNames"] [empty="pi.no_apps"]> —
  * several choices from the plugin's list (the same "options" request as <pi-select>), one switch
  * each; stored as an array of values. Chosen values the plugin doesn't list right now (an app that
- * is closed) stay, with their stored names from `label-setting` ({ value: name }).
+ * is closed) stay, with their stored names from `label-setting` ({ value: name }). A longer list
+ * (more than SEARCH_FROM rows) gets a search field; chosen rows always stay in sight.
  */
 export class PiMultiSelect extends HTMLElement {
     private items: Item[] = [];
     private requestId = 0;
+    private query = '';
     private offs: (() => void)[] = [];
 
     private get key(): string {
@@ -55,12 +60,28 @@ export class PiMultiSelect extends HTMLElement {
     private render(): void {
         const chosen = this.chosen;
         const names = this.names;
-        const rows: (Item & { away?: boolean })[] = [...this.items, ...chosen.filter((v) => !this.items.some((i) => i.value === v)).map((v) => ({ value: v, label: names[v] ?? v, away: true }))];
-        if (!rows.length) {
+        const all: (Item & { away?: boolean })[] = [...this.items, ...chosen.filter((v) => !this.items.some((i) => i.value === v)).map((v) => ({ value: v, label: names[v] ?? v, away: true }))];
+        if (!all.length) {
             this.innerHTML = `<div class="pi-row"><span class="pi-hint">${escapeHtml(t(this.getAttribute('empty') ?? 'kit.multi_none'))}</span></div>`;
             return;
         }
-        this.innerHTML = rows
+        let search = this.querySelector<HTMLInputElement>('.pi-multi-search');
+        if (all.length >= SEARCH_FROM && !search) {
+            this.innerHTML = `<div class="pi-row"><input class="pi-input pi-multi-search" type="search" placeholder="${escapeHtml(t('kit.multi_search'))}"/></div><div class="pi-multi-rows"></div>`;
+            search = this.querySelector<HTMLInputElement>('.pi-multi-search')!;
+            search.value = this.query;
+            search.addEventListener('input', () => {
+                this.query = search!.value;
+                this.render();
+            });
+        } else if (all.length < SEARCH_FROM && (search || !this.querySelector('.pi-multi-rows'))) {
+            this.innerHTML = `<div class="pi-multi-rows"></div>`;
+            this.query = '';
+        }
+        const q = this.query.trim().toLowerCase();
+        const rows = q ? all.filter((r) => chosen.includes(r.value) || `${r.label} ${r.sub ?? ''} ${r.value}`.toLowerCase().includes(q)) : all;
+        const list = this.querySelector<HTMLElement>('.pi-multi-rows')!;
+        list.innerHTML = rows
             .map(
                 (r) => `<div class="pi-row">
                     ${r.image ? `<img class="pi-multi-icon" src="${escapeHtml(r.image)}" alt=""/>` : ''}
@@ -72,7 +93,7 @@ export class PiMultiSelect extends HTMLElement {
                 </div>`,
             )
             .join('');
-        this.querySelectorAll<HTMLButtonElement>('button[data-value]').forEach((b) => b.addEventListener('click', () => this.toggle(b.dataset.value ?? '')));
+        list.querySelectorAll<HTMLButtonElement>('button[data-value]').forEach((b) => b.addEventListener('click', () => this.toggle(b.dataset.value ?? '')));
     }
 
     private toggle(value: string): void {
