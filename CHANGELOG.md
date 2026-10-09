@@ -4,11 +4,15 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Added
+
+- Volume key: with a `preset` on another command (mute, louder, quieter), a long press sets the preset volume, unmuted (sonos-controller's keys did that); without one the key acts at once.
+
 ## [0.1.0-alpha.18] — 2026-10-09
 
 ### Added
 
-- **Universal Volume key** (grill 2026-10-09, family style): `VolumeKeys` (SDK-free), `renderVolumeKey()`, `volumeIcon()` and `VolumeKeyAction` (`/keys`). Louder and quieter from the volume the key shows (absolute `volume`, or `volume-by` for a player that only takes steps), mute as a ring, pie or open ring (grey with a red speaker while muted), a preset volume that is "on" while the volume is at it (and unmutes). Pressed values show at once until the player confirms them. Settings `player`, `command` (`up`, `down`, `mute`, `preset`), `step`, `preset`, `showVolume`, `gauge`, `keyColor`, `marker`. With a `preset` on another command, a long press sets the preset volume (sonos-controller's keys did that).
+- **Universal Volume key** (grill 2026-10-09, family style): `VolumeKeys` (SDK-free), `renderVolumeKey()`, `volumeIcon()` and `VolumeKeyAction` (`/keys`). Louder and quieter from the volume the key shows (absolute `volume`, or `volume-by` for a player that only takes steps), mute as a ring, pie or open ring (grey with a red speaker while muted), a preset volume that is "on" while the volume is at it (and unmutes). Pressed values show at once until the player confirms them. Settings `player`, `command` (`up`, `down`, `mute`, `preset`), `step`, `preset`, `showVolume`, `gauge`, `keyColor`, `marker`.
 
 ## [0.1.0-alpha.17] — 2026-10-09
 
