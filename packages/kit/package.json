@@ -1,6 +1,6 @@
 {
     "name": "@rocklobster42195/streamdeck-kit",
-    "version": "0.1.0-alpha.21",
+    "version": "0.1.0-alpha.22",
     "description": "(Alpha) Building blocks for Elgato Stream Deck plugins: key and touch-strip rendering, animation, Panorama effects across dials, and a framework-free property inspector kit.",
     "license": "MIT",
     "author": "Boris Kemper",

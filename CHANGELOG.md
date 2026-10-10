@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.22] — 2026-10-10
+
 ### Added
 
 - **Universal Track dial** (grill 2026-10-10, without lyrics: those belong in the Panorama): `TrackDials` (SDK-free), `renderTrackDial()` and `TrackDialAction` (`/keys`). Cover, title, artist and progress of any player on the deck, the cover on either side; the look "info" (text low, progress at the bottom, "LIVE" for a stream) or "eq" (bars rising above the text while it plays, also over a Panorama effect). Rotate seeks in seconds per tick (a turned position shows at once), push skips, a tap plays or pauses (explicit `play`/`pause`); title and artist scroll in counted steps. Over an effect the text gets small dark boxes. Settings `player`, `look`, `coverSide`, `seekStep`, `showTitle`, `keyColor`; options `defaultLook`, `badge` (a corner badge: source icon, battery), `feedback` (extra items for a built-in layout, e.g. clearing the title of "$A0").
