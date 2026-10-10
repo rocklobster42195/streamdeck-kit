@@ -8,6 +8,7 @@ import { openRing } from './gauge/open-ring.js';
 import { pie } from './gauge/pie.js';
 import { mdi, scrimBox, scrimDisc, stripImage, text, textWidth } from './strip.js';
 import { volumeIcon } from '../transport/volume-keys.js';
+import { statusBadge, type StatusKind } from './status-badge.js';
 
 export type VolumeDialGauge = 'ring' | 'pie' | 'open';
 
@@ -33,6 +34,8 @@ export type VolumeDialView = {
     saved?: boolean;
     /** What the effect shows behind the dial (a Panorama slice); the scrims go on top of it. */
     underlay?: string;
+    /** What the player is doing about a command (a corner badge). */
+    status?: StatusKind;
 };
 
 const MUTED = '#ff8a8a';
@@ -102,5 +105,6 @@ export function renderVolumeDial(v: VolumeDialView): string {
             text(tx, 64, v.name, { size: 11, color: '#cccccc', maxWidth: 92, anchor }),
         );
     }
+    if (v.status) parts.push(statusBadge(v.status, 4, 80));
     return stripImage(parts, undefined, v.underlay ? v.underlay + scrim : undefined);
 }

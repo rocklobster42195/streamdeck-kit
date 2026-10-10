@@ -54,7 +54,7 @@ const HOLD_PAUSE_MS = 40_000;
 const DIM_FADE_MS = 500;
 
 export type PlayPauseKeysOptions = {
-    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'>;
+    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'> & Partial<Pick<PlayerBoard, 'status'>>;
     /** Shows a key's picture and title (the plugin calls action.setImage / setTitle; title "" clears it). */
     draw: (id: string, image: string, title: string) => void;
     /** The player of a key without one: "active" (speakers) by default; SA-C: "active:all". */
@@ -207,6 +207,7 @@ export class PlayPauseKeys {
             titleSvg: this.title(id, k, s, p),
             left: this.corner(s, s.topLeft, p),
             right: this.corner(s, s.topRight, p),
+            status: this.o.board.status?.(p),
         });
     }
 

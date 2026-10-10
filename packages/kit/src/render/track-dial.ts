@@ -2,6 +2,7 @@
 // title, artist and progress beside it, all low; as "Equalizer" bars above them move while it plays
 // (the text stays where it is, so nothing jumps when it pauses). Over a Panorama effect the text gets small dark boxes. SDK-free.
 import { mdiMusicNote, mdiPlay } from '@mdi/js';
+import { statusBadge, type StatusKind } from './status-badge.js';
 import { image, mdi, progressBar, scrimBox, stripImage, text, textWidth, wrap } from './strip.js';
 
 export type TrackDialLook = 'info' | 'eq';
@@ -34,6 +35,8 @@ export type TrackDialView = {
     /** The text when nothing plays. */
     nothing: string;
     showTitle?: boolean;
+    /** What the player is doing about a command (a corner badge on the cover). */
+    status?: StatusKind;
 };
 
 const COVER = 100;
@@ -97,5 +100,6 @@ export function renderTrackDial(v: TrackDialView): string {
             parts.push(`<rect x="${tx + i * 9}" y="${56 - rh}" width="7" height="${rh}" fill="${v.accent}" opacity="${(0.75 * amp).toFixed(2)}" rx="1"/>`);
         });
     }
+    if (v.status) parts.push(statusBadge(v.status, coverX + 5, 79));
     return stripImage(parts, undefined, v.underlay ? v.underlay + scrim : undefined);
 }

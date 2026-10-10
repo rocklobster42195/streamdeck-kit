@@ -8,6 +8,7 @@ import { openRing } from '../render/gauge/open-ring.js';
 import { pie } from '../render/gauge/pie.js';
 import { KEY_ICON, KEY_TIERS, keyActiveFrame, keyActivePlate, keyCaption, keyIcon, keySvg } from '../render/key-style.js';
 import { KEY_GREY, resolveKeyColor } from '../players/key-color.js';
+import { keyStatusBadge, type StatusKind } from '../render/status-badge.js';
 import { ACTIVE_PLAYER, type Player, type PlayerBoard } from '../players/players.js';
 
 export type VolumeCommand = 'up' | 'down' | 'mute' | 'preset';
@@ -35,7 +36,7 @@ const MUTED_RING = '#5a5a60';
 const HOLD_MS = 3000;
 
 export type VolumeKeysOptions = {
-    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'>;
+    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'> & Partial<Pick<PlayerBoard, 'status'>>;
     draw: (id: string, image: string, title: string) => void;
     defaultPlayer?: string;
     rowColor?: (id: string) => string | undefined;
@@ -153,7 +154,7 @@ export class VolumeKeys {
         const view: VolumeView = usable
             ? { command: s.command ?? 'up', ...this.shown(k, p!), preset: presetOf(s), showVolume: s.showVolume !== false, gauge: s.gauge ?? 'ring', color, marker }
             : { command: s.command ?? 'up', volume: 0, muted: false, preset: presetOf(s), showVolume: false, gauge: s.gauge ?? 'ring', color: KEY_GREY, marker, unavailable: true };
-        const image = renderVolumeKey(view);
+        const image = renderVolumeKey({ ...view, status: p ? this.o.board.status?.(p) : undefined });
         if (image === k.last) return;
         k.last = image;
         this.o.draw(id, image, '');
@@ -161,6 +162,8 @@ export class VolumeKeys {
 }
 
 export type VolumeView = {
+    /** What the player is doing about a command (a corner badge). */
+    status?: StatusKind;
     command: VolumeCommand;
     volume: number;
     muted: boolean;
@@ -202,6 +205,7 @@ export function renderVolumeKey(v: VolumeView): string {
         else if (v.gauge !== 'pie') parts.push(keyIcon(volumeIcon(v.volume), { size: 56, x: 44, y: 44 }, '#e0e0e0'));
     }
     if (v.marker) parts.push(keyIcon(v.marker, { size: 22, x: 144 - 35, y: 13 }, '#b8b8be'));
+    if (v.status) parts.push(keyStatusBadge(v.status));
     return keySvg(parts);
 }
 

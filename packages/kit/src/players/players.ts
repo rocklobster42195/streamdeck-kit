@@ -6,6 +6,7 @@
 // and takes every command about what plays (grill 2026-10-09). Kept SDK-free.
 import type { DeckBus, PeerInfo } from '../bus/bus.js';
 import { kitLog } from '../log.js';
+import type { StatusKind } from '../render/status-badge.js';
 
 export const PLAYERS_KEY = 'players';
 export const TRANSPORT_METHOD = 'transport';
@@ -36,6 +37,8 @@ export type PlayerEntry = {
     app?: string;
     /** The plugin talks to the device itself, not through a server. */
     direct?: boolean;
+    /** A command is being carried out and takes a while (e.g. Music Assistant starting a Spotify playlist). */
+    busy?: boolean;
     /** What plays right now comes from this plugin (its queue or session). */
     media?: boolean;
     playing: boolean;
@@ -106,6 +109,11 @@ export function routeFor(p: Player, command: TransportCommand): PlayerRoute {
 }
 
 /** "active": the active speaker; "active:all": including apps. */
+/** A command that is still being carried out after this long shows as loading. */
+const LOADING_AFTER_MS = 600;
+/** How long a failure shows. */
+const FAILED_SHOWN_MS = 4000;
+
 export const ACTIVE_PLAYER = 'active';
 export const ACTIVE_ANY_PLAYER = 'active:all';
 
@@ -170,6 +178,7 @@ function merge(id: string, routes: PlayerRoute[]): Player {
         since: Math.max(...routes.map((r) => r.entry.since)),
         volume: v.volume ?? f.volume,
         muted: v.muted ?? f.muted,
+        busy: routes.some((r) => r.entry.busy) || undefined,
         battery: v.battery ?? f.battery,
         charging: v.charging ?? f.charging,
         shuffle: f.shuffle ?? v.shuffle,
@@ -335,6 +344,10 @@ export class PlayerBoard {
         const t = parseTransport({ player: route.entry.player, command, value });
         // The route a command takes and what came of it, for the plugin's log (a skip that does nothing)
         const started = Date.now();
+        const activity = this.activityOf(p.id);
+        activity.running++;
+        activity.since ??= started;
+        setTimeout(() => this.notify(), LOADING_AFTER_MS + 20);
         const where = `${route.source}${route.peer ? '' : ' (here)'} "${p.name}"`;
         try {
             let result: unknown;
@@ -349,8 +362,34 @@ export class PlayerBoard {
             return result;
         } catch (e) {
             kitLog().warn(`[transport] ${command} → ${where} failed after ${Date.now() - started} ms:`, e);
+            activity.failedUntil = Date.now() + FAILED_SHOWN_MS;
+            setTimeout(() => this.notify(), FAILED_SHOWN_MS + 20);
             throw e;
+        } finally {
+            if (--activity.running <= 0) activity.since = undefined;
+            this.notify();
         }
+    }
+
+    /** What a key or dial shows in its corner for a player: a command that takes a while, or a recent failure. */
+    status(p: Pick<Player, 'id' | 'busy'>, now = Date.now()): StatusKind | undefined {
+        const a = this.activity.get(p.id);
+        if (a?.failedUntil && a.failedUntil > now) return 'failed';
+        if (p.busy) return 'loading';
+        if (a && a.running > 0 && a.since !== undefined && now - a.since >= LOADING_AFTER_MS) return 'loading';
+        return undefined;
+    }
+
+    private readonly activity = new Map<string, { running: number; since?: number; failedUntil?: number }>();
+
+    private activityOf(id: string): { running: number; since?: number; failedUntil?: number } {
+        let a = this.activity.get(id);
+        if (!a) this.activity.set(id, (a = { running: 0 }));
+        return a;
+    }
+
+    private notify(): void {
+        for (const fn of this.listeners) fn();
     }
 
     /** Called whenever the deck's players change. */

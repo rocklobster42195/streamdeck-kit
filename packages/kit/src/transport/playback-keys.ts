@@ -17,6 +17,7 @@ import {
 } from '@mdi/js';
 import { KEY_ICON, KEY_TIERS, keyActiveFrame, keyActivePlate, keyCaption, keyIcon, keySvg } from '../render/key-style.js';
 import { KEY_GREY, resolveKeyColor } from '../players/key-color.js';
+import { keyStatusBadge, type StatusKind } from '../render/status-badge.js';
 import { ACTIVE_PLAYER, positionNow, type Player, type PlayerBoard, type RepeatMode, type TransportCommand } from '../players/players.js';
 import { DEFAULT_SEEK_STEP, SeekStepper } from '../players/seek.js';
 
@@ -39,7 +40,7 @@ const REPEAT_NEXT: Record<RepeatMode, RepeatMode> = { off: 'all', all: 'one', on
 const HOLD_TOGGLE_MS = 3000;
 
 export type PlaybackKeysOptions = {
-    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'>;
+    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'> & Partial<Pick<PlayerBoard, 'status'>>;
     /** Shows a key's picture and title. */
     draw: (id: string, image: string, title: string) => void;
     defaultPlayer?: string;
@@ -213,7 +214,7 @@ export class PlaybackKeys {
             const active = command === 'repeat' ? repeat !== 'off' : this.flagOf(k, p, command);
             view = { icon: iconOf(command, active, repeat), color: active ? on : KEY_TIERS.off, active: active ? on : undefined };
         }
-        const image = renderPlaybackKey({ ...view, marker });
+        const image = renderPlaybackKey({ ...view, marker, status: p ? this.o.board.status?.(p) : undefined });
         if (image === k.last && title === k.lastTitle) return;
         k.last = image;
         k.lastTitle = title;
@@ -230,6 +231,8 @@ export type PlaybackView = {
     caption?: string;
     /** The marker's MDI path, top right. */
     marker?: string;
+    /** What the player is doing about a command (a corner badge). */
+    status?: StatusKind;
 };
 
 /** The key in the family style (MA-C's, the kit's key-style): the icon, "on" with plate and frame. */
@@ -240,6 +243,7 @@ export function renderPlaybackKey(v: PlaybackView): string {
     if (v.caption) parts.push(keyCaption(v.caption, '#ffffff'));
     if (v.marker) parts.push(keyIcon(v.marker, { size: 22, x: 144 - 35, y: 13 }, '#b8b8be'));
     if (v.active) parts.push(keyActiveFrame(v.active));
+    if (v.status) parts.push(keyStatusBadge(v.status));
     return keySvg(parts);
 }
 

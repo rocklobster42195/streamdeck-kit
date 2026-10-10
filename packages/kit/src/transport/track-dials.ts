@@ -30,7 +30,7 @@ const BASE_BARS = [8, 14, 10, 18, 6, 12, 16, 8, 14, 10];
 const EQ_FADE_S = 3;
 
 export type TrackDialsOptions = {
-    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'>;
+    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'> & Partial<Pick<PlayerBoard, 'status'>>;
     draw: (id: string, image: string) => void;
     defaultPlayer?: string;
     rowColor?: (id: string) => string | undefined;
@@ -253,6 +253,7 @@ export class TrackDials {
                 underlay,
                 nothing: this.o.nothingLabel(),
                 showTitle: s.showTitle,
+                status: this.o.board.status?.(p),
             }),
         );
     }

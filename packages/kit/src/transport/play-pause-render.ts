@@ -5,6 +5,8 @@ import { mdiMusicNote, mdiPlay, mdiTimerSand } from '@mdi/js';
 import { KEY_BG, KEY_SIZE, KEY_TIERS, keySvg } from '../render/key-style.js';
 import { cornerSvg, type CornerBadge } from './corners.js';
 
+import { keyStatusBadge, type StatusKind } from '../render/status-badge.js';
+
 export type PlayPauseView = {
     /** No player to control (none chosen, gone, plugin away): a dimmed play symbol. */
     unavailable?: boolean;
@@ -27,6 +29,8 @@ export type PlayPauseView = {
     titleSvg?: string;
     left?: CornerBadge;
     right?: CornerBadge;
+    /** What the player is doing about a command (a corner badge). */
+    status?: StatusKind;
 };
 
 const S = KEY_SIZE;
@@ -53,6 +57,7 @@ export function renderPlayPauseKey(v: PlayPauseView): string {
     if (v.titleSvg && !v.unavailable) parts.push(v.titleSvg);
     if (v.progress !== undefined && !v.unavailable) parts.push(progressPill(v.progress, v.accent));
     parts.push(cornerSvg(v.left, 'left'), cornerSvg(v.right, 'right'));
+    if (v.status && !v.unavailable) parts.push(keyStatusBadge(v.status));
     return keySvg(parts, KEY_BG);
 }
 

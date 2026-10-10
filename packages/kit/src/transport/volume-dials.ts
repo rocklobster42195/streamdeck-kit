@@ -30,7 +30,7 @@ const HOLD_MS = 3000;
 export const SAVED_MS = 1200;
 
 export type VolumeDialsOptions = {
-    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'>;
+    board: Pick<PlayerBoard, 'resolve' | 'send' | 'onChange'> & Partial<Pick<PlayerBoard, 'status'>>;
     /** Draws a dial; `underlay` is the row's Panorama slice, if the dial takes part. */
     draw: (id: string, image: string) => void;
     defaultPlayer?: string;
@@ -233,6 +233,7 @@ export class VolumeDials {
             mutedLabel: this.o.mutedLabel(),
             saved: (d.savedUntil ?? 0) > this.now(),
             underlay: this.o.underlay?.(id),
+            status: p ? this.o.board.status?.(p) : undefined,
         });
         if (image === d.last) return;
         d.last = image;
