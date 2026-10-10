@@ -24,6 +24,7 @@ type Info = {
 
 const NONE = 'none';
 const COVER = 'cover';
+const COVER_ALL = 'cover-all';
 const DEFAULT = 'default';
 const COLOR_KEY = 'rowColor';
 
@@ -115,7 +116,7 @@ export class PiPanorama extends HTMLElement {
         ].map(([m, label]) => `<button type="button" class="pi-choice-tile" data-color-mode="${m}" aria-pressed="${m === mode}"><span>${escapeHtml(label)}</span></button>`);
         let detail = '';
         if (mode === COVER) {
-            const options = [`<option value="${COVER}">${escapeHtml(t('kit.panorama_color_active'))}</option>`, ...info.covers.map((c) => `<option value="${COVER}:${escapeHtml(c.id)}" ${info.color === `${COVER}:${c.id}` ? 'selected' : ''}>${c.playing ? '▶ ' : ''}${escapeHtml(c.label)}</option>`)];
+            const options = [`<option value="${COVER}">${escapeHtml(t('kit.panorama_color_active'))}</option>`, `<option value="${COVER_ALL}" ${info.color === COVER_ALL ? 'selected' : ''}>${escapeHtml(t('kit.panorama_color_active_all'))}</option>`, ...info.covers.map((c) => `<option value="${COVER}:${escapeHtml(c.id)}" ${info.color === `${COVER}:${c.id}` ? 'selected' : ''}>${c.playing ? '▶ ' : ''}${escapeHtml(c.label)}</option>`)];
             detail = `<select class="pi-input" data-color-player>${options.join('')}</select>`;
             if (!info.covers.length) detail += `<div class="pi-hint">${escapeHtml(t('kit.panorama_color_none'))}</div>`;
         } else if (mode === 'fixed') detail = `<pi-swatch data-color-fixed value="${escapeHtml(info.color)}"></pi-swatch>`;

@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Changed
+
+- **Panorama colour "Active player" and "Active player, also apps"**, as on the keys: the row's cover colour "Active player" follows the active **speaker** (apps on the PC no longer take it over when a video starts); the new choice "Active player, also apps" (`cover-all`) includes them. A PC without any speaker still follows its apps with "Active player". `CoverEntry.kind`, `COVER_ALL_CHOICE`.
+
 ## [0.1.0-alpha.24] — 2026-10-10
 
 ### Added

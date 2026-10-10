@@ -3,9 +3,10 @@
 // player; any plugin resolves a colour choice from all of them, so a Panorama row can follow the
 // cover even when none of its dials belongs to a music plugin.
 //
-// A colour choice is a string: "cover" (the active player: the one that started playing last, or
-// the last one that played), "cover:<plugin>/<player>" (one player), "#RRGGBB" (fixed) or
-// "default" (the effect's own colour).
+// A colour choice is a string: "cover" (the active speaker: the one that started playing last, or
+// the last one that played; as the keys' "Active player"), "cover-all" (the same, apps on the PC
+// included), "cover:<plugin>/<player>" (one player), "#RRGGBB" (fixed) or "default" (the effect's
+// own colour).
 import type { DeckBus, PeerInfo } from '../bus/bus.js';
 
 export const COVERS_KEY = 'covers';
@@ -26,12 +27,16 @@ export type CoverEntry = {
     device?: string;
     /** The plugin talks to the device directly (its colour wins for that device). */
     direct?: boolean;
+    /** "speaker" or "app" (from "players"); entries without a kind count as speakers. */
+    kind?: string;
 };
 
 /** An entry with the plugin it comes from. */
 export type CoverSource = CoverEntry & { source: string; id: string };
 
 export const COVER_CHOICE = 'cover';
+/** The active player, apps included (the keys' "Active player, also apps"). */
+export const COVER_ALL_CHOICE = 'cover-all';
 export const DEFAULT_CHOICE = 'default';
 
 export class CoverBoard {
@@ -91,7 +96,10 @@ export class CoverBoard {
         if (/^#[0-9a-f]{6}$/i.test(c)) return c;
         const all = this.sources();
         if (c.startsWith(`${COVER_CHOICE}:`)) return all.find((s) => s.id === c.slice(COVER_CHOICE.length + 1))?.color;
-        return activeSource(all)?.color;
+        if (c === COVER_ALL_CHOICE) return activeSource(all)?.color;
+        // The active speaker; with no speaker at all (a PC without Sonos or Music Assistant) the apps' colour
+        const speakers = all.filter((s) => s.kind !== 'app');
+        return activeSource(speakers.length ? speakers : all)?.color;
     }
 
     /** Called whenever the players or their colours change. */

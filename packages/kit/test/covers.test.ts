@@ -15,6 +15,16 @@ describe('cover board', () => {
         expect(board.resolve('cover')).toBe('#0000ff');
     });
 
+    it('"cover" is the active speaker, "cover-all" the active player with apps; a PC without speakers follows its apps', () => {
+        const board = new CoverBoard('SA-C');
+        const app = { ...entry('firefox', '#e8b569', true, 50), kind: 'app' };
+        board.setPeers([peer('SO-C', [{ ...entry('RINCON_1', '#72a9bf', true, 10), kind: 'speaker' }]), peer('SA-C', [app])]);
+        expect(board.resolve('cover')).toBe('#72a9bf');
+        expect(board.resolve('cover-all')).toBe('#e8b569');
+        board.setPeers([peer('SA-C', [app])]);
+        expect(board.resolve('cover')).toBe('#e8b569');
+    });
+
     it('one player by plugin and id, a fixed colour, or none', () => {
         const board = new CoverBoard('MA-C');
         board.publish([entry('kitchen', '#ff0000', false, 1)]);
