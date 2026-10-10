@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Fixed
+
+- **Closing a YouTube tab left the keys empty.** An app that has quit stays as a (closed) player so "Play" can start it again, and being the one that started last it stayed the active player. `active` and `active:all` skip a closed app while anything else is there, so the keys go back to what played before (the playlist on the speaker). `PlayerEntry.closed`.
+
 ### Changed
 
 - **Panorama colour "Active player" and "Active player, also apps"**, as on the keys: the row's cover colour "Active player" follows the active **speaker** (apps on the PC no longer take it over when a video starts); the new choice "Active player, also apps" (`cover-all`) includes them. A PC without any speaker still follows its apps with "Active player". `CoverEntry.kind`, `COVER_ALL_CHOICE`.

@@ -39,6 +39,8 @@ export type PlayerEntry = {
     direct?: boolean;
     /** A command is being carried out and takes a while (e.g. Music Assistant starting a Spotify playlist). */
     busy?: boolean;
+    /** An app that has quit: its player stays so "Play" can start it again, but it shows nothing and isn't the active player while anything else is there. */
+    closed?: boolean;
     /** What plays right now comes from this plugin (its queue or session). */
     media?: boolean;
     playing: boolean;
@@ -318,9 +320,15 @@ export class PlayerBoard {
         });
     }
 
-    /** The active player: speakers only (`active`), or including apps (`active:all`). */
+    /**
+     * The active player: speakers only (`active`), or including apps (`active:all`). An app that has
+     * quit doesn't count while anything else is there: close the YouTube tab and the keys go back to
+     * what played before (the playlist on the speaker), not to an empty player.
+     */
     active(all = false): Player | undefined {
-        return latest(this.players().filter((p) => all || p.kind === 'speaker'));
+        const list = this.players().filter((p) => all || p.kind === 'speaker');
+        const open = list.filter((p) => !p.closed);
+        return latest(open.length ? open : list);
     }
 
     /** A key's player by its choice: "active", "active:all", "device:…", "app:…" or "<plugin>/<player>". */

@@ -36,6 +36,16 @@ describe('positionNow', () => {
 });
 
 describe('PlayerBoard', () => {
+    it('"active:all" skips an app that has quit and returns to what played before', () => {
+        const board = new PlayerBoard('SO-C');
+        const youtube = { player: 'firefox', name: 'Firefox', kind: 'app', app: 'firefox', playing: false, since: 20, closed: true, can: ['play', 'play-pause'] } as PlayerEntry;
+        board.setPeers([peer('SO-C', [speaker('RINCON_A', { device: 'RINCON_A', name: 'Wohnzimmer', since: 10, title: 'Playlist' })]), peer('SA-C', [youtube], 2)]);
+        expect(board.resolve('active:all')?.name).toBe('Wohnzimmer');
+        // the quit app is all there is: it stays the answer (Play starts it again)
+        board.setPeers([peer('SA-C', [youtube], 2)]);
+        expect(board.resolve('active:all')?.name).toBe('Firefox');
+    });
+
     it('one device seen by two plugins is one player: commands direct, media from whoever plays it', () => {
         const board = new PlayerBoard('SO-C');
         board.publish([speaker('RINCON_1', { device: 'RINCON_1', name: 'Bad', direct: true, playing: true, since: 5, title: 'Sonos title', color: '#0000ff', volume: 12, can: ['play-pause', 'seek'] })]);
