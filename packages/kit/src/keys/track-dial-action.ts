@@ -11,7 +11,7 @@ import streamDeck, {
     type WillAppearEvent,
     type WillDisappearEvent,
 } from '@elgato/streamdeck';
-import type { JsonObject } from '@elgato/utils';
+import type { JsonObject, JsonValue } from '@elgato/utils';
 import { TrackDials, type TrackDialSettings, type TrackDialsOptions } from '../transport/track-dials.js';
 
 type Settings = TrackDialSettings & JsonObject;
@@ -27,6 +27,11 @@ export type TrackDialActionOptions<S extends Settings> = Omit<TrackDialsOptions,
     onSettings?: (action: DialAction<S>, settings: S) => void;
     /** A picture instead of the dimmed dial while no player is found (e.g. "set up"). */
     unavailable?: (settings: S) => string | undefined;
+    /**
+     * More feedback items sent with every picture, for a dial whose manifest layout has them (e.g.
+     * the built-in "$A0": its title, icon and indicator are cleared with {title: "", icon: "", indicator: {value: 0, enabled: false}}).
+     */
+    feedback?: Record<string, JsonValue>;
 };
 
 export class TrackDialAction<S extends Settings = Settings> extends SingletonAction<S> {
@@ -110,6 +115,6 @@ export class TrackDialAction<S extends Settings = Settings> extends SingletonAct
         if (!this.dials.player(id)) image = this.options.unavailable?.(s.settings) ?? image;
         if (image === s.image) return;
         s.image = image;
-        void s.action.setFeedback({ 'full-canvas': image }).catch((e) => streamDeck.logger.warn('[track-dial] setFeedback failed', e));
+        void s.action.setFeedback({ 'full-canvas': image, ...this.options.feedback }).catch((e) => streamDeck.logger.warn('[track-dial] setFeedback failed', e));
     }
 }
