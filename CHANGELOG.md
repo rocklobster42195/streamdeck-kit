@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.23] — 2026-10-10
+
 ### Fixed
 
 - **A new cover's colour reached the Panorama late.** Particles counted its colour fade in steps of 50 ms, but the host ticks every 100 ms, so the 2 s fade took 4 s; it runs in real time now and takes 0.8 s. Matrix Rain only coloured new glyphs while the old trails (up to five seconds) kept the previous colour; a new colour now recolours what is already drawn at once.
