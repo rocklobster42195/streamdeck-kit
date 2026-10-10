@@ -2,8 +2,9 @@
 // übergreifend sein, das ist der Sinn des deckbus"). Dials that carry text mark themselves in the
 // shared "actions" state (`canvas: true`); the one that shows text puts the text there too. Every
 // plugin works out the same run from that: adjacent canvas dials on one device, left to right.
-// The leftmost dial with text decides what the run shows, and each display draws its own 200 px
-// window of it (render/panorama-text.ts), so a title can start on MA-C's dial and end on SO-C's.
+// The dial whose text changed last decides what the run shows (the fastest source wins: Music
+// Assistant reports a Spotify skip seconds after Sonos does; ties go to the leftmost), and each
+// display draws its own 200 px window of it (render/panorama-text.ts), so a title can start on MA-C's dial and end on SO-C's.
 import type { ActionsState } from "../bus/actions.js";
 import { peerActions } from "../bus/actions.js";
 import type { DeckBus, PeerInfo } from "../bus/bus.js";
@@ -27,8 +28,8 @@ export type TextRunView = {
     local: boolean;
 };
 
-type Dial = { device: string; column: number; text?: RunText; local: boolean };
-type Own = { device: string; column: number; text?: RunText; redraw: () => void; last?: string };
+type Dial = { device: string; column: number; text?: RunText; at: number; local: boolean };
+type Own = { device: string; column: number; text?: RunText; at: number; redraw: () => void; last?: string };
 
 const STRIP_WIDTH = 200;
 
@@ -68,8 +69,10 @@ export class TextRuns {
     /** A text-capable dial appeared (or moved); `text` is what it shows itself, if anything. */
     set(context: string, at: { device: string; column: number }, text: RunText | undefined, redraw: () => void): void {
         const prev = this.own.get(context);
-        this.own.set(context, { ...at, text, redraw, last: prev?.last });
-        this.actions?.update(context, { canvas: true, text });
+        const sameText = prev && JSON.stringify(prev.text) === JSON.stringify(text);
+        const stamp = sameText ? prev.at : Date.now();
+        this.own.set(context, { ...at, text, at: stamp, redraw, last: prev?.last });
+        this.actions?.update(context, { canvas: true, text, textAt: stamp });
         this.changed();
     }
 
@@ -78,13 +81,14 @@ export class TextRuns {
         const d = this.own.get(context);
         if (!d || JSON.stringify(d.text) === JSON.stringify(text)) return;
         d.text = text;
-        this.actions?.update(context, { text });
+        d.at = Date.now();
+        this.actions?.update(context, { text, textAt: d.at });
         this.changed();
     }
 
     remove(context: string): void {
         if (!this.own.delete(context)) return;
-        this.actions?.update(context, { canvas: undefined, text: undefined });
+        this.actions?.update(context, { canvas: undefined, text: undefined, textAt: undefined });
         this.changed();
     }
 
@@ -96,17 +100,20 @@ export class TextRuns {
         for (const peer of this.peers) {
             for (const a of peerActions(peer)) {
                 if (a.device !== d.device || a.controller !== "Encoder" || a.canvas !== true) continue;
-                byColumn.set(a.column, { device: a.device, column: a.column, text: parseText(a.text), local: false });
+                byColumn.set(a.column, { device: a.device, column: a.column, text: parseText(a.text), at: typeof a.textAt === "number" ? a.textAt : 0, local: false });
             }
         }
         // Own dials win over a stale peer entry at the same place
-        for (const o of this.own.values()) if (o.device === d.device) byColumn.set(o.column, { device: o.device, column: o.column, text: o.text, local: true });
+        for (const o of this.own.values()) if (o.device === d.device) byColumn.set(o.column, { device: o.device, column: o.column, text: o.text, at: o.at, local: true });
         let first = d.column;
         while (byColumn.has(first - 1)) first--;
         let last = d.column;
         while (byColumn.has(last + 1)) last++;
         let source: Dial | undefined;
-        for (let c = first; c <= last && !source; c++) if (byColumn.get(c)?.text) source = byColumn.get(c);
+        for (let c = first; c <= last; c++) {
+            const dial = byColumn.get(c);
+            if (dial?.text && (!source || dial.at > source.at)) source = dial;
+        }
         const length = last - first + 1;
         return {
             key: `${d.device}/${first}`,

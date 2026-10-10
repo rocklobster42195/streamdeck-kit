@@ -22,16 +22,24 @@ describe("TextRuns", () => {
         b.emit([peer("MA-C", [dial(1)])]);
         const view = runs.run("mine")!;
         expect(view).toMatchObject({ width: 400, offset: 200, index: 1, length: 2, local: true, text: track });
-        expect(update).toHaveBeenCalledWith("mine", { canvas: true, text: track });
+        expect(update).toHaveBeenCalledWith("mine", { canvas: true, text: track, textAt: expect.any(Number) });
     });
 
-    it("lets the leftmost dial with text decide, from whichever plugin", () => {
+    it("lets the dial whose text changed last decide, from whichever plugin; ties go left", () => {
         const b = bus();
         const runs = new TextRuns();
         runs.connect(b);
         runs.set("mine", { device: "D1", column: 2 }, { kind: "track", title: "Mine", artist: "" }, () => {});
-        b.emit([peer("MA-C", [dial(1, { text: { kind: "lyrics", current: "la la", next: "" } })])]);
-        expect(runs.run("mine")).toMatchObject({ local: false, text: { kind: "lyrics", current: "la la" }, offset: 200 });
+        const lyrics: RunText = { kind: "lyrics", current: "la la", next: "" };
+        // the neighbour changed its text later than mine: it decides
+        b.emit([peer("MA-C", [dial(1, { text: lyrics, textAt: Date.now() + 5000 })])]);
+        expect(runs.run("mine")).toMatchObject({ local: false, text: lyrics, offset: 200 });
+        // an older text of the neighbour (e.g. Music Assistant lagging behind) loses to mine
+        b.emit([peer("MA-C", [dial(1, { text: lyrics, textAt: 1 })])]);
+        expect(runs.run("mine")).toMatchObject({ local: true, text: { kind: "track", title: "Mine" } });
+        // no time given: the leftmost
+        b.emit([peer("MA-C", [dial(1, { text: lyrics })])]);
+        expect(runs.run("mine")).toMatchObject({ local: true });
     });
 
     it("breaks the run at a dial that isn't a canvas, or sits on another device", () => {
