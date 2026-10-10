@@ -205,9 +205,9 @@ export class TrackDials {
 
         // Scrolling text in counted steps while it doesn't fit
         const m = this.marquee(d, `${title}\n${artist}`);
-        const titleY = eq ? 22 : 72;
-        const artistY = eq ? 38 : 86;
-        const artistSize = eq ? 12 : 11;
+        const titleY = 72;
+        const artistY = 86;
+        const artistSize = 11;
         const x = s.coverSide === 'left' ? 108 : 8;
         const titleScrolls = !!title && marqueeNeeded(title, 14, TEXT_W);
         const artistScrolls = !!artist && marqueeNeeded(artist, artistSize, TEXT_W);

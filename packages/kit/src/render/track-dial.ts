@@ -1,6 +1,6 @@
 // The universal Track dial's picture (grill 2026-10-10): cover on one side (the user's choice),
-// title, artist and progress beside it; or, as "Equalizer", the title at the top and bars below
-// that move while it plays. Over a Panorama effect the text gets small dark boxes. SDK-free.
+// title, artist and progress beside it, all low; as "Equalizer" bars above them move while it plays
+// (the text stays where it is, so nothing jumps when it pauses). Over a Panorama effect the text gets small dark boxes. SDK-free.
 import { mdiMusicNote, mdiPlay } from '@mdi/js';
 import { image, mdi, progressBar, scrimBox, stripImage, text, textWidth, wrap } from './strip.js';
 
@@ -64,13 +64,13 @@ export function renderTrackDial(v: TrackDialView): string {
     const title = v.title ?? "";
     const artist = v.artist ?? "";
     const showTitle = v.showTitle !== false && !!title;
-    // Info look: text sits low (title 72, artist 86, bar 95); Equalizer look: high (title 22, artist 38, bar 48, bars below)
-    const titleY = eq ? 22 : 72;
-    const artistY = eq ? 38 : 86;
-    const barY = eq ? 48 : 95;
+    // The text sits low in both looks: title 72, artist 86, progress 95; the bars rise from y 56
+    const titleY = 72;
+    const artistY = 86;
+    const barY = 95;
     const group: string[] = [];
     if (showTitle) group.push(v.titleSvg ?? text(tx, titleY, title, { size: 14, maxWidth: TEXT_W }));
-    if (artist) group.push(v.artistSvg ?? text(tx, artistY, artist, { size: eq ? 12 : 11, color: "#999999", maxWidth: TEXT_W }));
+    if (artist) group.push(v.artistSvg ?? text(tx, artistY, artist, { size: 11, color: "#999999", maxWidth: TEXT_W }));
     parts.push(`<g opacity="${dim}">${group.join("")}</g>`);
     if (v.underlay) {
         const tw = (s: string, size: number) => Math.min(TEXT_W + 6, textWidth(s, size) + 8);
@@ -81,7 +81,7 @@ export function renderTrackDial(v: TrackDialView): string {
     // Progress, or LIVE
     if (v.live) {
         // Small, in the bar's place (the artist line sits right above it)
-        const ly = eq ? 43 : 88;
+        const ly = 88;
         parts.push(`<rect x="${tx}" y="${ly}" width="30" height="11" rx="3" fill="${v.accent}"/>`, text(tx + 15, ly + 8.5, "LIVE", { size: 9, weight: "bold", color: "#0b0b0c", anchor: "middle" }));
     } else if (v.progress !== undefined) {
         parts.push(...progressBar(tx, barY, TEXT_W, v.progress, v.accent, 5));
@@ -92,7 +92,7 @@ export function renderTrackDial(v: TrackDialView): string {
         const amp = v.amplitude ?? 1;
         v.bars.forEach((h, i) => {
             const rh = Math.max(1, Math.round(h * amp));
-            parts.push(`<rect x="${tx + i * 9}" y="${90 - rh}" width="7" height="${rh}" fill="${v.accent}" opacity="${(0.75 * amp).toFixed(2)}" rx="1"/>`);
+            parts.push(`<rect x="${tx + i * 9}" y="${56 - rh}" width="7" height="${rh}" fill="${v.accent}" opacity="${(0.75 * amp).toFixed(2)}" rx="1"/>`);
         });
     }
     return stripImage(parts, undefined, v.underlay ? v.underlay + scrim : undefined);
