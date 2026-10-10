@@ -39,6 +39,11 @@ export class VolumeKeyAction<S extends Settings = Settings> extends SingletonAct
         for (const [id, s] of this.shown) if (!this.keys.player(id)) this.keys.show(id, s.settings);
     }
 
+    /** Draw a key again. */
+    redraw(id: string): void {
+        this.keys.redraw(id);
+    }
+
     override onWillAppear(ev: WillAppearEvent<S>): void {
         if (!ev.action.isKey()) return;
         let settings = ev.payload.settings;

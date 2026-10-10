@@ -124,6 +124,11 @@ export class VolumeKeys {
         this.keys.clear();
     }
 
+    /** Draw a key again (e.g. its own speaker's volume moved, which the board doesn't report). */
+    redraw(id: string): void {
+        this.render(id);
+    }
+
     private renderAll(): void {
         for (const id of this.keys.keys()) this.render(id);
     }

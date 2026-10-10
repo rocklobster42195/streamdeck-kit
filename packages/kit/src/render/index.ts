@@ -16,5 +16,6 @@ export * from './feedback.js';
 export * from './key-style.js';
 export * from './level-strip.js';
 export * from './volume-display.js';
+export * from './volume-dial.js';
 export * from './now-playing-card.js';
 export * from './svg-inline.js';
