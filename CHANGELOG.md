@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.21] — 2026-10-10
+
 ### Added
 
 - **Universal Volume dial** (grill 2026-10-09, Sonos Controller's look): `VolumeDials` (SDK-free), `renderVolumeDial()` and `VolumeDialAction` (`/keys`). Rotate sets the volume of any player (a turned value shows at once until the player confirms; only the latest is sent, ~150 ms; a fast spin doubles the step), push mutes, a tap recalls the preset and unmutes, a long tap saves the current volume as the preset. Pie, ring or open ring with an optional icon, text left, right or centred; muted: grey gauge with a red speaker. Settings `player`, `step`, `preset`, `gauge`, `align`, `showText`, `icon`, `keyColor`, `title`.
