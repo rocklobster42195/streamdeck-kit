@@ -230,8 +230,32 @@ class MatrixRainEffectInstance implements EffectInstance<MatrixRainEffectSetting
         return `<image x="0" y="0" width="${width}" height="${height}" href="${encodePngDataUri(width, height, rgba)}"/>`;
     }
 
+    /**
+     * The pixels already in the frame keep their brightness but take the new colour at once: the
+     * trails fade for seconds, and a new cover's colour would otherwise only arrive with the next
+     * glyphs. (Brightness = the pixel's largest channel against the old head colour's.)
+     */
+    private recolor(from: [number, number, number], to: [number, number, number]): void {
+        const peak = Math.max(1, from[0], from[1], from[2]);
+        const toPeak = Math.max(1, to[0], to[1], to[2]);
+        for (let i = 0; i < this.frame.length; i += 4) {
+            const l = Math.max(this.frame[i], this.frame[i + 1], this.frame[i + 2]) / peak;
+            if (l <= 0) continue;
+            this.frame[i] = Math.min(255, (to[0] / toPeak) * 255 * l);
+            this.frame[i + 1] = Math.min(255, (to[1] / toPeak) * 255 * l);
+            this.frame[i + 2] = Math.min(255, (to[2] / toPeak) * 255 * l);
+        }
+    }
+
     onSettingsChange(settings: MatrixRainEffectSettings): void {
-        if (settings.color) this.baseRgb = parseColor(settings.color);
+        if (settings.color) {
+            const next = parseColor(settings.color);
+            if (next.some((v, i) => v !== this.baseRgb[i])) {
+                const before = this.headColor();
+                this.baseRgb = next;
+                this.recolor(before, this.headColor());
+            }
+        }
         // Also applied live (not just on first initPanorama) — lets a PI density slider edit take
         // effect immediately on an already-running instance, same as onRotate does.
         if (settings.savedDensity !== undefined) {

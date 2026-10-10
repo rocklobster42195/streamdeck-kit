@@ -95,3 +95,34 @@ describe('audio level', () => {
         expect(seen.at(-1)).toBeUndefined();
     });
 });
+
+describe('colour changes reach the effect quickly', () => {
+    it('Particles: the fade to a new colour takes about 800 ms whatever the tick interval', () => {
+        const inst = effectRegistry.get('particles')!.createInstance();
+        inst.initPanorama({ width: 200, height: 100, settings: { color: '#000000' } });
+        inst.onSettingsChange!({ color: '#ff0000' });
+        for (let i = 0; i < 3; i++) inst.tickPanorama(100);
+        expect(inst.renderSlice(0, 200, 100)).not.toContain('rgb(255,0,0)');
+        for (let i = 0; i < 5; i++) inst.tickPanorama(100);
+        expect(inst.renderSlice(0, 200, 100)).toContain('rgb(255,0,0)');
+        inst.destroy?.();
+    });
+
+    it('Matrix Rain: pixels already drawn take the new colour at once', () => {
+        const inst = effectRegistry.get('matrix-rain')!.createInstance() as unknown as {
+            initPanorama(c: unknown): void;
+            tickPanorama(dt: number): void;
+            onSettingsChange(s: unknown): void;
+            frame: Uint8ClampedArray;
+        };
+        inst.initPanorama({ width: 200, height: 100, settings: { color: '#22C55E', savedDensity: 1.5 } });
+        for (let i = 0; i < 150; i++) inst.tickPanorama(100);
+        let green = 0;
+        for (let i = 0; i < inst.frame.length; i += 4) if (inst.frame[i + 1] > 40) green++;
+        expect(green).toBeGreaterThan(0);
+        inst.onSettingsChange({ color: '#ff0000' });
+        let wrong = 0;
+        for (let i = 0; i < inst.frame.length; i += 4) if (inst.frame[i + 1] > 55 || inst.frame[i + 2] > 55 || inst.frame[i + 1] > inst.frame[i]) wrong++;
+        expect(wrong).toBe(0);
+    });
+});

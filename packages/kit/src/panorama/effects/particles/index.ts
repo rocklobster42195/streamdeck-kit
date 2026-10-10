@@ -67,8 +67,8 @@ class ParticlesEffectInstance implements EffectInstance<ParticlesEffectSettings>
         }
     }
 
-    tickPanorama(): void {
-        particleEngine.tickPanorama(this.key);
+    tickPanorama(dtMs: number): void {
+        particleEngine.tickPanorama(this.key, dtMs);
     }
 
     /** With an audio source the particles speed up with the music (0.4× in silence, up to 2.4×). */

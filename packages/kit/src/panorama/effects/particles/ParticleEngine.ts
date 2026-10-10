@@ -59,7 +59,7 @@ export class ParticleEngine {
     private colorTransitions: Map<string, {
         fromR: number; fromG: number; fromB: number;
         toR: number; toG: number; toB: number;
-        step: number; totalSteps: number;
+        elapsedMs: number; durationMs: number;
     }> = new Map();
 
     // ── Per-context API ──────────────────────────────────────────────────────
@@ -155,7 +155,8 @@ export class ParticleEngine {
         this.panoramas.set(key, { config: cfg, particles: this.spawnMany(cfg), lines: [] });
     }
 
-    tickPanorama(key: string): void {
+    /** `dtMs`: the time since the last tick (the host's tick interval), which the colour fade runs on. */
+    tickPanorama(key: string, dtMs = 100): void {
         const pano = this.panoramas.get(key);
         if (!pano) return;
         const { config: cfg, particles: ps } = pano;
@@ -163,8 +164,8 @@ export class ParticleEngine {
         // Advance any active color transition.
         const tr = this.colorTransitions.get(key);
         if (tr) {
-            tr.step++;
-            const t = Math.min(tr.step / tr.totalSteps, 1);
+            tr.elapsedMs += dtMs;
+            const t = Math.min(tr.elapsedMs / tr.durationMs, 1);
             // Ease in-out cubic for a natural feel.
             const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
             cfg.color = this.colorToRgb(
@@ -172,7 +173,7 @@ export class ParticleEngine {
                 tr.fromG + (tr.toG - tr.fromG) * ease,
                 tr.fromB + (tr.toB - tr.fromB) * ease,
             );
-            if (tr.step >= tr.totalSteps) this.colorTransitions.delete(key);
+            if (t >= 1) this.colorTransitions.delete(key);
         }
 
         for (const p of ps) {
@@ -266,15 +267,16 @@ export class ParticleEngine {
 
     /**
      * Smoothly interpolate from the current panorama color to targetColor over durationMs.
-     * Uses cubic ease-in-out; the transition advances one step per tickPanorama() call.
+     * Uses cubic ease-in-out; it advances by the time between tickPanorama() calls, so it takes
+     * `durationMs` whatever the host's tick interval is (it was counted in steps of 50 ms, which
+     * took twice as long on a 100 ms tick: a new cover's colour arrived after four seconds).
      */
-    transitionPanoramaColor(key: string, targetColor: string, durationMs = 2000): void {
+    transitionPanoramaColor(key: string, targetColor: string, durationMs = 800): void {
         const pano = this.panoramas.get(key);
         if (!pano) return;
         const [fromR, fromG, fromB] = this.parseColor(pano.config.color);
         const [toR, toG, toB] = this.parseColor(targetColor);
-        const totalSteps = Math.max(1, Math.round(durationMs / 50));
-        this.colorTransitions.set(key, { fromR, fromG, fromB, toR, toG, toB, step: 0, totalSteps });
+        this.colorTransitions.set(key, { fromR, fromG, fromB, toR, toG, toB, elapsedMs: 0, durationMs: Math.max(1, durationMs) });
     }
 
     /** Scale all current velocities so the simulation runs at a new effective speed. */
