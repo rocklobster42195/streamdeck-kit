@@ -36,8 +36,6 @@ export type VolumeDialsOptions = {
     defaultPlayer?: string;
     /** Percent per tick when the dial has no setting. */
     defaultStep?: number;
-    /** The gauge colour on a grey dial (MA-C: its blue); default light grey. */
-    accent?: string;
     rowColor?: (id: string) => string | undefined;
     iconPath?: (name: string) => string | undefined;
     /** The Panorama slice behind a dial (an SVG fragment), or nothing. */
@@ -218,7 +216,7 @@ export class VolumeDials {
         const usable = !!p && this.hasVolume(p);
         const shown = usable ? this.shown(d, p!) : { volume: 0, muted: false };
         const grey = !s.keyColor || s.keyColor === 'grey';
-        const color = usable && !grey ? resolveKeyColor(s.keyColor, { cover: p!.color, row: this.o.rowColor?.(id) }) : (this.o.accent ?? KEY_GREY);
+        const color = usable && !grey ? resolveKeyColor(s.keyColor, { cover: p!.color, row: this.o.rowColor?.(id) }) : KEY_GREY;
         // The ring glides to a new volume; the number shows the target at once
         const ring = usable ? glide(`volume-dial-${id}`, shown.volume, () => this.render(id)) : 0;
         const image = renderVolumeDial({
