@@ -19,6 +19,7 @@ import { initWindowNav } from './window-nav.js';
 const WINDOW_FEATURES = 'width=780,height=860';
 
 let pluginName = '';
+let helpUrl = '';
 
 export function isSettingsWindow(): boolean {
     return new URLSearchParams(location.search).has('window');
@@ -49,8 +50,9 @@ export function openSettingsWindow(section?: string): boolean {
  * Call when the page script starts. In the PI: lets a window find this page's connection. In the
  * window: mirrors the PI's `sd` (or says to open it from Stream Deck when there is no PI).
  */
-export function initSettingsWindow(options: { name: string }): void {
+export function initSettingsWindow(options: { name: string; helpUrl?: string }): void {
     pluginName = options.name;
+    helpUrl = options.helpUrl ?? '';
     if (!isSettingsWindow()) {
         (window as unknown as { piSettingsSd: StreamDeckPiClient }).piSettingsSd = sd;
         return;
@@ -84,21 +86,46 @@ function addLogLink(): void {
     link.textContent = t('kit.diag_log');
     link.addEventListener('click', (e) => {
         e.preventDefault();
-        if (isSettingsWindow()) {
-            const section = document.getElementById('diagnostics');
-            const details = section?.querySelector('details');
-            if (details) details.open = true;
-            section?.scrollIntoView();
-        } else if (!openSettingsWindow('diagnostics')) showSettingsInline();
+        if (isSettingsWindow()) jumpToDiagnostics();
+        else if (!openSettingsWindow('diagnostics')) showSettingsInline();
     });
+    // "Help & feedback", when the plugin gave an address and the page has no such link yet
+    let first = footer.querySelector('a');
+    if (!first && helpUrl) {
+        const help = document.createElement('a');
+        help.href = helpUrl;
+        help.textContent = t('kit.help');
+        // A link inside the PI would navigate the PI itself
+        help.addEventListener('click', (e) => {
+            e.preventDefault();
+            sd.openUrl(helpUrl);
+        });
+        footer.appendChild(help);
+        first = help;
+    }
     // Beside "Help & feedback" on the right (the footer spreads its children across the width)
-    const first = footer.querySelector('a');
     if (first) {
         const group = document.createElement('span');
         group.className = 'pi-footer-links';
         footer.insertBefore(group, first);
         group.append(link, first);
     } else footer.appendChild(link);
+}
+
+/**
+ * Opens the Diagnostics field and brings it into view. Done again a moment later: the page's lists
+ * fill in after it was built, and the field moves down with them.
+ */
+function jumpToDiagnostics(): void {
+    const go = () => {
+        const section = document.getElementById('diagnostics');
+        const details = section?.querySelector('details');
+        if (details && !details.open) details.open = true;
+        section?.scrollIntoView();
+    };
+    go();
+    setTimeout(go, 300);
+    setTimeout(go, 1200);
 }
 
 /** The window ends with the "Diagnostics" field (log, copy, issue); a page can place its own `<pi-diagnostics>` instead. */
@@ -125,5 +152,6 @@ export function settingsWindowShown(): void {
     document.title = [pluginName, title].filter(Boolean).join(' · ');
     addDiagnostics();
     initWindowNav();
-    if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
+    if (location.hash === '#diagnostics') jumpToDiagnostics();
+    else if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
 }
