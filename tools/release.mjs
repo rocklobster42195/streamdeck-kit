@@ -73,7 +73,7 @@ if (dryRun) {
 fs.writeFileSync(pkgPath, pkgRaw.replace(/"version":\s*"[^"]*"/, `"version": "${version}"`));
 fs.writeFileSync(path.join(root, "packages", "kit", "src", "version.ts"), `// Written by tools/release.mjs with the version it releases; shown in the diagnostics report.\nexport const KIT_VERSION = '${version}';\n`);
 fs.writeFileSync(changelogPath, changelog.replace("\n## [Unreleased]\n", `\n## [Unreleased]\n\n## [${version}] — ${new Date().toISOString().slice(0, 10)}\n`));
-git(`add "${pkgPath}" "${changelogPath}"`);
+git(`add "${pkgPath}" "${changelogPath}" "${path.join(root, "packages", "kit", "src", "version.ts")}"`);
 git(`commit -m "Release streamdeck-kit ${version}"`);
 git(`tag -a ${tag} -m "streamdeck-kit ${version}"`);
 console.log("  📤 Pushing…");
