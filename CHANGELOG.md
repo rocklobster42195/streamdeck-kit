@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.24] — 2026-10-10
+
 ### Added
 
 - **Status in the corner** (grill 2026-10-10): the universal keys (Play/Pause, Playback Control, Volume) and the Volume and Track dials show a small badge at the bottom left when a command takes a while ("loading", an hourglass, after 0.6 s) or was refused (a red mark for four seconds). `PlayerEntry.busy`: a plugin marks a player whose command takes a while, so every plugin's key for it shows "loading" (older peers ignore the field). `PlayerBoard.status(player)` and `statusBadge()` / `keyStatusBadge()` for the plugins' own displays.
