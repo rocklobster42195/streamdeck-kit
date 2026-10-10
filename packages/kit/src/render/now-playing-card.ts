@@ -18,9 +18,20 @@ export type NowPlayingCard = {
     /** A short message in place of the title (e.g. "▶ Jazz Radio"). */
     flash?: { text: string; color: string };
     hint: string;
+    /** Instead of the hint's words: a row of small icons (MDI paths), e.g. rotate, tap, push. */
+    hintIcons?: string[];
     /** Panorama slice (with its darkening) drawn under the card. */
     backdrop?: string;
 };
+
+const HINT_ICON = 14;
+const HINT_GAP = 12;
+
+/** The hint under the text: its words, or a row of icons when the card has them. */
+function hintParts(o: NowPlayingCard, baseline: number): string[] {
+    if (!o.hintIcons?.length) return [text(82, baseline, o.hint, { size: 10, color: '#8a8a90', maxWidth: 112 })];
+    return o.hintIcons.map((path, i) => mdi(path, 82 + i * (HINT_ICON + HINT_GAP), baseline - 11, HINT_ICON, '#8a8a90'));
+}
 
 export function nowPlayingCard(o: NowPlayingCard): string {
     const parts: string[] = [];
@@ -30,7 +41,7 @@ export function nowPlayingCard(o: NowPlayingCard): string {
         parts.push(text(82, 26, o.source.kind, { size: 10, color: '#8a8a90', maxWidth: 112 }));
         parts.push(text(82, 44, o.source.name, { size: 13, weight: 'bold', maxWidth: 112 }));
         parts.push(text(82, 62, o.source.track, { size: 11, color: '#c8c8cc', maxWidth: 112 }));
-        parts.push(text(82, 82, o.hint, { size: 10, color: '#8a8a90', maxWidth: 112 }));
+        parts.push(...hintParts(o, 82));
         return stripImage(parts, undefined, o.backdrop);
     }
     // Title (up to two lines, one when there is an artist below), artist, then the hint
@@ -38,6 +49,6 @@ export function nowPlayingCard(o: NowPlayingCard): string {
     const lines = wrap(o.flash?.text ?? o.title, 112, 13, artist ? 1 : 2);
     lines.forEach((line, i) => parts.push(text(82, 36 + i * 16, line, { size: 13, weight: 'bold', color: o.flash?.color ?? '#ffffff' })));
     if (artist) parts.push(text(82, 55, artist, { size: 11, color: '#c8c8cc', maxWidth: 112 }));
-    parts.push(text(82, 80, o.hint, { size: 10, color: '#8a8a90', maxWidth: 112 }));
+    parts.push(...hintParts(o, 80));
     return stripImage(parts, undefined, o.backdrop);
 }

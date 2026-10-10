@@ -90,6 +90,18 @@ describe('MarqueeStepper', () => {
     });
 });
 
+describe('nowPlayingCard hint icons', () => {
+    it('a row of icons replaces the hint words', async () => {
+        const { nowPlayingCard } = await import('../src/render/now-playing-card.js');
+        const dec = (u: string) => Buffer.from(u.split(',')[1], 'base64').toString();
+        const words = dec(nowPlayingCard({ title: 'T', hint: 'Turn to browse' }));
+        const icons = dec(nowPlayingCard({ title: 'T', hint: 'Turn to browse', hintIcons: ['M0 0h4v4z', 'M1 1h3v3z', 'M2 2h2v2z'] }));
+        expect(words).toContain('Turn to browse');
+        expect(icons).not.toContain('Turn to browse');
+        expect(icons.match(/d="M[012] [012]h/g)?.length).toBe(3);
+    });
+});
+
 describe('nowPlayingCard', () => {
     it('shows the source when there is one, else title and artist, always the hint', async () => {
         const { nowPlayingCard } = await import('../src/render/now-playing-card.js');
