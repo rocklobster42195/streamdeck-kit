@@ -131,7 +131,7 @@ function previewMessage(preview: unknown): PiPushMessage {
 }
 
 // Diagnostics: the log tail and report header for the settings window
-export { registerDiagnostics, tailLines, reportHeader, defaultLogFile, revealFile, type DiagnosticsOptions } from "./diagnostics.js";
+export { registerDiagnostics, tailLines, reportHeader, reportText, copyToClipboard, defaultLogFile, revealFile, type DiagnosticsOptions } from "./diagnostics.js";
 export { redactLog } from "./redact.js";
 
 // Also on the SDK side: deckbus' "actions" state from the plugin's visible actions

@@ -10,7 +10,7 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ### Added
 
-- **`<pi-diagnostics>` and `registerDiagnostics()`**: the settings window ends with a collapsed "Diagnostics" field (added by the window itself; a page can place its own). The plugin gives the end of its log file (`tailLines`), a report header (`reportHeader`: plugin, kit, Stream Deck, system, the other plugins on deckbus, plugin-specific lines through `extra`) and shows the file in the file manager (`revealFile`); everything passes `redactLog()` (tokens, passwords, credentials in URLs, e-mail addresses, long opaque strings; private IP addresses stay). `KIT_VERSION`.
+- **`<pi-diagnostics>` and `registerDiagnostics()`**: the settings window ends with a collapsed "Diagnostics" field (added by the window itself; a page can place its own). The plugin gives the end of its log file (`tailLines`), a report header (`reportHeader`: plugin, kit, Stream Deck, system, the other plugins on deckbus, plugin-specific lines through `extra`) and shows the file in the file manager (`revealFile`); everything passes `redactLog()` (tokens, passwords, credentials in URLs, e-mail addresses, long opaque strings; private IP addresses stay). `KIT_VERSION`. The copy runs in the plugin (`copyToClipboard`, `reportText`: Stream Deck's browser doesn't answer the page's own clipboard calls); the footer gets a "Log" link beside "Help & feedback" that opens the settings window at the field.
 
 - **`nowPlayingCard` hint icons:** `hintIcons` (MDI paths) draws a row of small icons (rotate, tap, push) in place of the hint's words.
 

@@ -259,3 +259,4 @@ select.pi-state-value { flex: 0 1 120px; font-family: inherit; }
 .pi-diag-log { margin: 0; max-height: 220px; overflow: auto; padding: 8px; background: var(--pi-input-bg); border: 1px solid var(--pi-control-border); border-radius: 8px; font: 11px/1.4 Consolas, "Cascadia Mono", monospace; color: var(--pi-text-2); white-space: pre-wrap; word-break: break-word; }
 .pi-diag-line-warn { color: var(--pi-error-text); }
 .pi-diag-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.pi-footer-links { display: flex; gap: 12px; }

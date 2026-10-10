@@ -71,6 +71,36 @@ export function initSettingsWindow(options: { name: string }): void {
     });
 }
 
+/**
+ * "Log" in the page's footer, left of "Help & feedback": in the PI it opens the settings window at
+ * the Diagnostics field, in the window it scrolls there and opens it.
+ */
+function addLogLink(): void {
+    const footer = document.querySelector('.pi-footer');
+    if (!footer || footer.querySelector('.pi-footer-log')) return;
+    const link = document.createElement('a');
+    link.href = '#diagnostics';
+    link.className = 'pi-footer-log';
+    link.textContent = t('kit.diag_log');
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (isSettingsWindow()) {
+            const section = document.getElementById('diagnostics');
+            const details = section?.querySelector('details');
+            if (details) details.open = true;
+            section?.scrollIntoView();
+        } else if (!openSettingsWindow('diagnostics')) showSettingsInline();
+    });
+    // Beside "Help & feedback" on the right (the footer spreads its children across the width)
+    const first = footer.querySelector('a');
+    if (first) {
+        const group = document.createElement('span');
+        group.className = 'pi-footer-links';
+        footer.insertBefore(group, first);
+        group.append(link, first);
+    } else footer.appendChild(link);
+}
+
 /** The window ends with the "Diagnostics" field (log, copy, issue); a page can place its own `<pi-diagnostics>` instead. */
 function addDiagnostics(): void {
     if (document.querySelector('pi-diagnostics') || !customElements.get('pi-diagnostics')) return;
@@ -88,6 +118,7 @@ function addDiagnostics(): void {
  * <body data-title>") and the section asked for (#id).
  */
 export function settingsWindowShown(): void {
+    addLogLink();
     if (!isSettingsWindow()) return;
     // <body data-title="i18n key">, else the page's own <title>
     const title = document.body.dataset.title ? t(document.body.dataset.title) : document.title;

@@ -2,12 +2,15 @@ import { escapeHtml } from '../dom.js';
 import { t } from '../i18n.js';
 import { sd } from '../sd-client.js';
 
-type Report = { event?: string; header?: string[]; lines?: string[]; issueUrl?: string; error?: string };
+type Report = { event?: string; header?: string[]; lines?: string[]; issueUrl?: string; error?: string; ok?: boolean };
 
 const REQUEST = 'kit-diag-request';
 const OPEN = 'kit-diag-open';
 const REPLY = 'kit-diag';
+const COPY = 'kit-diag-copy';
+const COPIED = 'kit-diag-copied';
 const COPY_ICON = 'M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12V1Z';
+const CROSS_ICON = 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z';
 const CHECK_ICON = 'M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59 21 7Z';
 const WARN = /\b(WARN|ERROR|FATAL)\b/;
 
@@ -24,9 +27,14 @@ export class PiDiagnostics extends HTMLElement {
     private report: Report | undefined;
     private onlyWarnings = false;
     private waiting?: ReturnType<typeof setTimeout>;
+    private copied?: (ok: boolean) => void;
 
     connectedCallback(): void {
         this.off = sd.onMessage((msg: Report) => {
+            if (msg?.event === COPIED) {
+                this.copied?.(msg.ok === true);
+                return;
+            }
             if (msg?.event !== REPLY) return;
             clearTimeout(this.waiting);
             this.report = msg;
@@ -49,6 +57,8 @@ export class PiDiagnostics extends HTMLElement {
         details.addEventListener('toggle', () => {
             if (details.open) this.load();
         });
+        // Opened from the footer's "Log" link
+        if (location.hash === '#diagnostics') details.open = true;
         // The copy icon sits in the summary: don't let it toggle the field
         this.querySelector('.pi-diag-copy')!.addEventListener('click', (e) => {
             e.preventDefault();
@@ -60,9 +70,10 @@ export class PiDiagnostics extends HTMLElement {
             this.renderLog();
         });
         this.querySelector('.pi-diag-open')!.addEventListener('click', () => sd.sendToPlugin({ event: OPEN }));
-        this.querySelector('.pi-diag-issue')!.addEventListener('click', async () => {
-            await this.copy();
+        this.querySelector('.pi-diag-issue')!.addEventListener('click', () => {
+            // The page opens at once; the copy runs beside it (it can take a moment)
             if (this.report?.issueUrl) sd.openUrl(this.report.issueUrl);
+            void this.copy();
         });
     }
 
@@ -105,33 +116,50 @@ export class PiDiagnostics extends HTMLElement {
         return [...(r?.header ?? []), '', ...(r?.lines ?? [])].join('\n');
     }
 
+    /**
+     * The whole report on the clipboard. The plugin does it (the page's own clipboard API doesn't
+     * answer in Stream Deck's browser); if it can't, the page tries its legacy copy. Never waits
+     * for long: the icon shows a check, or a cross when nothing worked.
+     */
     private async copy(button?: HTMLElement): Promise<void> {
-        if (!this.report) {
-            sd.sendToPlugin({ event: REQUEST });
-            await new Promise((res) => setTimeout(res, 600));
-        }
-        const text = this.text();
+        const ok = await new Promise<boolean>((resolve) => {
+            const timer = setTimeout(() => done(false), 2500);
+            const done = (v: boolean) => {
+                clearTimeout(timer);
+                this.copied = undefined;
+                resolve(v);
+            };
+            this.copied = done;
+            sd.sendToPlugin({ event: COPY });
+        });
+        const copied = ok || this.legacyCopy(this.text());
+        if (button) this.flash(button, copied);
+    }
+
+    /** execCommand("copy") from a selected textarea (works inside a click, without a permission). */
+    private legacyCopy(text: string): boolean {
         try {
-            await navigator.clipboard.writeText(text);
-        } catch {
             const area = document.createElement('textarea');
             area.value = text;
             area.style.position = 'fixed';
             area.style.opacity = '0';
             document.body.appendChild(area);
             area.select();
-            document.execCommand('copy');
+            const ok = document.execCommand('copy');
             area.remove();
+            return ok;
+        } catch {
+            return false;
         }
-        if (button) {
-            const path = button.querySelector('path');
-            const before = path?.getAttribute('d') ?? COPY_ICON;
-            path?.setAttribute('d', CHECK_ICON);
-            button.title = t('kit.diag_copied');
-            setTimeout(() => {
-                path?.setAttribute('d', before);
-                button.title = t('kit.diag_copy');
-            }, 1500);
-        }
+    }
+
+    private flash(button: HTMLElement, ok: boolean): void {
+        const path = button.querySelector('path');
+        path?.setAttribute('d', ok ? CHECK_ICON : CROSS_ICON);
+        button.title = t(ok ? 'kit.diag_copied' : 'kit.diag_copy_failed');
+        setTimeout(() => {
+            path?.setAttribute('d', COPY_ICON);
+            button.title = t('kit.diag_copy');
+        }, 1800);
     }
 }

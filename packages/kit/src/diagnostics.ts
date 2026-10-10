@@ -60,6 +60,44 @@ export function reportHeader(o: DiagnosticsOptions): string[] {
     return lines.map(redactLog);
 }
 
+/**
+ * Puts text on the clipboard from the plugin's process: the property inspector's own clipboard
+ * calls don't answer in Stream Deck's browser (seen 2026-10-10). Resolves false when the system
+ * has no tool for it.
+ */
+export function copyToClipboard(text: string): Promise<boolean> {
+    const tools: [string, string[]][] =
+        process.platform === 'win32'
+            ? [['powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '[Console]::InputEncoding=[System.Text.Encoding]::UTF8; Set-Clipboard -Value ([Console]::In.ReadToEnd())']]]
+            : process.platform === 'darwin'
+              ? [['pbcopy', []]]
+              : [['wl-copy', []], ['xclip', ['-selection', 'clipboard']]];
+    const attempt = ([cmd, args]: [string, string[]]) =>
+        new Promise<boolean>((resolve) => {
+            try {
+                const child = spawn(cmd, args, { stdio: ['pipe', 'ignore', 'ignore'], windowsHide: true });
+                child.on('error', () => resolve(false));
+                child.on('close', (code) => resolve(code === 0));
+                child.stdin.on('error', () => resolve(false));
+                child.stdin.end(text, 'utf8');
+            } catch {
+                resolve(false);
+            }
+        });
+    return tools.reduce<Promise<boolean>>(async (done, tool) => (await done) || attempt(tool), Promise.resolve(false));
+}
+
+/** The whole report as text: the header, an empty line, the last lines of the log. */
+export function reportText(o: DiagnosticsOptions, file: string): string {
+    let lines: string[] = [];
+    try {
+        lines = tailLines(file, o.lines ?? 150);
+    } catch (e) {
+        lines = [`(the log can't be read: ${String((e as Error)?.message ?? e)})`];
+    }
+    return [...reportHeader(o), '', ...lines].join('\n');
+}
+
 /** Shows a file in the file manager, selected (Explorer, Finder); elsewhere its folder. */
 export function revealFile(file: string): void {
     const spawnQuiet = (cmd: string, args: string[], opts: Record<string, unknown> = {}) => {
@@ -87,6 +125,10 @@ export function registerDiagnostics(bridge: PiBridge, o: DiagnosticsOptions = {}
             error = String((e as Error)?.message ?? e);
         }
         await bridge.reply({ event: 'kit-diag', header: reportHeader(o), lines, issueUrl: o.issueUrl ?? '', ...(error ? { error } : {}) });
+    });
+    bridge.handle('kit-diag-copy', async () => {
+        const ok = await copyToClipboard(reportText(o, file()));
+        await bridge.reply({ event: 'kit-diag-copied', ok });
     });
     bridge.handle('kit-diag-open', () => {
         try {
