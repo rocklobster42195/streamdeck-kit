@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.25] — 2026-10-10
+
 ### Fixed
 
 - **Closing a YouTube tab left the keys empty.** An app that has quit stays as a (closed) player so "Play" can start it again, and being the one that started last it stayed the active player. `active` and `active:all` skip a closed app while anything else is there, so the keys go back to what played before (the playlist on the speaker). `PlayerEntry.closed`.
