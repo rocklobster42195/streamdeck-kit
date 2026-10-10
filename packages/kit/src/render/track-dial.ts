@@ -1,7 +1,7 @@
 // The universal Track dial's picture (grill 2026-10-10): cover on one side (the user's choice),
 // title, artist and progress beside it, all low; as "Equalizer" bars above them move while it plays
 // (the text stays where it is, so nothing jumps when it pauses). Over a Panorama effect the text gets small dark boxes. SDK-free.
-import { mdiMusicNote, mdiPlay } from '@mdi/js';
+import { mdiMusicNote, mdiPlay, mdiTimerSand } from '@mdi/js';
 import { statusBadge, type StatusKind } from './status-badge.js';
 import { image, mdi, progressBar, scrimBox, stripImage, text, textWidth, wrap } from './strip.js';
 
@@ -56,7 +56,9 @@ export function renderTrackDial(v: TrackDialView): string {
     // Cover (dimmed with a play symbol while it doesn't play)
     if (v.cover) parts.push(image(v.cover, coverX, 0, COVER, 100));
     else parts.push(`<rect x="${coverX}" width="${COVER}" height="100" fill="#1d1d20"/>`, mdi(mdiMusicNote, coverX + 26, 26, 48, "#5a5a60"));
-    if (!v.playing && (v.title || v.artist)) parts.push(`<rect x="${coverX}" width="${COVER}" height="100" fill="#000" opacity="0.45"/>`, mdi(mdiPlay, coverX + 30, 30, 40, "#ffffff"));
+    // Paused: the play symbol; a command taking a while: the hourglass in its place
+    const loading = v.status === 'loading';
+    if (loading || (!v.playing && (v.title || v.artist))) parts.push(`<rect x="${coverX}" width="${COVER}" height="100" fill="#000" opacity="0.45"/>`, mdi(loading ? mdiTimerSand : mdiPlay, coverX + 30, 30, 40, "#ffffff"));
     if (v.badge) parts.push(v.badge);
 
     if (!v.title && !v.artist) {
@@ -100,6 +102,6 @@ export function renderTrackDial(v: TrackDialView): string {
             parts.push(`<rect x="${tx + i * 9}" y="${56 - rh}" width="7" height="${rh}" fill="${v.accent}" opacity="${(0.75 * amp).toFixed(2)}" rx="1"/>`);
         });
     }
-    if (v.status) parts.push(statusBadge(v.status, coverX + 5, 79));
+    if (v.status === 'failed') parts.push(statusBadge(v.status, coverX + 5, 79));
     return stripImage(parts, undefined, v.underlay ? v.underlay + scrim : undefined);
 }

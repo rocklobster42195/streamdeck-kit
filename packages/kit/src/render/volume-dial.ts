@@ -9,6 +9,7 @@ import { pie } from './gauge/pie.js';
 import { mdi, scrimBox, scrimDisc, stripImage, text, textWidth } from './strip.js';
 import { volumeIcon } from '../transport/volume-keys.js';
 import { statusBadge, type StatusKind } from './status-badge.js';
+import { mdiTimerSand } from '@mdi/js';
 
 export type VolumeDialGauge = 'ring' | 'pie' | 'open';
 
@@ -76,7 +77,10 @@ export function renderVolumeDial(v: VolumeDialView): string {
     // Inside the gauge: the red speaker while muted; centred, the number (no room beside the gauge);
     // otherwise the user's icon or the speaker for this volume. The open ring's sits in its opening.
     const centred = showText && align === 'center' && !v.unavailable;
-    if (v.muted && !v.unavailable) {
+    if (v.status === 'loading') {
+        // A command takes a while: the hourglass in the middle of the gauge
+        parts.push(mdi(mdiTimerSand, cx - 16, 34, 32, '#e0e0e0'));
+    } else if (v.muted && !v.unavailable) {
         parts.push(mdi(mdiVolumeOff, cx - 16, 34, 32, MUTED));
     } else if (centred && gauge !== 'pie') {
         parts.push(text(cx, gauge === 'open' ? 54 : 57, `${volume}%`, { size: 18, weight: 'bold', anchor: 'middle', color: NUMBER }));
@@ -105,6 +109,6 @@ export function renderVolumeDial(v: VolumeDialView): string {
             text(tx, 64, v.name, { size: 11, color: '#cccccc', maxWidth: 92, anchor }),
         );
     }
-    if (v.status) parts.push(statusBadge(v.status, 4, 80));
+    if (v.status === 'failed') parts.push(statusBadge(v.status, 4, 80));
     return stripImage(parts, undefined, v.underlay ? v.underlay + scrim : undefined);
 }

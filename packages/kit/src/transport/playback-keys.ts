@@ -17,7 +17,7 @@ import {
 } from '@mdi/js';
 import { KEY_ICON, KEY_TIERS, keyActiveFrame, keyActivePlate, keyCaption, keyIcon, keySvg } from '../render/key-style.js';
 import { KEY_GREY, resolveKeyColor } from '../players/key-color.js';
-import { keyStatusBadge, type StatusKind } from '../render/status-badge.js';
+import { keyLoadingOverlay, keyStatusBadge, type StatusKind } from '../render/status-badge.js';
 import { ACTIVE_PLAYER, positionNow, type Player, type PlayerBoard, type RepeatMode, type TransportCommand } from '../players/players.js';
 import { DEFAULT_SEEK_STEP, SeekStepper } from '../players/seek.js';
 
@@ -243,7 +243,8 @@ export function renderPlaybackKey(v: PlaybackView): string {
     if (v.caption) parts.push(keyCaption(v.caption, '#ffffff'));
     if (v.marker) parts.push(keyIcon(v.marker, { size: 22, x: 144 - 35, y: 13 }, '#b8b8be'));
     if (v.active) parts.push(keyActiveFrame(v.active));
-    if (v.status) parts.push(keyStatusBadge(v.status));
+    if (v.status === 'loading') parts.push(keyLoadingOverlay());
+    else if (v.status) parts.push(keyStatusBadge(v.status));
     return keySvg(parts);
 }
 

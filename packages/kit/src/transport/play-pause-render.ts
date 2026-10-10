@@ -5,7 +5,7 @@ import { mdiMusicNote, mdiPlay, mdiTimerSand } from '@mdi/js';
 import { KEY_BG, KEY_SIZE, KEY_TIERS, keySvg } from '../render/key-style.js';
 import { cornerSvg, type CornerBadge } from './corners.js';
 
-import { keyStatusBadge, type StatusKind } from '../render/status-badge.js';
+import { keyLoadingOverlay, keyStatusBadge, type StatusKind } from '../render/status-badge.js';
 
 export type PlayPauseView = {
     /** No player to control (none chosen, gone, plugin away): a dimmed play symbol. */
@@ -38,6 +38,8 @@ const S = KEY_SIZE;
 /** The key as an SVG data URI (144 × 144). */
 export function renderPlayPauseKey(v: PlayPauseView): string {
     const parts: string[] = [];
+    // Waiting for the device: this key's own hourglass, or the player's (a command taking a while)
+    const loading = v.loading || v.status === 'loading';
     if (v.unavailable) {
         parts.push(icon(mdiPlay, 36, 36, 72, KEY_TIERS.unavailable));
     } else if (v.cover) {
@@ -49,15 +51,17 @@ export function renderPlayPauseKey(v: PlayPauseView): string {
             // Paused: the cover stays, dimmed, with a play symbol (press to resume); fades in and out
             const shade = (0.55 * dim).toFixed(2);
             parts.push(`<rect width="${S}" height="${S}" fill="#000" opacity="${shade}"/>`, `<circle cx="72" cy="72" r="30" fill="#000" opacity="${shade}"/>`);
-            parts.push(icon(v.loading ? mdiTimerSand : mdiPlay, 48, 48, 48, v.accent, dim));
+            parts.push(icon(loading ? mdiTimerSand : mdiPlay, 48, 48, 48, v.accent, dim));
+        } else if (v.status === 'loading') {
+            parts.push(keyLoadingOverlay());
         }
     } else {
-        parts.push(icon(v.loading ? mdiTimerSand : v.playing ? mdiMusicNote : mdiPlay, 36, 36, 72, v.iconColor));
+        parts.push(icon(loading ? mdiTimerSand : v.playing ? mdiMusicNote : mdiPlay, 36, 36, 72, v.iconColor));
     }
     if (v.titleSvg && !v.unavailable) parts.push(v.titleSvg);
     if (v.progress !== undefined && !v.unavailable) parts.push(progressPill(v.progress, v.accent));
     parts.push(cornerSvg(v.left, 'left'), cornerSvg(v.right, 'right'));
-    if (v.status && !v.unavailable) parts.push(keyStatusBadge(v.status));
+    if (v.status === 'failed' && !v.unavailable) parts.push(keyStatusBadge(v.status));
     return keySvg(parts, KEY_BG);
 }
 
