@@ -21,3 +21,4 @@ export * from './status-badge.js';
 export * from './now-playing-card.js';
 export * from './svg-inline.js';
 export * from './track-dial.js';
+export * from './panorama-text.js';
