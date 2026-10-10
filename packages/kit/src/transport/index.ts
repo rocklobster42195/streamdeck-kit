@@ -6,3 +6,4 @@ export * from './service-icons.js';
 export * from './playback-keys.js';
 export * from './volume-keys.js';
 export * from './volume-dials.js';
+export * from './track-dials.js';
