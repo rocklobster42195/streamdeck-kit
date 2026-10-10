@@ -71,6 +71,18 @@ export function initSettingsWindow(options: { name: string }): void {
     });
 }
 
+/** The window ends with the "Diagnostics" field (log, copy, issue); a page can place its own `<pi-diagnostics>` instead. */
+function addDiagnostics(): void {
+    if (document.querySelector('pi-diagnostics') || !customElements.get('pi-diagnostics')) return;
+    const section = document.createElement('pi-section');
+    section.setAttribute('title', 'kit.diag_title');
+    section.id = 'diagnostics';
+    section.appendChild(document.createElement('pi-diagnostics'));
+    const footer = document.querySelector('.pi-footer');
+    if (footer?.parentElement) footer.parentElement.insertBefore(section, footer);
+    else document.body.appendChild(section);
+}
+
 /**
  * Call once the page is built and shown. In the window: the menu, the title bar ("<plugin> ·
  * <body data-title>") and the section asked for (#id).
@@ -80,6 +92,7 @@ export function settingsWindowShown(): void {
     // <body data-title="i18n key">, else the page's own <title>
     const title = document.body.dataset.title ? t(document.body.dataset.title) : document.title;
     document.title = [pluginName, title].filter(Boolean).join(' · ');
+    addDiagnostics();
     initWindowNav();
     if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
 }

@@ -1,5 +1,6 @@
 // Node side of the kit (plugin backend), see README.md. Browser-only property inspector code
 // lives in the "/pi" entry point, the icon catalog in "/mdi".
+export * from './redact.js';
 export * from './render/index.js';
 export * from './panorama/index.js';
 export * from './list/index.js';
