@@ -45,7 +45,7 @@ export function renderTrackDial(v: TrackDialView): string {
     const side = v.coverSide ?? 'right';
     const coverX = side === 'right' ? 200 - COVER : 0;
     const tx = side === 'right' ? MARGIN : COVER + GAP;
-    const eq = (v.look ?? 'info') === 'eq' && !v.underlay;
+    const eq = (v.look ?? 'info') === 'eq';
     const dim = v.playing ? 1 : 0.6;
     const parts: string[] = [];
     let scrim = '';
@@ -90,6 +90,8 @@ export function renderTrackDial(v: TrackDialView): string {
     // Equalizer bars
     if (eq && v.playing && v.bars) {
         const amp = v.amplitude ?? 1;
+        // Over an effect the bars get a dark box too, so they stay readable
+        if (v.underlay) scrim += scrimBox(tx - 4, 34, v.bars.length * 9 + 1, 26);
         v.bars.forEach((h, i) => {
             const rh = Math.max(1, Math.round(h * amp));
             parts.push(`<rect x="${tx + i * 9}" y="${56 - rh}" width="7" height="${rh}" fill="${v.accent}" opacity="${(0.75 * amp).toFixed(2)}" rx="1"/>`);

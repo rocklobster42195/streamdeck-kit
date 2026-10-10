@@ -39,6 +39,8 @@ export type TrackDialsOptions = {
     /** The Panorama slice behind a dial, or nothing. */
     underlay?: (id: string) => string | undefined;
     nothingLabel: () => string;
+    /** The look of a dial that hasn't chosen one (default "info"; Sonos Controller's was the Equalizer). */
+    defaultLook?: TrackDialLook;
     onError?: (e: unknown) => void;
     now?: () => number;
 };
@@ -200,8 +202,8 @@ export class TrackDials {
         const cover = this.covers.frame(id, p.cover, () => this.render(id)).cover;
         const title = p.title ?? '';
         const artist = p.artist ?? p.album ?? '';
-        const look: TrackDialLook = s.look ?? 'info';
-        const eq = look === 'eq' && !underlay;
+        const look: TrackDialLook = s.look ?? this.o.defaultLook ?? 'info';
+        const eq = look === 'eq';
 
         // Scrolling text in counted steps while it doesn't fit
         const m = this.marquee(d, `${title}\n${artist}`);
