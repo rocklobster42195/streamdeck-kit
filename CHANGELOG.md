@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Added
+
+- **Transport commands are logged** through the plugin's logger (`setKitLogger`): `[transport] next → MA-C "Küche" ok in 63 ms`, or a warning with the error and the time it took. Which plugin got a command, and what became of it, is in the log now.
+
 ## [0.1.0-alpha.23] — 2026-10-10
 
 ### Fixed

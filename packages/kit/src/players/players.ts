@@ -5,6 +5,7 @@
 // mute; the media's plugin (whose queue or session plays) gives title, cover, colour and position
 // and takes every command about what plays (grill 2026-10-09). Kept SDK-free.
 import type { DeckBus, PeerInfo } from '../bus/bus.js';
+import { kitLog } from '../log.js';
 
 export const PLAYERS_KEY = 'players';
 export const TRANSPORT_METHOD = 'transport';
@@ -332,12 +333,24 @@ export class PlayerBoard {
         if (!p) throw new Error('transport: no such player');
         const route = routeFor(p, command);
         const t = parseTransport({ player: route.entry.player, command, value });
-        if (!route.peer) {
-            if (!this.handler) throw new Error('transport: no players here');
-            return this.handler(t);
+        // The route a command takes and what came of it, for the plugin's log (a skip that does nothing)
+        const started = Date.now();
+        const where = `${route.source}${route.peer ? '' : ' (here)'} "${p.name}"`;
+        try {
+            let result: unknown;
+            if (!route.peer) {
+                if (!this.handler) throw new Error('transport: no players here');
+                result = await this.handler(t);
+            } else {
+                if (!this.bus) throw new Error('transport: not on the bus');
+                result = await this.bus.request(route.peer, TRANSPORT_METHOD, t, TRANSPORT_TIMEOUT_MS);
+            }
+            kitLog().info?.(`[transport] ${command} → ${where} ok in ${Date.now() - started} ms`);
+            return result;
+        } catch (e) {
+            kitLog().warn(`[transport] ${command} → ${where} failed after ${Date.now() - started} ms:`, e);
+            throw e;
         }
-        if (!this.bus) throw new Error('transport: not on the bus');
-        return this.bus.request(route.peer, TRANSPORT_METHOD, t, TRANSPORT_TIMEOUT_MS);
     }
 
     /** Called whenever the deck's players change. */
