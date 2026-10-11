@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Changed
+
+- **Progress bars of the Track dial and the volume display grow in whole pixels**, so a bar that hasn't moved a pixel is the same picture as before and isn't sent again.
+
 ## [0.1.0-alpha.28] — 2026-10-11
 
 ### Fixed

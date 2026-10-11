@@ -65,7 +65,7 @@ export function mdi(path: string, x: number, y: number, size: number, fill: stri
 
 export function progressBar(x: number, y: number, w: number, value: number, color: string, h = 4): string[] {
     const v = Math.min(1, Math.max(0, value));
-    return [`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="#2c2c30"/>`, `<rect x="${x}" y="${y}" width="${Math.max(h, w * v).toFixed(1)}" height="${h}" rx="${h / 2}" fill="${color}"/>`];
+    return [`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="#2c2c30"/>`, `<rect x="${x}" y="${y}" width="${Math.max(h, Math.round(w * v))}" height="${h}" rx="${h / 2}" fill="${color}"/>`];
 }
 
 /** Image (data URI) into a rect, cropped to fill. */
