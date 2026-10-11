@@ -69,6 +69,8 @@ export type PlayPauseKeysOptions = {
 type Key = {
     settings: PlayPauseKeySettings;
     fader?: TitleFader;
+    /** The cover is crossfading: the title waits (band and text come in once the cover is there). */
+    coverFading?: boolean;
     /** A pressed state shown until the device confirms it. */
     pressed?: { playing: boolean; until: number; position?: number };
     /** The paused look, fading in and out (0 playing … 1 paused). */
@@ -178,6 +180,7 @@ export class PlayPauseKeys {
         const accent = !s.keyColor || s.keyColor === 'grey' ? (p.color ?? KEY_GREY) : iconColor;
         const cover = s.showCover && p.cover ? this.covers.frame(id, p.cover, () => this.render(id)) : undefined;
         if (!cover) this.covers.forget(id);
+        k.coverFading = cover?.previous !== undefined;
 
         let progress: number | undefined;
         if (s.showProgress && p.duration) {
@@ -224,6 +227,8 @@ export class PlayPauseKeys {
         frames.run(`play-pause-title-${id}`, () => {
             const key = this.keys.get(id);
             if (!key?.fader) return false;
+            // First the cover, then the band, then the text: one thing moving at a time
+            if (key.coverFading) return true;
             if (key.fader.step()) this.render(id);
             return true;
         });
