@@ -64,6 +64,29 @@ describe('PlayerBoard', () => {
         expect(bad.since).toBe(7);
     });
 
+    it('the plugin that learns of the next track first gives it to the deck; the media plugin takes over when it catches up', () => {
+        const board = new PlayerBoard('SO-C');
+        const media = (title: string, titleAt: number) => peer('MA-C', [speaker('ma-bad', { device: 'RINCON_1', name: 'Bad', media: true, playing: true, since: 7, title, titleAt, color: '#ff0000' })]);
+        vi.useFakeTimers();
+        vi.setSystemTime(1000);
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', direct: true, playing: true, since: 5, title: 'Old', color: '#0000ff' })]);
+        board.setPeers([media('Old', 900)]);
+        expect(board.players()[0].title).toBe('Old');
+        // The speaker reports the next track, Music Assistant still has the old one
+        vi.setSystemTime(2000);
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', direct: true, playing: true, since: 5, title: 'New', color: '#00ff00' })]);
+        expect(board.ownPlayers()[0].titleAt).toBe(2000);
+        expect(board.players()[0].title).toBe('New');
+        expect(board.players()[0].color).toBe('#00ff00');
+        // Music Assistant catches up: its own data again
+        board.setPeers([media('New (MA)', 3000)]);
+        expect(board.players()[0].title).toBe('New (MA)');
+        // A republish without a change keeps the stamp
+        vi.setSystemTime(4000);
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', direct: true, playing: true, since: 5, title: 'New', color: '#00ff00', volume: 3 })]);
+        expect(board.ownPlayers()[0].titleAt).toBe(2000);
+    });
+
     it('the device says whether it plays; the media gives source, shuffle and repeat; the device its battery', () => {
         const board = new PlayerBoard('SO-C');
         // MA still reports "playing" during a pause; the speaker knows better

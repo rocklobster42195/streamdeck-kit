@@ -51,6 +51,8 @@ export type PlayerEntry = {
     title?: string;
     artist?: string;
     album?: string;
+    /** When (ms) title or artist last changed, stamped by `PlayerBoard.publish`: of two plugins that know one speaker, the fresher track wins. */
+    titleAt?: number;
     /** A cover image URL this computer can load. */
     cover?: string;
     /** Seconds; `at` is when (ms) `position` was true. */
@@ -164,7 +166,16 @@ function merge(id: string, routes: PlayerRoute[]): Player {
     // stopped radio, not Music Assistant's old queue — seen 2026-10-09), else another's
     const from = (playing.includes(via) ? via : playing[0]) ?? (via.entry.media ? via : undefined) ?? media[0] ?? via;
     const v = via.entry;
-    const f = from.entry;
+    // A plugin that learns of the next track first (the speaker itself) gives it to the deck at once;
+    // the others' data takes over when it catches up (a later change of title). Not from a route
+    // that stands still while another plays.
+    const anyPlaying = routes.some((r) => r.entry.playing);
+    const fresh = routes
+        .filter((r) => r !== from && r.entry.title && r.entry.titleAt !== undefined && from.entry.titleAt !== undefined && r.entry.titleAt > from.entry.titleAt && r.entry.title !== from.entry.title && (!anyPlaying || r.entry.playing))
+        .reduce<PlayerRoute | undefined>((a, b) => (!a || b.entry.titleAt! > a.entry.titleAt! ? b : a), undefined);
+    const f: PlayerEntry = fresh
+        ? { ...from.entry, ...pickTrack(fresh.entry) }
+        : from.entry;
     return {
         ...f,
         player: v.player,
@@ -193,6 +204,11 @@ function merge(id: string, routes: PlayerRoute[]): Player {
         via,
         from,
     };
+}
+
+/** The fields that belong to one track. */
+function pickTrack(e: PlayerEntry): Partial<PlayerEntry> {
+    return { title: e.title, artist: e.artist, album: e.album, titleAt: e.titleAt, cover: e.cover, color: e.color, position: e.position, duration: e.duration, at: e.at };
 }
 
 /** What a merged player takes: commands about what plays as its media's plugin says, the rest as the device's. */
@@ -273,7 +289,16 @@ export class PlayerBoard {
 
     /** This plugin's players (call it whenever one of them changes). */
     publish(entries: PlayerEntry[]): void {
-        if (JSON.stringify(entries) === JSON.stringify(this.own)) return;
+        const now = Date.now();
+        // Stamp when a player's track changed (the plugin need not say), kept while it stays
+        const stamped = entries.map((e) => {
+            const before = this.own.find((o) => o.player === e.player);
+            const same = before && before.title === e.title && before.artist === e.artist;
+            const titleAt = e.title ? (same ? before.titleAt ?? now : now) : undefined;
+            return titleAt === e.titleAt ? e : { ...e, titleAt };
+        });
+        if (JSON.stringify(stamped) === JSON.stringify(this.own)) return;
+        entries = stamped;
         this.own = entries;
         this.bus?.setState(PLAYERS_KEY, entries.length ? entries : undefined);
         this.changed();

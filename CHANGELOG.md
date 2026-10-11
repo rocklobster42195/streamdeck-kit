@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Fixed
+
+- **A new track showed late on the plugin that waits for Music Assistant.** The plugin that learns of the next track first (the speaker's own plugin) now gives it to the deck at once: `PlayerBoard.publish` stamps `PlayerEntry.titleAt` when a player's title or artist changes, and of the routes of one device the one with the fresher title (with its cover, colour and position) wins, until the other one catches up with a later change. A route that stands still while another plays never wins.
+
 ## [0.1.0-alpha.26] — 2026-10-11
 
 ### Added
