@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.29] — 2026-10-11
+
 ### Changed
 
 - **The cover crossfade runs at 25 frames a second** (its own 40 ms clock instead of the shared 80 ms one), so it is smooth rather than stepping; the covers are small now, so the frames cost little.
