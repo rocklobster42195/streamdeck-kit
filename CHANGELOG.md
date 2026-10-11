@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.26] — 2026-10-11
+
 ### Added
 
 - **Panorama text across plugins:** `TextRuns` (title and artist, or a lyrics line, over a run of Panorama dials of several plugins: dials mark themselves `canvas` in the shared "actions" state, the one whose text changed last decides, every display draws its window of it). `trackOverlay`, `lyricsOverlay` and the other Panorama text overlays moved here from MA-C.
