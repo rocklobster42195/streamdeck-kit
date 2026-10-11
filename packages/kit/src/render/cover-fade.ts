@@ -74,6 +74,7 @@ export class CoverFader {
             s.previous = undefined;
             return { cover: s.cover, mix: 1 };
         }
-        return { cover: s.cover, previous: s.previous, mix: t * t * (3 - 2 * t) }; // smoothstep
+        // Linear: with ~10 frames a smoothstep barely moves in the first two and jumps in the middle
+        return { cover: s.cover, previous: s.previous, mix: t };
     }
 }
