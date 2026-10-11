@@ -4,6 +4,15 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Fixed
+
+- **A track's data no longer blanks the other route's cover.** The fresher route's track (alpha.27) takes only the fields it actually has, so a Sonos cover that is still loading doesn't empty the one Music Assistant has.
+- **Play/Pause key: cover, then band, then text.** While the cover crossfades the title waits, so one thing moves at a time; the crossfade itself is linear (a smoothstep over ten frames barely moved at first and then jumped).
+
+### Changed
+
+- **Much less to send to Stream Deck** (measured 2026-10-11: about 6.3 MB/s for three plugins, now about 1.8 MB/s). The particle effect leaves out every line and particle that lies wholly beyond a display's slice (a slice carried all 600 lines of the row, most far off to the side). The cover cache takes a `resize` hook (`configureCoverCache({ resize })`), and `coverResizer(maxSide = 256, quality = 82)` is a pure-JavaScript one (`jpeg-js`, `pngjs`; a native module doesn't ship with a packed plugin): a 640 px, 200 KB cover became about 15 KB. Without the hook covers stay as served.
+
 ## [0.1.0-alpha.27] — 2026-10-11
 
 ### Fixed
