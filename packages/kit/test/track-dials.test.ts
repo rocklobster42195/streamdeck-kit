@@ -43,7 +43,7 @@ describe('TrackDials', () => {
         d.show('a', {});
         expect(images.at(-1)).toContain('Invented Song');
         expect(images.at(-1)).toContain('Sim Artist');
-        expect(images.at(-1)).toContain('width="21.0"');
+        expect(images.at(-1)).toContain('width="21" height="5"');
     });
 
     it('rotate seeks by seconds per tick (default 10, a set step), shown at once, only the latest is sent', async () => {

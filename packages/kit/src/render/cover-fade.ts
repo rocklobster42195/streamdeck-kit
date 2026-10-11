@@ -1,5 +1,9 @@
 import { getCachedCover, loadCover } from "./cover-cache.js";
-import { frames } from "./frames.js";
+import { FrameTicker } from "./animation.js";
+
+/** Its own, faster clock: a crossfade over about ten frames at the shared 80 ms reads as stepping. */
+const FADE_TICK_MS = 40;
+const fadeFrames = new FrameTicker(FADE_TICK_MS);
 
 /** Crossfade duration between two covers (sonos-controller: 10 steps of 80 ms). */
 const FADE_MS = 800;
@@ -52,7 +56,7 @@ export class CoverFader {
             s.cover = hit;
             s.since = Date.now() - Math.min(1, Math.max(0, startMix)) * this.fadeMs;
             if (s.previous) {
-                frames.run(`cover-${id}`, () => {
+                fadeFrames.run(`cover-${id}`, () => {
                     if (this.state.get(id) !== s || !s.previous) return false;
                     redraw();
                     return Date.now() - s.since < this.fadeMs;
@@ -64,7 +68,7 @@ export class CoverFader {
 
     forget(id: string): void {
         this.state.delete(id);
-        frames.stop(`cover-${id}`);
+        fadeFrames.stop(`cover-${id}`);
     }
 
     private current(s: State): CoverFrame {

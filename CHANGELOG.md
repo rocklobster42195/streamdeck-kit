@@ -6,6 +6,7 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ### Changed
 
+- **The cover crossfade runs at 25 frames a second** (its own 40 ms clock instead of the shared 80 ms one), so it is smooth rather than stepping; the covers are small now, so the frames cost little.
 - **Progress bars of the Track dial and the volume display grow in whole pixels**, so a bar that hasn't moved a pixel is the same picture as before and isn't sent again.
 
 ## [0.1.0-alpha.28] — 2026-10-11
