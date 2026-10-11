@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.28] — 2026-10-11
+
 ### Fixed
 
 - **A track's data no longer blanks the other route's cover.** The fresher route's track (alpha.27) takes only the fields it actually has, so a Sonos cover that is still loading doesn't empty the one Music Assistant has.
