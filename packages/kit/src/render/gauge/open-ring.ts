@@ -3,6 +3,7 @@
 // value in its zone's colour; a handle can mark the value (what the dial sets), a small dot a second
 // value (a thermostat's room temperature). Text inside is up to the caller.
 import { clamp01 } from "./arc.js";
+import { mdi } from "../strip.js";
 import { zoneColor, type Zones } from "./scale.js";
 
 export type OpenRingOptions = {
@@ -26,6 +27,12 @@ export type OpenRingOptions = {
     dimColor?: string;
     /** Show the zones as faint bands on the track (0..1, like the half arc's); none when unset. */
     zoneOpacity?: number;
+    /** An MDI path drawn in the gap at the bottom, centred under the ring's middle (the family's place for the icon). */
+    icon?: string;
+    /** The icon's size in px; default half the radius. */
+    iconSize?: number;
+    /** The icon's colour; default light grey, `dimColor` while dimmed. */
+    iconColor?: string;
 };
 
 const START = 135;
@@ -80,6 +87,12 @@ export function openRing(o: OpenRingOptions): string[] {
     if (o.handle && f !== undefined) {
         const [x, y] = openRingPoint(o.cx, o.cy, o.r, f);
         parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(width + 0.5).toFixed(1)}" fill="${o.dim ? "#8a8a90" : "#ffffff"}" stroke="#0a0a0a" stroke-width="2"/>`);
+    }
+    if (o.icon) {
+        const size = o.iconSize ?? Math.round(o.r / 2);
+        // The ring's ends sit at 45° below the sides; the icon takes the middle of the gap between them
+        const [, yEnd] = openRingPoint(o.cx, o.cy, o.r, 0);
+        parts.push(mdi(o.icon, o.cx - size / 2, yEnd - size * 0.35, size, o.dim ? dimColor : (o.iconColor ?? "#c8c8cc")));
     }
     return parts;
 }

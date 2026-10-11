@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Added
+
+- **`openRing` takes an `icon`** (an MDI path, with `iconSize` and `iconColor`): drawn in the gap at the bottom of the ring, centred under its middle, grey while dimmed. One place for the icon instead of each plugin choosing its own (asked for by HA-C, where a name on the strip pushed the icon out).
+
 ## [0.1.0-alpha.25] — 2026-10-10
 
 ### Fixed
