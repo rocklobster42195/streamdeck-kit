@@ -78,6 +78,12 @@ describe('PlayerBoard', () => {
         expect(board.ownPlayers()[0].titleAt).toBe(2000);
         expect(board.players()[0].title).toBe('New');
         expect(board.players()[0].color).toBe('#00ff00');
+        // A cover that is still loading doesn't blank the one the other route has
+        vi.setSystemTime(2500);
+        board.setPeers([peer('MA-C', [speaker('ma-bad', { device: 'RINCON_1', name: 'Bad', media: true, playing: true, since: 7, title: 'Old', titleAt: 900, cover: 'http://ma/old.jpg', color: '#ff0000' })])]);
+        board.publish([speaker('RINCON_1', { device: 'RINCON_1', direct: true, playing: true, since: 5, title: 'New' })]);
+        expect(board.players()[0].title).toBe('New');
+        expect(board.players()[0].cover).toBe('http://ma/old.jpg');
         // Music Assistant catches up: its own data again
         board.setPeers([media('New (MA)', 3000)]);
         expect(board.players()[0].title).toBe('New (MA)');

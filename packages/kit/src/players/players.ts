@@ -206,9 +206,13 @@ function merge(id: string, routes: PlayerRoute[]): Player {
     };
 }
 
-/** The fields that belong to one track. */
+/** The fields that belong to one track; only those the route has (a cover still loading doesn't blank the other route's). */
 function pickTrack(e: PlayerEntry): Partial<PlayerEntry> {
-    return { title: e.title, artist: e.artist, album: e.album, titleAt: e.titleAt, cover: e.cover, color: e.color, position: e.position, duration: e.duration, at: e.at };
+    const track: Partial<PlayerEntry> = {};
+    for (const key of ['title', 'artist', 'album', 'titleAt', 'cover', 'color', 'position', 'duration', 'at'] as const) {
+        if (e[key] !== undefined) Object.assign(track, { [key]: e[key] });
+    }
+    return track;
 }
 
 /** What a merged player takes: commands about what plays as its media's plugin says, the rest as the device's. */
