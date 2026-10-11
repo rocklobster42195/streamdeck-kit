@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { loadCover } from '../src/render/cover-cache.js';
+import { configureCoverCache, loadCover } from '../src/render/cover-cache.js';
 
 // Ported from sonos-controller's cover-art-loader tests (hardware lessons).
 function jpeg(byte: number): Response {
@@ -25,6 +25,20 @@ describe('loadCover', () => {
         expect(first).toMatch(/^data:image\/jpeg;base64,/);
         expect(second).toBe(first);
         expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the cover small with a resize hook, and the original when the hook fails or does not shrink', async () => {
+        fetchSpy.mockImplementation(async () => new Response(new Uint8Array(100).fill(7), { status: 200, headers: { 'content-type': 'image/jpeg' } }));
+        configureCoverCache({ resize: async () => ({ body: Buffer.from([1, 2, 3]), type: 'image/jpeg' }) });
+        const small = await loadCover('http://resize.test/a.jpg');
+        expect(Buffer.from(small!.split(',')[1], 'base64').length).toBe(3);
+        configureCoverCache({ resize: async () => ({ body: Buffer.alloc(500), type: 'image/jpeg' }) });
+        const same = await loadCover('http://resize.test/b.jpg');
+        expect(Buffer.from(same!.split(',')[1], 'base64').length).toBe(100);
+        configureCoverCache({ resize: async () => { throw new Error('boom'); } });
+        const failed = await loadCover('http://resize.test/c.jpg');
+        expect(Buffer.from(failed!.split(',')[1], 'base64').length).toBe(100);
+        configureCoverCache({ resize: async () => undefined });
     });
 
     it('dedupes concurrent requests for the same URL', async () => {

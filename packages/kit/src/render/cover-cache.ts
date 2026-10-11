@@ -10,16 +10,21 @@ import { runThrottled } from "../util/per-host-throttle.js";
 // - a failed URL is not retried for a few seconds — long enough to collapse a burst of callers
 //   (every poll, every re-render) into one attempt, short enough that a transient failure at a
 //   track change doesn't leave the previous cover standing for long;
-// - empty bodies and non-image answers count as failures.
+// - empty bodies and non-image answers count as failures;
+// - a plugin may give a resize hook (sharp) so the cached cover is key-sized, not as served.
 const FETCH_TIMEOUT_MS = 8000;
 let maxEntries = 100;
 let failureCooldownMs = 5000;
+/** Brings a fetched cover down to what a key or strip shows (set by the plugin; none: kept as served). */
+export type CoverResize = (body: Buffer, type: string) => Promise<{ body: Buffer; type: string } | undefined>;
+let resize: CoverResize | undefined;
 const cache = new Map<string, string>();
 const inflight = new Map<string, Promise<string | undefined>>();
 const failedAt = new Map<string, number>();
 
 /** Cache size (default 100 covers) and how long a failed URL rests (default 5 s). */
-export function configureCoverCache(o: { maxEntries?: number; failureCooldownMs?: number }): void {
+export function configureCoverCache(o: { maxEntries?: number; failureCooldownMs?: number; resize?: CoverResize }): void {
+    if (o.resize !== undefined) resize = o.resize;
     if (o.maxEntries !== undefined) maxEntries = Math.max(1, o.maxEntries);
     if (o.failureCooldownMs !== undefined) failureCooldownMs = Math.max(0, o.failureCooldownMs);
 }
@@ -68,7 +73,21 @@ async function fetchAsDataUri(url: string): Promise<string | undefined> {
         if (!type.startsWith("image/") && !type.startsWith("binary/")) throw new Error(`not an image (${type})`);
         const body = await res.arrayBuffer();
         if (!body.byteLength) throw new Error("empty body");
-        const uri = `data:${type};base64,${Buffer.from(body).toString("base64")}`;
+        let bytes = Buffer.from(body);
+        let mime = type;
+        // A server's cover may be 640 px and 200 KB for a 144 px key, sent again with every frame
+        if (resize) {
+            try {
+                const small = await resize(bytes, type);
+                if (small && small.body.length < bytes.length) {
+                    bytes = small.body;
+                    mime = small.type;
+                }
+            } catch (e) {
+                kitLog().warn(`[cover] resize failed for ${url}`, e);
+            }
+        }
+        const uri = `data:${mime};base64,${bytes.toString("base64")}`;
         failedAt.delete(url);
         cache.set(url, uri);
         while (cache.size > maxEntries) cache.delete(cache.keys().next().value!);

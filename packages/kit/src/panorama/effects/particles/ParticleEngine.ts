@@ -1,4 +1,8 @@
 // Ported from sonos-controller (src/effects/particles/ParticleEngine.ts). Keep both in sync — see the sync rule in CLAUDE.md.
+/** One display's slice (a Stream Deck + strip), for leaving out what lies wholly beyond it. */
+const SLICE_W = 200;
+const SLICE_H = 100;
+
 export type ParticleMode = 'drift' | 'network';
 
 export interface ParticleConfig {
@@ -226,8 +230,25 @@ export class ParticleEngine {
         const col = cfg.color;
         const op = cfg.opacity;
 
+        // Only what can show: the whole panorama's lines and particles are computed, but a display
+        // is one slice wide. Anything wholly beyond one edge of it is left out (it was clipped away anyway).
+        const M = 4;
+        const sx = canvasX - sliceOffsetX;
+        const inView = (xa: number, ya: number, xb: number, yb: number): boolean => {
+            const ax = xa + sx;
+            const bx = xb + sx;
+            const ay = ya + canvasY;
+            const by = yb + canvasY;
+            if (ax < -M && bx < -M) return false;
+            if (ax > SLICE_W + M && bx > SLICE_W + M) return false;
+            if (ay < -M && by < -M) return false;
+            if (ay > SLICE_H + M && by > SLICE_H + M) return false;
+            return true;
+        };
+
         if (cfg.mode === 'network') {
             for (const line of lines) {
+                if (!inView(line.x1, line.y1, line.x2, line.y2)) continue;
                 const x1 = (line.x1 - sliceOffsetX + canvasX).toFixed(1);
                 const y1 = (line.y1 + canvasY).toFixed(1);
                 const x2 = (line.x2 - sliceOffsetX + canvasX).toFixed(1);
@@ -237,6 +258,7 @@ export class ParticleEngine {
         }
 
         for (const p of ps) {
+            if (!inView(p.x - p.r, p.y - p.r, p.x + p.r, p.y + p.r)) continue;
             const cx = (p.x - sliceOffsetX + canvasX).toFixed(1);
             const cy = (p.y + canvasY).toFixed(1);
             parts.push(`<circle cx="${cx}" cy="${cy}" r="${p.r.toFixed(1)}" fill="${col}" opacity="${op.toFixed(2)}"/>`);
