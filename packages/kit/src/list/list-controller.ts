@@ -1,12 +1,18 @@
 // Wiring of a dial list: the scroll model, the strip layout and the shared frame ticker. The plugin
 // keeps its own dial action and data; it calls rotate()/reset() and draws with render(), and
 // answers push/touch itself (`marked` is the selected row).
-import type { FrameTicker } from '../render/animation.js';
-import { frames as sharedFrames } from '../render/frames.js';
-import { MarqueeStepper, marqueeNeeded } from '../render/marquee.js';
+import { FrameTicker } from '../render/animation.js';
+import { MARQUEE_TICK_MS, MarqueeStepper, marqueeNeeded } from '../render/marquee.js';
 import { measureArialWidth } from '../render/text-width.js';
 import { LIST_MARQUEE_PAUSE_MS, LIST_MARQUEE_SPEED, listStrip, listTitleWidth, type ListStripView } from './list-strip.js';
 import { ScrollList, type ScrollListOptions } from './scroll-list.js';
+
+/**
+ * The list's own, faster clock: a glide over about ten frames at the shared 80 ms reads as stepping
+ * (the same lesson as the cover crossfade). The marquee still steps at its own pace.
+ */
+const LIST_FRAME_MS = 40;
+const listFrames = new FrameTicker(LIST_FRAME_MS);
 
 export type ListControllerOptions = ScrollListOptions & {
     /** Unique per dial (ticker and marquee ids). */
@@ -33,12 +39,14 @@ export class ListController {
     private markedAt = 0;
     private overlay?: { text: string; at: number };
     private marqueeOn = false;
+    /** When the marquee last stepped: it steps once per MARQUEE_TICK_MS whatever the frame rate. */
+    private marqueeAt = 0;
     /** Counted marquee steps: a late frame shows the next step instead of jumping. */
     private readonly stepper = new MarqueeStepper(LIST_MARQUEE_SPEED, LIST_MARQUEE_PAUSE_MS);
 
     constructor(private readonly o: ListControllerOptions) {
         this.model = new ScrollList(o);
-        this.ticker = o.ticker ?? sharedFrames;
+        this.ticker = o.ticker ?? listFrames;
         this.clock = o.clock ?? Date.now;
     }
 
@@ -135,10 +143,22 @@ export class ListController {
         return this.model.moving || fading || !!this.overlay || this.marqueeOn;
     }
 
+    private stepMarquee(): void {
+        const now = this.clock();
+        if (!this.marqueeAt) this.marqueeAt = now;
+        // A late frame catches up a few steps at most instead of racing
+        for (let i = 0; i < 3 && now - this.marqueeAt >= MARQUEE_TICK_MS; i++) {
+            this.stepper.tick();
+            this.marqueeAt += MARQUEE_TICK_MS;
+        }
+        if (now - this.marqueeAt >= MARQUEE_TICK_MS) this.marqueeAt = now;
+    }
+
     private animate(now = true): void {
         if (now) this.o.redraw();
         this.ticker.run(this.tickerId, () => {
-            if (this.marqueeOn) this.stepper.tick();
+            if (this.marqueeOn) this.stepMarquee();
+            else this.marqueeAt = 0;
             this.o.redraw();
             return this.busy();
         });

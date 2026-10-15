@@ -6,6 +6,7 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ### Changed
 
+- **Dial lists glide at 25 frames a second** (their own 40 ms clock instead of the shared 80 ms one), so a list turning one entry per click reads as smooth rather than stepping, as the cover crossfade did before. The marquee in the list keeps its pace.
 - **Boing Ball and Boing Globe: the colour glides** to a new cover colour (like Particles and Matrix Rain) instead of cutting in at every track change, and a colour that would vanish against its partner is pushed away from it: a pale cover darkens against the white checker, a blue cover is lightened against the ocean. The default green and blue are unchanged.
 
 ## [0.1.0-alpha.31] — 2026-10-15
