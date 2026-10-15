@@ -7,7 +7,7 @@ Building blocks for [Elgato Stream Deck](https://www.elgato.com/stream-deck) plu
 - **Panorama effects:** animated backgrounds that span several neighbouring dials.
 - **A property inspector kit:** a framework-free replacement for `sdpi-components`, with a Stream Deck socket client, i18n, light-DOM components and a dark theme.
 
-It is used by [MA-C (Music Assistant Controller)](https://github.com/rocklobster42195/streamdeck-music-assistant-controller) and will be used by [Sonos Controller](https://github.com/rocklobster42195/streamdeck-sonos-controller) and the plugins that follow them.
+It is used by [Sonos Controller](https://github.com/rocklobster42195/streamdeck-sonos-controller) and by the plugins that follow it (Music Assistant, system audio, Home Assistant, X-Air mixers).
 
 > **Alpha.** The API changes often and without notice, also between alpha versions. The kit is built for the plugins named above; if you use it in your own plugin, pin an exact version.
 
@@ -62,7 +62,7 @@ const ring = arc(72, 72, 54, 0.42, "#6cc4ff", { width: 14 }); // SVG parts: trac
 const torte = pie(50, 50, 38, 0.42, "#cccccc");               // SVG parts: outline + wedge
 ```
 
-- `arc(cx, cy, r, value, color, { track, width })`: a ring gauge with a round-capped arc from 12 o'clock, clockwise (MA-C's volume ring).
+- `arc(cx, cy, r, value, color, { track, width })`: a ring gauge with a round-capped arc from 12 o'clock, clockwise (a volume ring).
 - `pie(cx, cy, r, value, color, { inner, stroke })`: an outline circle and a filled wedge, also from 12 o'clock (Sonos Controller's volume look). Without options, the wedge radius and stroke follow Sonos Controller's proportions: 7 and 1.5 for r 9, 30 and 6 for r 38.
 - `halfArc({ cx, cy, r, min, max, value, target, zones, width, track, color })`: a half-circle gauge from 9 o'clock over the top to 3 o'clock, in the value's own unit (°C, W, %). Colour zones (`Zones`, as for meters) show as dim bands on the track, the value as a filled arc in its zone's colour, and `target` as a marker, e.g. a thermostat's setpoint. `halfArcPosition` and `halfArcPoint` give positions for labels.
 
@@ -170,12 +170,12 @@ Media keys that work with any player on the deck: every plugin publishes what it
 ```ts
 import { PlayerBoard, SeekStepper, positionNow, resolveKeyColor } from "@rocklobster42195/streamdeck-kit";
 
-const players = new PlayerBoard("SO-C");
+const players = new PlayerBoard("Sonos");
 players.connect(bus, { allow: () => settings.othersMayControl !== false }); // "transport" is on by default
 players.serve(({ player, command, value }) => speakers.get(player)?.run(command, value)); // own players, from own keys and other plugins
 players.publish([{ player: "RINCON_…", device: "RINCON_…", name: "Bad", kind: "speaker", direct: true, playing: true, since: Date.now(), color: "#d9643a", can: ["play-pause", "next", "seek"] }]);
 
-const p = players.resolve(keySettings.player ?? "active"); // "active", "active:all", "device:…", "app:Spotify", "MA-C/shield"
+const p = players.resolve(keySettings.player ?? "active"); // "active", "active:all", "device:…", "app:Spotify", "Sonos/Kitchen"
 await players.send(p, "play-pause");
 
 // Next/Previous key: a long press switches to seeking, quick taps add up to one seek
@@ -314,6 +314,115 @@ connection.onChange(() => piBridge.schedulePush());
 - `reply(msg)` answers a request.
 - The kit's messages are typed in `KitPiRequest` and `KitPiPush`, and list entries in `OptionItem`.
 - `@elgato/streamdeck` is a peer dependency. When you link the kit from a local checkout, tell your bundler to use one copy (Rollup: `nodeResolve({ dedupe: ["@elgato/streamdeck", "@elgato/utils"] })`), or the bridge talks through a second SDK instance that never connects.
+
+## Examples
+
+### A Play/Pause key with double and triple tap
+
+One action class, the kit does the rest (cover, paused look, corners, status badge, tap counting). The key reacts at once while `multiTap` is off; with it on, one tap plays or pauses, two taps skip to the next track and three go back.
+
+```ts
+// plugin/src/actions/play-pause-key.ts
+import { action } from "@elgato/streamdeck";
+import { PlayPauseKeyAction } from "@rocklobster42195/streamdeck-kit/keys";
+import { players, rows, mdiPath } from "../deck.js"; // your PlayerBoard, PanoramaRows and icon lookup
+
+@action({ UUID: "com.example.my-plugin.play-pause-key" })
+export class PlayPauseKey extends PlayPauseKeyAction {
+    constructor() {
+        super({
+            board: players,
+            markerPath: (name) => mdiPath(name),
+            rowColor: (deviceId) => rows.rowColor(deviceId),
+        });
+    }
+}
+```
+
+```html
+<!-- plugin/…sdPlugin/ui/play-pause-key.html -->
+<pi-section title="pi.player">
+    <pi-select setting="player" source="players" placeholder="kit.player_active"></pi-select>
+</pi-section>
+<pi-section title="pi.display">
+    <pi-toggle setting="showCover" label="pi.show_cover" data-default="true"></pi-toggle>
+    <pi-toggle setting="showTitle" label="pi.show_title"></pi-toggle>
+</pi-section>
+<pi-section title="pi.tapping">
+    <pi-multi-tap></pi-multi-tap> <!-- switch "Double and triple tap" and, while on, the tap speed -->
+</pi-section>
+<pi-section title="kit.corners_title">
+    <pi-corners default-left="marker" default-right="source"></pi-corners>
+</pi-section>
+<pi-section title="kit.key_color">
+    <pi-key-color setting="keyColor" label=""></pi-key-color>
+</pi-section>
+```
+
+The settings the key stores are the fields of `PlayPauseKeySettings`: `multiTap` (boolean, off by default) and `tapSpeed` (`"fast"` 250 ms, `"normal"` 350 ms, `"slow"` 500 ms). `<pi-multi-tap>` writes them, and `tapWindow(settings)` tells you the window a key uses (undefined while the key doesn't count taps).
+
+### Counting taps on your own key
+
+`TapCounter` is the part of this that doesn't need the Stream Deck SDK. `tap()` is called on every release; `done(count)` runs once when the burst is final, either after the window or at once at the third tap.
+
+```ts
+import { TapCounter } from "@rocklobster42195/streamdeck-kit";
+import type { KeyUpEvent, WillDisappearEvent } from "@elgato/streamdeck";
+
+const taps = new TapCounter({ max: 3 });
+
+// in your action
+override onKeyUp(ev: KeyUpEvent): void {
+    taps.tap(ev.action.id, 300, (count) => {
+        if (count === 1) toggle();
+        else if (count === 2) next();
+        else previous();
+    });
+}
+
+override onWillDisappear(ev: WillDisappearEvent): void {
+    taps.cancel(ev.action.id); // drop a burst that never finished
+}
+```
+
+### A Volume key
+
+The same shape for volume: louder, quieter, mute or a preset, for any player on the deck. A long press on a key that has a preset sets the preset volume.
+
+```ts
+import { action } from "@elgato/streamdeck";
+import { VolumeKeyAction } from "@rocklobster42195/streamdeck-kit/keys";
+
+@action({ UUID: "com.example.my-plugin.volume-key" })
+export class VolumeKey extends VolumeKeyAction {
+    constructor() {
+        super({ board: players, markerPath: (name) => mdiPath(name) });
+    }
+}
+```
+
+Settings: `command` (`"up"`, `"down"`, `"mute"`, `"preset"`), `step` (percent per press, default 5), `preset`, `showVolume`, `gauge` (`"ring"`, `"pie"`, `"open"`), `player`, `keyColor`, `marker`.
+
+### Copying the theme into your plugin
+
+The property inspector's look is one CSS file. Copy it next to your PI pages when you build (a Rollup plugin; any build tool can do the same):
+
+```js
+// rollup.config.mjs
+import { createRequire } from "node:module";
+import fs from "node:fs";
+
+const require = createRequire(import.meta.url);
+
+const copyPiTheme = {
+    name: "copy-pi-theme",
+    buildStart() {
+        const theme = require.resolve("@rocklobster42195/streamdeck-kit/styles/pi-theme.css");
+        this.addWatchFile(theme);
+        fs.copyFileSync(theme, "com.example.my-plugin.sdPlugin/ui/pi-theme.css");
+    },
+};
+```
 
 ## License
 
