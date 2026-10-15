@@ -39,4 +39,17 @@ describe('open ring gauge', () => {
         expect(banded).toContain('stroke="#ffff00" stroke-width="6" stroke-linecap="butt"');
         expect(banded).toContain('<circle');
     });
+
+    it('draws an icon in the gap at the bottom, grey while dimmed', () => {
+        const path = 'M0 0h24v24H0z';
+        const lit = openRing({ cx: 100, cy: 50, r: 40, min: 0, max: 100, value: 40, zones, icon: path }).join('');
+        expect(lit).toContain(`d="${path}"`);
+        // 20 px wide, centred on the ring's middle, below its middle line
+        expect(lit).toContain('translate(90 ');
+        expect(lit).toContain('fill="#c8c8cc"');
+        const y = Number(/translate\(90 ([\d.]+)\)/.exec(lit)?.[1]);
+        expect(y).toBeGreaterThan(50 + 40 * 0.5);
+        expect(openRing({ cx: 100, cy: 50, r: 40, min: 0, max: 100, zones, icon: path, dim: true }).join('')).toContain('fill="#6a6a70"');
+        expect(openRing({ cx: 100, cy: 50, r: 40, min: 0, max: 100, zones }).join('')).not.toContain('translate');
+    });
 });
