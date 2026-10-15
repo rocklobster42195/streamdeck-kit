@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.34] — 2026-10-15
+
 ### Added
 
 - **Level strip: the icon of the open ring sits in the gap at the bottom** (the family's place for it, as `openRing`'s own `icon`), no longer in the middle. The ring and the pie keep it in the middle.
