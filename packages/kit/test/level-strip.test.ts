@@ -4,6 +4,23 @@ import { inkOn, levelStyleShowsMeter, renderLevelStrip, type LevelStripView } fr
 const svg = (uri: string) => Buffer.from(uri.split(',')[1], 'base64').toString();
 const view: LevelStripView = { style: 'digital', name: 'Vocals', valueText: '-3.5 dB', position: 0.7, color: '#E30018', muted: false, levels: [-20, -18], peaks: [-10, -9], vus: [-3, -2] };
 
+describe('level strip icon', () => {
+    const icon = 'data:image/png;base64,AAAA';
+    const imageAt = (style: 'ring' | 'pie' | 'open') => {
+        const m = /<image href="data:image\/png;base64,AAAA" x="([\d.]+)" y="([\d.]+)"/.exec(svg(renderLevelStrip({ ...view, style, icon })));
+        return m ? { x: Number(m[1]), y: Number(m[2]) } : undefined;
+    };
+
+    it('sits in the middle of the ring and the pie, and in the gap at the bottom of the open ring', () => {
+        expect(imageAt('ring')?.y).toBe(32);
+        expect(imageAt('pie')?.y).toBe(30);
+        const open = imageAt('open')!;
+        // centred under the ring's middle, below its middle line
+        expect(open.x).toBe(39);
+        expect(open.y).toBeGreaterThan(60);
+    });
+});
+
 describe('level strip', () => {
     for (const style of ['digital', 'classic', 'ring', 'pie', 'open'] as const) {
         it(`${style}: shows the value, MUTE when muted, a backing only over an effect`, () => {

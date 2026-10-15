@@ -11,7 +11,7 @@
 import { mdiVolumeOff } from '@mdi/js';
 import { arc } from './gauge/arc.js';
 import { meterBar, meterScaleMarks } from './gauge/bar.js';
-import { openRing } from './gauge/open-ring.js';
+import { openRing, openRingPoint } from './gauge/open-ring.js';
 import { pie } from './gauge/pie.js';
 import { METER_TICKS } from './gauge/scale.js';
 import { vuMeter } from './gauge/vu.js';
@@ -119,7 +119,12 @@ function gauge(v: LevelStripView): string {
               : arc(50, 50, 34, position, color);
     const parts = [...scrims, ...circle];
     if (showMute) parts.push(mdi(mdiVolumeOff, 34, 34, 32, MUTED));
-    else if (v.icon) parts.push(v.style === 'pie' ? image(v.icon, 30, 30, 40) : image(v.icon, 32, 32, 36));
+    else if (v.icon && v.style === 'open') {
+        // The open ring leaves a gap at the bottom: the family's place for the icon (as openRing's own icon)
+        const size = 22;
+        const [, yEnd] = openRingPoint(50, 50, 34, 0);
+        parts.push(image(v.icon, 50 - size / 2, Math.round(yEnd - size * 0.35), size));
+    } else if (v.icon) parts.push(v.style === 'pie' ? image(v.icon, 30, 30, 40) : image(v.icon, 32, 32, 36));
     // A band next to the circle looks odd: "strip" colours the name like "color"
     const nameColor = v.inactive ? INK_GREY : (v.header ?? 'plain') !== 'plain' ? v.color : undefined;
     parts.push(text(100, top, v.name, { size: 14, weight: 'bold', maxWidth: 94, color: nameColor }));

@@ -6,6 +6,7 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ### Added
 
+- **Level strip: the icon of the open ring sits in the gap at the bottom** (the family's place for it, as `openRing`'s own `icon`), no longer in the middle. The ring and the pie keep it in the middle.
 - **`openRing` takes an `icon`** (an MDI path, with `iconSize` and `iconColor`): drawn in the gap at the bottom of the ring, centred under its middle, grey while dimmed. One place for the icon instead of each plugin choosing its own (asked for by Home Assistant Controller, where a name on the strip pushed the icon out). Nothing changes for callers that don't pass it.
 
 ## [0.1.0-alpha.33] — 2026-10-15
