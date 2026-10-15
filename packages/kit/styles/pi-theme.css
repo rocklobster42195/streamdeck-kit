@@ -128,6 +128,10 @@ body[data-connection="down"] .pi-needs-connection { opacity: 0.45; pointer-event
 pi-key-color > .pi-label { display: block; padding: 10px 12px 0; }
 pi-key-color > .pi-hint { padding: 0 12px 10px; }
 pi-key-color > .pi-row { padding-top: 0; }
+/* <pi-multi-tap>: the switch row, then the tap speed with the card's inner spacing */
+pi-multi-tap { display: block; }
+pi-multi-tap > .pi-label { display: block; padding: 4px 12px 0; }
+pi-multi-tap > .pi-choice { padding: 6px 12px 12px; }
 .pi-choice-tile:focus-visible { outline: 2px solid var(--pi-accent); outline-offset: 2px; }
 
 /* Range slider (<pi-range>) */
