@@ -8,6 +8,7 @@
 //   <pi-select setting="source" source="player-sources" with="player"></pi-select>   (list from the plugin)
 //   <pi-icon-picker setting="icon" default-icon="mdiBullhorn"></pi-icon-picker>
 //   <pi-key-color setting="keyColor"></pi-key-color>   (a key's colour: grey, cover, like the Panorama, fixed)
+//   <pi-multi-tap></pi-multi-tap>   (the Play/Pause key's double/triple tap: a switch and the tap speed)
 //   <pi-panorama [summary]></pi-panorama>   (the Panorama of the dial's row, see panorama/rows.ts)
 //   <pi-more ready-when="entityId"></pi-more>   (the short PI's button into the settings window, see window.ts)
 //   <pi-thresholds setting="thresholds" base-setting="color" unit="°C" min-setting="min" max-setting="max"></pi-thresholds>
@@ -25,6 +26,7 @@ import { PiDiagnostics } from './diagnostics.js';
 import { PiStates } from './states.js';
 import { PiMultiSelect } from './multi-select.js';
 import { PiMore } from './more.js';
+import { PiMultiTap } from './multi-tap.js';
 import { PiPanorama } from './panorama.js';
 import { PiRange } from './range.js';
 import { PiSection } from './section.js';
@@ -44,6 +46,7 @@ export { PiDiagnostics } from './diagnostics.js';
 export { PiStates, registerStatesCurrent } from './states.js';
 export { PiMultiSelect } from './multi-select.js';
 export { PiMore } from './more.js';
+export { PiMultiTap } from './multi-tap.js';
 export { PiPanorama } from './panorama.js';
 export { PiRange } from './range.js';
 export { PiSection } from './section.js';
@@ -71,6 +74,7 @@ export function definePiComponents(): void {
     if (!customElements.get('pi-select')) customElements.define('pi-select', PiSelect);
     if (!customElements.get('pi-icon-picker')) customElements.define('pi-icon-picker', PiIconPicker);
     if (!customElements.get('pi-thresholds')) customElements.define('pi-thresholds', PiThresholds);
+    if (!customElements.get('pi-multi-tap')) customElements.define('pi-multi-tap', PiMultiTap);
     if (!customElements.get('pi-more')) customElements.define('pi-more', PiMore);
     if (!customElements.get('pi-panorama')) customElements.define('pi-panorama', PiPanorama);
 }

@@ -186,7 +186,7 @@ const icon = resolveKeyColor(keySettings.color, { cover: p?.color, row: rowColou
 
 ### Transport keys
 
-The same Play/Pause key in every plugin: `PlayPauseKeys` does what all of a plugin's Play/Pause keys show and send, on the `PlayerBoard`; the plugin keeps a thin action class (its own UUID, its old settings migrated). The key shows the cover, dimmed with a play symbol while paused, an optional scrolling title and progress pill, and two corners the user fills (`topLeft`, `topRight`: `none`, `marker`, `source` or `battery`). A press sends an explicit `play` or `pause` by what the key shows (a peer that only knows `play-pause` gets that), and the key shows the new state at once until the device confirms it.
+The same Play/Pause key in every plugin: `PlayPauseKeys` does what all of a plugin's Play/Pause keys show and send, on the `PlayerBoard`; the plugin keeps a thin action class (its own UUID, its old settings migrated). The key shows the cover, dimmed with a play symbol while paused, an optional scrolling title and progress pill, and two corners the user fills (`topLeft`, `topRight`: `none`, `marker`, `source` or `battery`). A press sends an explicit `play` or `pause` by what the key shows (a peer that only knows `play-pause` gets that), and the key shows the new state at once until the device confirms it. With `multiTap` on in the key's settings (PI: `<pi-multi-tap>`), a double tap sends `next` and a triple tap `previous` (`skip()`), shown for a moment on the key; a single tap then waits `tapSpeed` (250/350/500 ms). `TapCounter` is the reusable counter behind it.
 
 ```ts
 import { PlayPauseKeys, type PlayPauseKeySettings } from "@rocklobster42195/streamdeck-kit";

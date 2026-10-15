@@ -35,7 +35,21 @@ export type PlayPauseKeySettings = {
     showProgress?: boolean;
     /** The player's name as the key's Stream Deck title. */
     showName?: boolean;
+    /** Double tap = next, triple tap = previous (a single tap then waits a moment). Default off. */
+    multiTap?: boolean;
+    /** How long a tap waits for the next one: "fast" 250 ms, "normal" 350 ms (default), "slow" 500 ms. */
+    tapSpeed?: TapSpeed;
 };
+
+export type TapSpeed = 'fast' | 'normal' | 'slow';
+const TAP_WINDOW_MS: Record<TapSpeed, number> = { fast: 250, normal: 350, slow: 500 };
+/** How long the key shows what a double or triple tap did. */
+const FLASH_MS = 800;
+
+/** How long a tap on this key waits for another one; undefined when the key doesn't count taps. */
+export function tapWindow(s: PlayPauseKeySettings): number | undefined {
+    return s.multiTap ? TAP_WINDOW_MS[s.tapSpeed ?? 'normal'] ?? TAP_WINDOW_MS.normal : undefined;
+}
 
 /** What a new key starts with (grill Q8c: marker left, source right). */
 export const PLAY_PAUSE_DEFAULTS: Required<Pick<PlayPauseKeySettings, 'topLeft' | 'topRight' | 'battery' | 'showCover' | 'showTitle' | 'showProgress'>> = {
@@ -73,6 +87,8 @@ type Key = {
     coverFading?: boolean;
     /** A pressed state shown until the device confirms it. */
     pressed?: { playing: boolean; until: number; position?: number };
+    /** What a double or triple tap just did, shown for a moment. */
+    flash?: { command: 'next' | 'previous'; until: number };
     /** The paused look, fading in and out (0 playing … 1 paused). */
     dim?: AnimatedValue;
     last?: string;
@@ -138,6 +154,29 @@ export class PlayPauseKeys {
             await this.o.board.send(p, command);
         } catch (e) {
             k.pressed = undefined;
+            this.render(id);
+            throw e;
+        }
+    }
+
+    /**
+     * Skip to the next or previous track (a double or triple tap). Shows what happened for a
+     * moment. Rejects without a player, when the player can't skip or when the command fails.
+     */
+    async skip(id: string, command: 'next' | 'previous'): Promise<void> {
+        const k = this.keys.get(id);
+        const p = this.player(id);
+        if (!k || !p) throw new Error('play/pause: no player');
+        if (p.can && !p.can.includes(command)) throw new Error(`play/pause: ${p.name} can't ${command}`);
+        k.flash = { command, until: this.now() + FLASH_MS };
+        this.render(id);
+        // The flash runs out by itself, the second timer of renderAll is too slow for it
+        const timer = setTimeout(() => this.render(id), FLASH_MS + 20);
+        timer.unref?.();
+        try {
+            await this.o.board.send(p, command);
+        } catch (e) {
+            k.flash = undefined;
             this.render(id);
             throw e;
         }
@@ -211,7 +250,13 @@ export class PlayPauseKeys {
             left: this.corner(s, s.topLeft, p),
             right: this.corner(s, s.topRight, p),
             status: this.o.board.status?.(p),
+            flash: this.flash(k),
         });
+    }
+
+    private flash(k: Key): 'next' | 'previous' | undefined {
+        if (k.flash && this.now() > k.flash.until) k.flash = undefined;
+        return k.flash?.command;
     }
 
     /** The scrolling "title [artist]" at the bottom, while the setting is on and something is named. */

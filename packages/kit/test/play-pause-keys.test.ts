@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mdiBatteryAlert, mdiSofa } from '@mdi/js';
-import { PlayPauseKeys, serviceIcon, batteryBadge, cornerSvg, renderPlayPauseKey, readableBar, type Player, type PlayerEntry, type TransportCommand } from '../src/index.js';
+import { mdiBatteryAlert, mdiSkipNext, mdiSofa } from '@mdi/js';
+import { PlayPauseKeys, TapCounter, tapWindow, serviceIcon, batteryBadge, cornerSvg, renderPlayPauseKey, readableBar, type Player, type PlayerEntry, type TransportCommand } from '../src/index.js';
 
 const svgOf = (dataUri: string) => Buffer.from(dataUri.slice(dataUri.indexOf(',') + 1), 'base64').toString();
 
@@ -194,5 +194,83 @@ describe('corners and picture', () => {
     it('brightens a dark bar colour, keeps a light one', () => {
         expect(readableBar('#ffffff')).toBe('#ffffff');
         expect(readableBar('#202020')).toMatch(/^rgb\(/);
+    });
+});
+
+describe('multi-tap', () => {
+    it('skips with the key and shows it for a moment', async () => {
+        const { k, fake, images, now } = make({ playing: true, can: ['play', 'pause', 'next', 'previous'] });
+        k.show('a', { multiTap: true });
+        await k.skip('a', 'next');
+        expect(fake.sent).toEqual(['next']);
+        expect(images.at(-1)).toContain(mdiSkipNext);
+        now.t += 2000;
+        fake.set({ title: 'x' });
+        expect(images.at(-1)).not.toContain(mdiSkipNext);
+        await k.skip('a', 'previous');
+        expect(fake.sent).toEqual(['next', 'previous']);
+    });
+
+    it('refuses a player that can not skip, and shows nothing', async () => {
+        const { k, fake, images } = make({ playing: true, can: ['play', 'pause'] });
+        k.show('a', { multiTap: true });
+        await expect(k.skip('a', 'next')).rejects.toThrow();
+        expect(fake.sent).toEqual([]);
+        expect(images.at(-1)).not.toContain(mdiSkipNext);
+    });
+
+    it('counts taps: the window is set by the speed and only on with multiTap', () => {
+        expect(tapWindow({})).toBeUndefined();
+        expect(tapWindow({ multiTap: true })).toBe(350);
+        expect(tapWindow({ multiTap: true, tapSpeed: 'fast' })).toBe(250);
+        expect(tapWindow({ multiTap: true, tapSpeed: 'slow' })).toBe(500);
+    });
+});
+
+describe('TapCounter', () => {
+    function fakeTimers() {
+        let id = 0;
+        const timers = new Map<number, () => void>();
+        return {
+            setTimeout: (fn: () => void) => (timers.set(++id, fn), id),
+            clearTimeout: (h: unknown) => void timers.delete(h as number),
+            fire: () => {
+                const fns = [...timers.values()];
+                timers.clear();
+                fns.forEach((f) => f());
+            },
+        };
+    }
+
+    it('gives one result per burst, after the window', () => {
+        const t = fakeTimers();
+        const c = new TapCounter(t);
+        const got: number[] = [];
+        c.tap('a', 300, (n) => got.push(n));
+        c.tap('a', 300, (n) => got.push(n));
+        expect(got).toEqual([]);
+        t.fire();
+        expect(got).toEqual([2]);
+    });
+
+    it('is final at the third tap without waiting', () => {
+        const t = fakeTimers();
+        const c = new TapCounter(t);
+        const got: number[] = [];
+        for (let i = 0; i < 3; i++) c.tap('a', 300, (n) => got.push(n));
+        expect(got).toEqual([3]);
+        t.fire();
+        expect(got).toEqual([3]);
+    });
+
+    it('keeps keys apart and cancels a burst', () => {
+        const t = fakeTimers();
+        const c = new TapCounter(t);
+        const got: string[] = [];
+        c.tap('a', 300, (n) => got.push(`a${n}`));
+        c.tap('b', 300, (n) => got.push(`b${n}`));
+        c.cancel('a');
+        t.fire();
+        expect(got).toEqual(['b1']);
     });
 });

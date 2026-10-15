@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Added
+
+- **Play/Pause key: double tap = next, triple tap = previous** (opt-in, `multiTap` in the key's settings; `tapSpeed` "fast" 250 ms, "normal" 350 ms, "slow" 500 ms). A single tap then waits a moment before it plays or pauses; without `multiTap` the key acts on press as before. The key shows the skip symbol for a moment. `PlayPauseKeys.skip(id, 'next' | 'previous')`, `tapWindow(settings)`, `TapCounter` (the reusable tap counter, SDK-free), PI component `<pi-multi-tap>` and the texts `kit.multi_tap*` / `kit.tap_speed*` (EN, DE, ES).
+
 ## [0.1.0-alpha.29] — 2026-10-11
 
 ### Changed

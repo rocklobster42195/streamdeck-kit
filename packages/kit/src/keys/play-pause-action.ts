@@ -2,10 +2,11 @@
 // its UUID and players. `@action({ UUID: "…play-pause-key" }) class PlayPauseKey extends
 // PlayPauseKeyAction { constructor() { super({ board: myPlayers }); } }`. The SDK part of the kit
 // ("/keys"); what the key shows and sends is PlayPauseKeys (SDK-free).
-import streamDeck, { SingletonAction, type DidReceiveSettingsEvent, type KeyAction, type KeyDownEvent, type WillAppearEvent, type WillDisappearEvent } from '@elgato/streamdeck';
+import streamDeck, { SingletonAction, type DidReceiveSettingsEvent, type KeyAction, type KeyDownEvent, type KeyUpEvent, type WillAppearEvent, type WillDisappearEvent } from '@elgato/streamdeck';
 import type { JsonObject } from '@elgato/utils';
 import type { Player } from '../players/players.js';
-import { PlayPauseKeys, type PlayPauseKeySettings, type PlayPauseKeysOptions } from '../transport/play-pause-keys.js';
+import { PlayPauseKeys, tapWindow, type PlayPauseKeySettings, type PlayPauseKeysOptions } from '../transport/play-pause-keys.js';
+import { TapCounter } from '../util/tap-counter.js';
 
 type Settings = PlayPauseKeySettings & JsonObject;
 
@@ -23,6 +24,7 @@ export type PlayPauseKeyActionOptions<S extends Settings> = Omit<PlayPauseKeysOp
 export class PlayPauseKeyAction<S extends Settings = Settings> extends SingletonAction<S> {
     private readonly shown = new Map<string, { action: KeyAction<S>; settings: S; image?: string; title?: string }>();
     protected readonly keys: PlayPauseKeys;
+    private readonly taps = new TapCounter();
 
     constructor(private readonly options: PlayPauseKeyActionOptions<S>) {
         super();
@@ -54,6 +56,7 @@ export class PlayPauseKeyAction<S extends Settings = Settings> extends Singleton
     }
 
     override onWillDisappear(ev: WillDisappearEvent<S>): void {
+        this.taps.cancel(ev.action.id);
         this.shown.delete(ev.action.id);
         this.keys.hide(ev.action.id);
     }
@@ -66,11 +69,28 @@ export class PlayPauseKeyAction<S extends Settings = Settings> extends Singleton
     }
 
     override async onKeyDown(ev: KeyDownEvent<S>): Promise<void> {
+        // Counting taps: the press is decided on release, see onKeyUp
+        const settings = this.shown.get(ev.action.id)?.settings ?? ev.payload.settings;
+        if (tapWindow(settings) !== undefined) return;
+        await this.run(ev.action, () => this.keys.press(ev.action.id));
+    }
+
+    override async onKeyUp(ev: KeyUpEvent<S>): Promise<void> {
+        const id = ev.action.id;
+        const window = tapWindow(this.shown.get(id)?.settings ?? ev.payload.settings);
+        if (window === undefined) return;
+        // One tap plays or pauses, two skip to the next track, three back to the previous one
+        this.taps.tap(id, window, (count) => {
+            void this.run(ev.action, () => (count === 1 ? this.keys.press(id) : this.keys.skip(id, count === 2 ? 'next' : 'previous')));
+        });
+    }
+
+    private async run(action: { showAlert(): Promise<void> }, fn: () => Promise<void>): Promise<void> {
         try {
-            await this.keys.press(ev.action.id);
+            await fn();
         } catch (e) {
             streamDeck.logger.warn('[play-pause] press failed', e);
-            await ev.action.showAlert();
+            await action.showAlert();
         }
     }
 

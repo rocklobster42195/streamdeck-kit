@@ -1,7 +1,7 @@
 // The picture of the universal Play/Pause key (grill 2026-10-09): sonos-controller's key as the
 // base — the cover while it plays, the cover dimmed with a play symbol while paused, a scrolling
 // title and a progress pill at the bottom — plus two corners the user fills (see corners.ts).
-import { mdiMusicNote, mdiPlay, mdiTimerSand } from '@mdi/js';
+import { mdiMusicNote, mdiPlay, mdiSkipNext, mdiSkipPrevious, mdiTimerSand } from '@mdi/js';
 import { KEY_BG, KEY_SIZE, KEY_TIERS, keySvg } from '../render/key-style.js';
 import { cornerSvg, type CornerBadge } from './corners.js';
 
@@ -31,6 +31,8 @@ export type PlayPauseView = {
     right?: CornerBadge;
     /** What the player is doing about a command (a corner badge). */
     status?: StatusKind;
+    /** A double or triple tap just skipped: its symbol on a dark disc over the picture. */
+    flash?: 'next' | 'previous';
 };
 
 const S = KEY_SIZE;
@@ -61,6 +63,7 @@ export function renderPlayPauseKey(v: PlayPauseView): string {
     if (v.titleSvg && !v.unavailable) parts.push(v.titleSvg);
     if (v.progress !== undefined && !v.unavailable) parts.push(progressPill(v.progress, v.accent));
     parts.push(cornerSvg(v.left, 'left'), cornerSvg(v.right, 'right'));
+    if (v.flash && !v.unavailable) parts.push(`<circle cx="72" cy="72" r="40" fill="#000" opacity="0.7"/>`, icon(v.flash === 'next' ? mdiSkipNext : mdiSkipPrevious, 36, 36, 72, '#FFFFFF'));
     if (v.status === 'failed' && !v.unavailable) parts.push(keyStatusBadge(v.status));
     return keySvg(parts, KEY_BG);
 }
