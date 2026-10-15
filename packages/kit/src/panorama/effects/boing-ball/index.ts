@@ -1,6 +1,7 @@
-// Ported from sonos-controller (src/effects/boing-ball/index.ts). Keep both in sync — see the sync rule in CLAUDE.md.
+// Ported from sonos-controller's Boing Ball (its own copy there is gone since SO-C moved onto the kit).
 import type { EffectDefinition, EffectInstance, PanoramaInitContext } from "../../types.js";
 import { encodePngDataUri } from "../../../render/png.js";
+import { glide, hexToRgb01, sameColor, separate, type Rgb } from "../boing-color.js";
 
 // Ports the raytraced checkered-sphere look already designed and tuned in
 // local/tools/generate-boing-gif.mjs (sage + white checker, tilt, specular highlight) to a live
@@ -48,11 +49,6 @@ function rotX(v: number[], a: number): [number, number, number] {
     return [v[0], v[1] * c - v[2] * s, v[1] * s + v[2] * c];
 }
 
-function hexToRgb01(hex: string): [number, number, number] {
-    const h = hex.replace('#', '');
-    return [parseInt(h.substring(0, 2), 16) / 255, parseInt(h.substring(2, 4), 16) / 255, parseInt(h.substring(4, 6), 16) / 255];
-}
-
 let instanceCounter = 0;
 
 class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings> {
@@ -72,16 +68,23 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
     private bouncePhase = 0; // 0..FRAMES_HALF*2, closed-form parabolic arc (see tickPanorama)
     private spin = 0; // rad
 
-    private primaryRgb: [number, number, number] = hexToRgb01('#87AE73'); // sage
-    private secondaryRgb: [number, number, number] = [1, 1, 1]; // white
+    private primaryRgb: Rgb = hexToRgb01('#87AE73'); // sage, as drawn (glides to the target)
+    private primaryTarget: Rgb = this.primaryRgb;
+    private secondaryRgb: Rgb = [1, 1, 1]; // white
+
+    /** A new primary colour: the glide target, kept apart from the white squares (a pale cover would make the checker vanish). */
+    private setPrimary(hex: string, instant: boolean): void {
+        this.primaryTarget = separate(hexToRgb01(hex), this.secondaryRgb, 0.3);
+        if (instant) this.primaryRgb = this.primaryTarget;
+    }
 
     initPanorama(ctx: PanoramaInitContext<BoingBallEffectSettings>): void {
         const firstInit = this.width === 200 && this.height === 100 && this.bouncePhase === 0 && this.x === 100;
         this.width = ctx.width;
         this.height = ctx.height;
         this.radius = ctx.height * 0.28;
-        if (ctx.settings.primaryColor) this.primaryRgb = hexToRgb01(ctx.settings.primaryColor);
         if (ctx.settings.secondaryColor) this.secondaryRgb = hexToRgb01(ctx.settings.secondaryColor);
+        if (ctx.settings.primaryColor) this.setPrimary(ctx.settings.primaryColor, firstInit);
 
         if (firstInit) {
             this.vx = ctx.settings.savedSpeed ?? SPEED_DEFAULT;
@@ -110,6 +113,7 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
     }
 
     tickPanorama(): void {
+        if (!sameColor(this.primaryRgb, this.primaryTarget)) this.primaryRgb = glide(this.primaryRgb, this.primaryTarget);
         this.bouncePhase = (this.bouncePhase + 1) % (FRAMES_HALF * 2);
         // Phase FRAMES_HALF is the floor contact: the next arc's height follows the music
         if (this.bouncePhase === FRAMES_HALF) this.hop = this.level === undefined ? 1 : 0.25 + 1.05 * this.level;
@@ -192,8 +196,8 @@ class BoingBallEffectInstance implements EffectInstance<BoingBallEffectSettings>
     }
 
     onSettingsChange(settings: BoingBallEffectSettings): void {
-        if (settings.primaryColor) this.primaryRgb = hexToRgb01(settings.primaryColor);
         if (settings.secondaryColor) this.secondaryRgb = hexToRgb01(settings.secondaryColor);
+        if (settings.primaryColor) this.setPrimary(settings.primaryColor, false);
         // Also applied live (not just on first initPanorama) — lets a PI speed slider edit take
         // effect immediately on an already-running instance, same as onRotate does. Preserves
         // current travel direction, only magnitude changes.

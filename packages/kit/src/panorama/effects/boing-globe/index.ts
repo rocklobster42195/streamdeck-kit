@@ -1,7 +1,8 @@
-// Ported from sonos-controller (src/effects/boing-globe/index.ts). Keep both in sync — see the sync rule in CLAUDE.md.
+// Ported from sonos-controller's Boing Globe (its own copy there is gone since SO-C moved onto the kit).
 import zlib from "node:zlib";
 import type { EffectDefinition, EffectInstance, PanoramaInitContext } from "../../types.js";
 import { encodePngDataUri } from "../../../render/png.js";
+import { glide, hexToRgb01, sameColor, separate, type Rgb } from "../boing-color.js";
 import { BM_W, BM_H, LAND_BITMAP_B64 } from "./landBitmap.js";
 
 // A raytraced Earth globe with the same bounce physics as Boing Ball, but drifting off one edge
@@ -61,11 +62,6 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
     return t * t * (3 - 2 * t);
 }
 
-function hexToRgb01(hex: string): [number, number, number] {
-    const h = hex.replace('#', '');
-    return [parseInt(h.substring(0, 2), 16) / 255, parseInt(h.substring(2, 4), 16) / 255, parseInt(h.substring(4, 6), 16) / 255];
-}
-
 // Decoded once, shared by every instance — the bitmap is universal, never per-instance.
 let landBitmap: Uint8Array | undefined;
 function getLandBitmap(): Uint8Array {
@@ -95,8 +91,15 @@ class BoingGlobeEffectInstance implements EffectInstance<BoingGlobeEffectSetting
     private bouncePhase = 0;
     private spin = 0;
 
-    private landRgb: [number, number, number] = hexToRgb01('#87AE73'); // sage
-    private oceanRgb: [number, number, number] = hexToRgb01('#1C3E6C'); // dark ocean blue
+    private landRgb: Rgb = hexToRgb01('#87AE73'); // sage, as drawn (glides to the target)
+    private landTarget: Rgb = this.landRgb;
+    private oceanRgb: Rgb = hexToRgb01('#1C3E6C'); // dark ocean blue
+
+    /** A new land colour: the glide target, kept apart from the ocean (a blue cover would melt into it). */
+    private setLand(hex: string, instant: boolean): void {
+        this.landTarget = separate(hexToRgb01(hex), this.oceanRgb, 0.25);
+        if (instant) this.landRgb = this.landTarget;
+    }
 
     initPanorama(ctx: PanoramaInitContext<BoingGlobeEffectSettings>): void {
         const firstInit = !this.initialized;
@@ -104,8 +107,8 @@ class BoingGlobeEffectInstance implements EffectInstance<BoingGlobeEffectSetting
         this.width = ctx.width;
         this.height = ctx.height;
         this.radius = ctx.height * 0.28;
-        if (ctx.settings.landColor) this.landRgb = hexToRgb01(ctx.settings.landColor);
         if (ctx.settings.oceanColor) this.oceanRgb = hexToRgb01(ctx.settings.oceanColor);
+        if (ctx.settings.landColor) this.setLand(ctx.settings.landColor, firstInit);
 
         if (firstInit) {
             this.vx = ctx.settings.savedSpeed ?? SPEED_DEFAULT;
@@ -129,6 +132,7 @@ class BoingGlobeEffectInstance implements EffectInstance<BoingGlobeEffectSetting
     }
 
     tickPanorama(): void {
+        if (!sameColor(this.landRgb, this.landTarget)) this.landRgb = glide(this.landRgb, this.landTarget);
         this.bouncePhase = (this.bouncePhase + 1) % (FRAMES_HALF * 2);
         this.x += this.vx;
         // Reset only once fully past the far edge, and reappear fully past the near edge — the
@@ -212,8 +216,8 @@ class BoingGlobeEffectInstance implements EffectInstance<BoingGlobeEffectSetting
     }
 
     onSettingsChange(settings: BoingGlobeEffectSettings): void {
-        if (settings.landColor) this.landRgb = hexToRgb01(settings.landColor);
         if (settings.oceanColor) this.oceanRgb = hexToRgb01(settings.oceanColor);
+        if (settings.landColor) this.setLand(settings.landColor, false);
         // Also applied live (not just on first initPanorama) — lets a PI speed slider edit take
         // effect immediately on an already-running instance, same as onRotate does. Preserves
         // current drift direction, only magnitude changes.

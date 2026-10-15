@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Changed
+
+- **Boing Ball and Boing Globe: the colour glides** to a new cover colour (like Particles and Matrix Rain) instead of cutting in at every track change, and a colour that would vanish against its partner is pushed away from it: a pale cover darkens against the white checker, a blue cover is lightened against the ocean. The default green and blue are unchanged.
+
 ## [0.1.0-alpha.31] — 2026-10-15
 
 ### Fixed
