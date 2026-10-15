@@ -6,6 +6,44 @@ Shared building blocks for Stream Deck plugins: rendering, animation, Panorama e
 
 This is an unofficial community project. It is not affiliated with or endorsed by Elgato or Corsair.
 
+## A first look
+
+A Play/Pause key that follows whatever plays on the deck, with the cover, a paused look and an optional double and triple tap, is one class:
+
+```ts
+import { action } from "@elgato/streamdeck";
+import { PlayPauseKeyAction } from "@rocklobster42195/streamdeck-kit/keys";
+
+@action({ UUID: "com.example.my-plugin.play-pause-key" })
+export class PlayPauseKey extends PlayPauseKeyAction {
+    constructor() {
+        super({ board: players, markerPath: (name) => mdiPath(name) });
+    }
+}
+```
+
+Counting taps on a key of your own needs no SDK part at all:
+
+```ts
+import { TapCounter } from "@rocklobster42195/streamdeck-kit";
+
+const taps = new TapCounter({ max: 3 });
+taps.tap(keyId, 300, (count) => (count === 1 ? toggle() : count === 2 ? next() : previous()));
+```
+
+The settings panel is plain HTML with the kit's components:
+
+```html
+<pi-section title="pi.tapping">
+    <pi-multi-tap></pi-multi-tap>
+</pi-section>
+<pi-section title="kit.key_color">
+    <pi-key-color setting="keyColor" label=""></pi-key-color>
+</pi-section>
+```
+
+More, with the settings these keys store, in the [package documentation: Examples](packages/kit/README.md#examples).
+
 ## Repository layout
 
 ```
