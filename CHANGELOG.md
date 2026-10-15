@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Changed
+
+- **Settings panel texts name plugins in full** (Home Assistant Controller, System Audio Controller) instead of their short names, in English, German and Spanish: the call hint, the Panorama colour hints.
+
 ## [0.1.0-alpha.32] — 2026-10-15
 
 ### Changed
