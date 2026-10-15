@@ -7,7 +7,7 @@ Building blocks for [Elgato Stream Deck](https://www.elgato.com/stream-deck) plu
 - **Panorama effects:** animated backgrounds that span several neighbouring dials.
 - **A property inspector kit:** a framework-free replacement for `sdpi-components`, with a Stream Deck socket client, i18n, light-DOM components and a dark theme.
 
-It is used by [Sonos Controller](https://github.com/rocklobster42195/streamdeck-sonos-controller) and by the plugins that follow it (Music Assistant, system audio, Home Assistant, X-Air mixers).
+It is used by [Sonos Controller](https://github.com/rocklobster42195/streamdeck-sonos-controller), [Music Assistant Controller](https://github.com/rocklobster42195/streamdeck-music-assistant-controller) and [System Audio Controller](https://github.com/rocklobster42195/streamdeck-system-audio-controller), and by the plugins that follow them (Home Assistant, X-Air mixers).
 
 > **Alpha.** The API changes often and without notice, also between alpha versions. The kit is built for the plugins named above; if you use it in your own plugin, pin an exact version.
 
