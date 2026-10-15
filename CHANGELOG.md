@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.31] — 2026-10-15
+
 ### Fixed
 
 - **`<pi-multi-tap>`: spacing** of the tap speed label and its tiles (they sat too close to the hint and the card's edge).
