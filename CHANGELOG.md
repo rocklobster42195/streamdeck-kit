@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.32] — 2026-10-15
+
 ### Changed
 
 - **Dial lists glide at 25 frames a second** (their own 40 ms clock instead of the shared 80 ms one), so a list turning one entry per click reads as smooth rather than stepping, as the cover crossfade did before. The marquee in the list keeps its pace.
