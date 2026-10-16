@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.35] — 2026-10-16
+
 ### Fixed
 
 - **A slow command no longer puts the hourglass on every key of the player.** The status is per kind of command now: a slow skip, play or seek shows on the Play/Pause, Playback Control and Track keys, a slow volume or mute only on the volume keys and dial (a failure the same). `PlayerBoard.status(player, now?, scope?)` takes the `scope` (`'media'` or `'volume'`); without it any command counts, as before. A player the plugin calls `busy` still shows on all.
