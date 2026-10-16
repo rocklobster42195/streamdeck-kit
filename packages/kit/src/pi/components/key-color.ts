@@ -6,9 +6,10 @@ import { bound } from './bound.js';
 const MODES = ['grey', 'cover', 'row', 'fixed'] as const;
 type Mode = (typeof MODES)[number];
 
-// Stream Deck device types without dials: they have no Panorama row, so "Like the Panorama" means nothing there
-// (0 Stream Deck, 1 Mini, 2 XL, 3 Mobile, 4 G-Keys, 5 Pedal, 8 SCUF, 9 Network Dock); unknown types keep the tile
-const NO_DIALS: ReadonlySet<number> = new Set([0, 1, 2, 3, 4, 5, 8, 9]);
+// Stream Deck device types without dials (the SDK's DeviceType): they have no Panorama row, so "Like the
+// Panorama" means nothing there (0 Stream Deck, 1 Mini, 2 XL, 3 Mobile, 4 Corsair G-Keys, 5 Pedal,
+// 6 Corsair Voyager, 8 SCUF, 9 Neo); the others (+, + XL, Studio, Galleon, virtual) and unknown types keep the tile
+const NO_DIALS: ReadonlySet<number> = new Set([0, 1, 2, 3, 4, 5, 6, 8, 9]);
 
 /** Whether the Stream Deck this key sits on can have a Panorama row (false only for a known dial-less device). */
 function hasPanorama(): boolean {
