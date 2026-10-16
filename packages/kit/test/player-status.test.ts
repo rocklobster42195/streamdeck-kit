@@ -3,8 +3,8 @@ import { PlayerBoard, renderPlaybackKey, renderVolumeKey } from '../src/index.js
 
 afterEach(() => vi.useRealTimers());
 
-function board(busy = false) {
-    const b = new PlayerBoard('T');
+function board(busy = false, o?: { loadingAfterMs?: number }) {
+    const b = new PlayerBoard('T', o);
     b.publish([{ player: 'p', device: 'RINCON_X', name: 'Küche', kind: 'speaker', playing: true, since: 1, can: ['next', 'play-pause'], ...(busy ? { busy: true } : {}) }]);
     return b;
 }
@@ -53,6 +53,45 @@ describe('player status in a corner', () => {
         const p = b.resolve('device:RINCON_X')!;
         expect(p.busy).toBe(true);
         expect(b.status(p)).toBe('loading');
+    });
+
+    it('a slow skip shows on the skip keys, not on the volume keys', async () => {
+        vi.useFakeTimers();
+        const b = board();
+        b.serve(() => new Promise<void>(() => undefined));
+        const p = b.resolve('device:RINCON_X')!;
+        void b.send(p, 'next');
+        await vi.advanceTimersByTimeAsync(700);
+        expect(b.status(p, undefined, 'media')).toBe('loading');
+        expect(b.status(p, undefined, 'volume')).toBeUndefined();
+        expect(b.status(p)).toBe('loading');
+    });
+
+    it('a failed volume command marks the volume keys only', async () => {
+        vi.useFakeTimers();
+        const b = board();
+        b.serve(async () => {
+            throw new Error('nope');
+        });
+        const p = b.resolve('device:RINCON_X')!;
+        await expect(b.send(p, 'volume', 30)).rejects.toThrow('nope');
+        expect(b.status(p, undefined, 'volume')).toBe('failed');
+        expect(b.status(p, undefined, 'media')).toBeUndefined();
+    });
+
+    it('a board for slow devices waits longer before it shows loading', async () => {
+        vi.useFakeTimers();
+        const b = board(false, { loadingAfterMs: 2000 });
+        let done!: () => void;
+        b.serve(() => new Promise<void>((r) => (done = r)));
+        const p = b.resolve('device:RINCON_X')!;
+        const sent = b.send(p, 'next');
+        await vi.advanceTimersByTimeAsync(1500);
+        expect(b.status(p)).toBeUndefined();
+        await vi.advanceTimersByTimeAsync(600);
+        expect(b.status(p)).toBe('loading');
+        done();
+        await sent;
     });
 
     it('the keys draw the badge', () => {

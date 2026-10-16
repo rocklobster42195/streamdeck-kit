@@ -45,24 +45,42 @@ export function initWindowNav(): void {
         spy();
     };
 
-    /** The last section whose top has passed a line a little below the window's top. */
+    // A tab the user clicked stays marked until they scroll by hand: a short page can't scroll far enough to bring its section to the line
+    let pinned: string | undefined;
+
+    /**
+     * The last section whose top has passed a line. The line slides from just under the top to the
+     * bottom of the window as the page scrolls to its end, so every section gets its turn even when the
+     * sections are small and the page is barely longer than the window (instead of the first jumping to the last).
+     */
     const spy = () => {
         // Just under the menu bar when it sits on top (narrow window), else near the top
-        const line = (getComputedStyle(nav).position === 'sticky' ? nav.getBoundingClientRect().bottom : 0) + 40;
+        const top = (getComputedStyle(nav).position === 'sticky' ? nav.getBoundingClientRect().bottom : 0) + 40;
+        const room = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = room > 0 ? Math.min(1, Math.max(0, window.scrollY / room)) : 0;
+        const line = top + progress * Math.max(0, window.innerHeight - top);
         let current = entries[0];
         for (const e of entries) if (e.el.getBoundingClientRect().top <= line) current = e;
-        // At the very bottom, the last section counts even if its top never reaches the line
-        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = entries[entries.length - 1];
-        nav.querySelectorAll<HTMLElement>('a').forEach((a) => a.classList.toggle('active', a.dataset.id === current?.el.id));
+        const id = pinned ?? current?.el.id;
+        nav.querySelectorAll<HTMLElement>('a').forEach((a) => a.classList.toggle('active', a.dataset.id === id));
     };
 
     nav.addEventListener('click', (e) => {
         const a = (e.target as HTMLElement).closest('a');
         if (!a) return;
         e.preventDefault();
+        pinned = a.dataset.id;
+        spy();
         document.getElementById(a.dataset.id ?? '')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     window.addEventListener('scroll', spy, { passive: true });
+    // Scrolling by hand lets the position decide again
+    for (const type of ['wheel', 'touchmove', 'keydown'] as const)
+        window.addEventListener(type, () => {
+            if (pinned === undefined) return;
+            pinned = undefined;
+            spy();
+        }, { passive: true });
     // Sections come and go with the settings and the plugin's answers
     let timer: ReturnType<typeof setTimeout> | undefined;
     const later = () => {

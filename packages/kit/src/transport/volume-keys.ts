@@ -152,9 +152,9 @@ export class VolumeKeys {
         const color = p && !grey ? resolveKeyColor(s.keyColor, { cover: p.color, row: this.o.rowColor?.(id) }) : (this.o.accent ?? KEY_TIERS.available);
         const usable = !!p && (!p.can || p.can.some((c) => c === 'volume' || c === 'volume-by' || c === 'mute')) && p.volume !== undefined;
         const view: VolumeView = usable
-            ? { command: s.command ?? 'up', ...this.shown(k, p!), preset: presetOf(s), showVolume: s.showVolume !== false, gauge: s.gauge ?? 'ring', color, marker }
+            ? { command: s.command ?? 'up', ...this.shown(k, p!), preset: presetOf(s), showVolume: s.showVolume !== false, gauge: s.gauge ?? 'ring', color, tinted: !grey, marker }
             : { command: s.command ?? 'up', volume: 0, muted: false, preset: presetOf(s), showVolume: false, gauge: s.gauge ?? 'ring', color: KEY_GREY, marker, unavailable: true };
-        const image = renderVolumeKey({ ...view, status: p ? this.o.board.status?.(p) : undefined });
+        const image = renderVolumeKey({ ...view, status: p ? this.o.board.status?.(p, undefined, 'volume') : undefined });
         if (image === k.last) return;
         k.last = image;
         this.o.draw(id, image, '');
@@ -172,6 +172,8 @@ export type VolumeView = {
     gauge: VolumeGauge;
     /** The gauge's and "on" colour. */
     color: string;
+    /** The key colour is not grey: the louder and quieter symbols take `color` too. */
+    tinted?: boolean;
     marker?: string;
     /** No player, or none with a volume: dimmed. */
     unavailable?: boolean;
@@ -187,7 +189,7 @@ export function renderVolumeKey(v: VolumeView): string {
     if (v.unavailable) {
         icon(v.command === 'down' ? mdiVolumeMinus : v.command === 'up' ? mdiVolumePlus : v.command === 'mute' ? mdiVolumeOff : volumeIcon(v.preset), KEY_TIERS.unavailable);
     } else if (v.command === 'up' || v.command === 'down') {
-        icon(v.command === 'up' ? mdiVolumePlus : mdiVolumeMinus, v.muted ? KEY_TIERS.off : KEY_TIERS.available, v.showVolume && !v.muted ? String(v.volume) : undefined);
+        icon(v.command === 'up' ? mdiVolumePlus : mdiVolumeMinus, v.muted ? KEY_TIERS.off : v.tinted ? v.color : KEY_TIERS.available, v.showVolume && !v.muted ? String(v.volume) : undefined);
     } else if (v.command === 'preset') {
         const on = !v.muted && v.volume === v.preset;
         if (on) parts.push(keyActivePlate(v.color));

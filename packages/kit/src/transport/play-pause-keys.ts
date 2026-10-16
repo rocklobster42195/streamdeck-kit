@@ -215,8 +215,8 @@ export class PlayPauseKeys {
     private view(id: string, k: Key, s: PlayPauseKeySettings & typeof PLAY_PAUSE_DEFAULTS, p: Player): string {
         const playing = this.shownPlaying(k, p);
         const iconColor = resolveKeyColor(s.keyColor, { cover: p.color, row: this.o.rowColor?.(id) });
-        // Grey keys show the cover's own colour in the bar and the paused symbol, as before
-        const accent = !s.keyColor || s.keyColor === 'grey' ? (p.color ?? KEY_GREY) : iconColor;
+        // Grey keys are grey all through: the bar and the paused symbol too
+        const accent = !s.keyColor || s.keyColor === 'grey' ? KEY_GREY : iconColor;
         const cover = s.showCover && p.cover ? this.covers.frame(id, p.cover, () => this.render(id)) : undefined;
         if (!cover) this.covers.forget(id);
         k.coverFading = cover?.previous !== undefined;
@@ -249,7 +249,7 @@ export class PlayPauseKeys {
             titleSvg: this.title(id, k, s, p),
             left: this.corner(s, s.topLeft, p),
             right: this.corner(s, s.topRight, p),
-            status: this.o.board.status?.(p),
+            status: this.o.board.status?.(p, undefined, 'media'),
             flash: this.flash(k),
         });
     }

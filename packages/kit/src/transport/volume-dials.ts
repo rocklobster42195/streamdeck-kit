@@ -233,7 +233,7 @@ export class VolumeDials {
             mutedLabel: this.o.mutedLabel(),
             saved: (d.savedUntil ?? 0) > this.now(),
             underlay: this.o.underlay?.(id),
-            status: p ? this.o.board.status?.(p) : undefined,
+            status: p ? this.o.board.status?.(p, undefined, 'volume') : undefined,
         });
         if (image === d.last) return;
         d.last = image;

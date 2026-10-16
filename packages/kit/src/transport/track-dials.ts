@@ -253,7 +253,7 @@ export class TrackDials {
                 underlay,
                 nothing: this.o.nothingLabel(),
                 showTitle: s.showTitle,
-                status: this.o.board.status?.(p),
+                status: this.o.board.status?.(p, undefined, 'media'),
             }),
         );
     }

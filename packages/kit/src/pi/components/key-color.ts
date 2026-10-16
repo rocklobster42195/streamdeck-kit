@@ -1,9 +1,21 @@
 import { escapeHtml } from '../dom.js';
 import { t } from '../i18n.js';
+import { sd } from '../sd-client.js';
 import { bound } from './bound.js';
 
 const MODES = ['grey', 'cover', 'row', 'fixed'] as const;
 type Mode = (typeof MODES)[number];
+
+// Stream Deck device types without dials: they have no Panorama row, so "Like the Panorama" means nothing there
+// (0 Stream Deck, 1 Mini, 2 XL, 3 Mobile, 4 G-Keys, 5 Pedal, 8 SCUF, 9 Network Dock); unknown types keep the tile
+const NO_DIALS: ReadonlySet<number> = new Set([0, 1, 2, 3, 4, 5, 8, 9]);
+
+/** Whether the Stream Deck this key sits on can have a Panorama row (false only for a known dial-less device). */
+function hasPanorama(): boolean {
+    const devices = sd.info?.devices;
+    const dev = Array.isArray(devices) ? (devices as { id?: string; type?: number }[]).find((d) => d.id === sd.actionInfo?.device) : undefined;
+    return !(typeof dev?.type === 'number' && NO_DIALS.has(dev.type));
+}
 
 const modeOf = (v: string): Mode => (/^#[0-9a-f]{6}$/i.test(v) ? 'fixed' : (MODES as readonly string[]).includes(v) ? (v as Mode) : 'grey');
 
@@ -32,12 +44,14 @@ export class PiKeyColor extends HTMLElement {
         const setting = bound(this);
         const value = String(setting.get() ?? 'grey');
         const mode = modeOf(value);
+        // A key already set to the row colour keeps its tile, so the choice never goes missing
+        const modes = hasPanorama() || mode === 'row' ? MODES : MODES.filter((m) => m !== 'row');
         const label = t(this.getAttribute('label') ?? 'kit.key_color');
         const text = (m: Mode, part = '') => (m === 'grey' && this.getAttribute(`grey-${part || 'label'}`)) || `kit.key_color_${m}${part ? `_${part}` : ''}`;
-        const tiles = MODES.map((m) => `<button type="button" class="pi-choice-tile" data-mode="${m}" aria-pressed="${m === mode}"><span>${escapeHtml(t(text(m)))}</span></button>`);
+        const tiles = modes.map((m) => `<button type="button" class="pi-choice-tile" data-mode="${m}" aria-pressed="${m === mode}"><span>${escapeHtml(t(text(m)))}</span></button>`);
         // label="" when a section title already says it
         this.innerHTML = `${label ? `<span class="pi-label">${escapeHtml(label)}</span>` : ''}
-            <div class="pi-choice" style="--pi-choice-columns: 4">${tiles.join('')}</div>
+            <div class="pi-choice" style="--pi-choice-columns: ${modes.length}">${tiles.join('')}</div>
             ${mode === 'fixed' ? `<div class="pi-row"><span class="pi-hint">${escapeHtml(value.toUpperCase())}</span><pi-swatch class="pi-color" value="${escapeHtml(value)}"></pi-swatch></div>` : ''}
             <div class="pi-hint">${escapeHtml(t(text(mode, 'hint')))}</div>`;
         this.querySelectorAll<HTMLElement>('[data-mode]').forEach((el) =>

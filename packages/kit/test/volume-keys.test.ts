@@ -46,6 +46,16 @@ describe('VolumeKeys', () => {
         expect(images.at(-1)).toContain('>30<');
     });
 
+    it('louder and quieter take the key colour; grey stays grey', () => {
+        const grey = make({ volume: 20, can: ['volume'], color: '#ff8800' } as never);
+        grey.k.show('a', { command: 'up' });
+        expect(grey.images.at(-1)).toContain('#e0e0e0');
+        expect(grey.images.at(-1)).not.toContain('#ff8800');
+        const cover = make({ volume: 20, can: ['volume'], color: '#ff8800' } as never);
+        cover.k.show('a', { command: 'up', keyColor: 'cover' });
+        expect(cover.images.at(-1)).toContain('#ff8800');
+    });
+
     it('a player with only relative volume gets volume-by', async () => {
         const { k, fake } = make({ volume: 50, can: ['volume-by'] });
         k.show('a', { command: 'down' });

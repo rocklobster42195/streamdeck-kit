@@ -197,6 +197,18 @@ describe('corners and picture', () => {
     });
 });
 
+describe('key colour', () => {
+    it('grey is grey all through: the bar does not take the cover colour; cover does', () => {
+        const grey = make({ playing: true, position: 10, duration: 100, at: 1000, color: '#ff8800', can: ['play', 'pause'] });
+        grey.k.show('a', { showProgress: true });
+        expect(grey.images.at(-1)).not.toContain('#ff8800');
+        expect(grey.images.at(-1)).not.toMatch(/rgb\(255,/);
+        const cover = make({ playing: true, position: 10, duration: 100, at: 1000, color: '#ff8800', can: ['play', 'pause'] });
+        cover.k.show('a', { showProgress: true, keyColor: 'cover' });
+        expect(cover.images.at(-1)).toContain('#ff8800');
+    });
+});
+
 describe('multi-tap', () => {
     it('skips with the key and shows it for a moment', async () => {
         const { k, fake, images, now } = make({ playing: true, can: ['play', 'pause', 'next', 'previous'] });

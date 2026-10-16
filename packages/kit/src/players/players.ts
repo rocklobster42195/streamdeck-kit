@@ -113,8 +113,12 @@ export function routeFor(p: Player, command: TransportCommand): PlayerRoute {
 }
 
 /** "active": the active speaker; "active:all": including apps. */
-/** A command that is still being carried out after this long shows as loading. */
+/** A command that is still being carried out after this long shows as loading (a board can ask for longer). */
 const LOADING_AFTER_MS = 600;
+/** What a status is about: the volume commands, or everything else (play, skip, seek, modes). */
+export type StatusScope = 'media' | 'volume';
+type Activity = { running: number; since?: number; failedUntil?: number };
+const scopeOf = (command: TransportCommand): StatusScope => (command === 'volume' || command === 'volume-by' || command === 'mute' ? 'volume' : 'media');
 /** How long a failure shows. */
 const FAILED_SHOWN_MS = 4000;
 
@@ -261,8 +265,14 @@ export class PlayerBoard {
     private readonly listeners = new Set<() => void>();
     private last = '';
 
-    /** `name`: this plugin's short name (e.g. "SO-C"). */
-    constructor(private readonly name: string) {}
+    /**
+     * `name`: this plugin's short name (e.g. "SO-C"). `loadingAfterMs`: how long a command may take before
+     * the keys show it as loading, for a plugin whose devices are slow to answer anyway (default 600).
+     */
+    constructor(
+        private readonly name: string,
+        private readonly o: { loadingAfterMs?: number } = {},
+    ) {}
 
     connect(bus: Pick<DeckBus, 'onPeers' | 'setState' | 'request' | 'handle'>, o: { allow?: (peer: PeerInfo) => boolean } = {}): void {
         this.bus = bus;
@@ -381,10 +391,10 @@ export class PlayerBoard {
         const t = parseTransport({ player: route.entry.player, command, value });
         // The route a command takes and what came of it, for the plugin's log (a skip that does nothing)
         const started = Date.now();
-        const activity = this.activityOf(p.id);
+        const activity = this.activityOf(p.id)[scopeOf(command)];
         activity.running++;
         activity.since ??= started;
-        setTimeout(() => this.notify(), LOADING_AFTER_MS + 20);
+        setTimeout(() => this.notify(), this.loadingAfter + 20);
         const where = `${route.source}${route.peer ? '' : ' (here)'} "${p.name}"`;
         try {
             let result: unknown;
@@ -408,20 +418,29 @@ export class PlayerBoard {
         }
     }
 
-    /** What a key or dial shows in its corner for a player: a command that takes a while, or a recent failure. */
-    status(p: Pick<Player, 'id' | 'busy'>, now = Date.now()): StatusKind | undefined {
+    /**
+     * What a key or dial shows in its corner for a player: a command that takes a while, or a recent
+     * failure. `scope` is what the key is for: a volume key shows nothing about a slow skip and the
+     * other way round (without it, any command counts). A player the plugin calls busy shows on all.
+     */
+    status(p: Pick<Player, 'id' | 'busy'>, now = Date.now(), scope?: StatusScope): StatusKind | undefined {
         const a = this.activity.get(p.id);
-        if (a?.failedUntil && a.failedUntil > now) return 'failed';
+        const slots = a ? (scope ? [a[scope]] : [a.media, a.volume]) : [];
+        if (slots.some((x) => x.failedUntil && x.failedUntil > now)) return 'failed';
         if (p.busy) return 'loading';
-        if (a && a.running > 0 && a.since !== undefined && now - a.since >= LOADING_AFTER_MS) return 'loading';
+        if (slots.some((x) => x.running > 0 && x.since !== undefined && now - x.since >= this.loadingAfter)) return 'loading';
         return undefined;
     }
 
-    private readonly activity = new Map<string, { running: number; since?: number; failedUntil?: number }>();
+    private get loadingAfter(): number {
+        return this.o.loadingAfterMs ?? LOADING_AFTER_MS;
+    }
 
-    private activityOf(id: string): { running: number; since?: number; failedUntil?: number } {
+    private readonly activity = new Map<string, Record<StatusScope, Activity>>();
+
+    private activityOf(id: string): Record<StatusScope, Activity> {
         let a = this.activity.get(id);
-        if (!a) this.activity.set(id, (a = { running: 0 }));
+        if (!a) this.activity.set(id, (a = { media: { running: 0 }, volume: { running: 0 } }));
         return a;
     }
 

@@ -4,6 +4,21 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Fixed
+
+- **A slow command no longer puts the hourglass on every key of the player.** The status is per kind of command now: a slow skip, play or seek shows on the Play/Pause, Playback Control and Track keys, a slow volume or mute only on the volume keys and dial (a failure the same). `PlayerBoard.status(player, now?, scope?)` takes the `scope` (`'media'` or `'volume'`); without it any command counts, as before. A player the plugin calls `busy` still shows on all.
+- **Grey is grey: the Play/Pause key** no longer tints the paused play symbol and the progress bar with the cover's colour when its colour is Grey (Cover still does), and an active toggle on a Playback Control key stays in the plugin's accent or the key's light grey instead of the cover's colour.
+- **Volume key: Cover, Like Panorama and Fixed colour the louder and quieter symbols** (they were white whatever the setting said; only the preset and the gauge took the colour). Grey stays grey.
+- **Settings window: the tab bar no longer jumps from the first section to the last.** The line a section has to pass slides down the window as the page scrolls to its end, so a short page marks every section in turn; a tab you click stays marked until you scroll by hand.
+
+### Added
+
+- **`PlayerBoard` takes `{ loadingAfterMs }`** (default 600): how long a command may take before the keys show it as loading, for a plugin whose devices answer slowly anyway (Sonos with TIDAL needs about 1.4 s to skip).
+
+### Changed
+
+- **`<pi-key-color>` leaves out "Like Panorama" on a Stream Deck without dials** (Stream Deck, Mini, XL, Mobile, Pedal, G-Keys, SCUF, Network Dock): there is no Panorama row to take the colour from. A key already set to it keeps the tile; an unknown device type shows it.
+
 ## [0.1.0-alpha.34] — 2026-10-15
 
 ### Added

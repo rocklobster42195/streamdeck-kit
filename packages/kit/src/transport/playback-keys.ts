@@ -198,7 +198,7 @@ export class PlaybackKeys {
         const marker = k.settings.marker ? this.o.markerPath?.(k.settings.marker) : undefined;
         const color = p ? resolveKeyColor(k.settings.keyColor, { cover: p.color, row: this.o.rowColor?.(id) }) : KEY_GREY;
         const grey = !k.settings.keyColor || k.settings.keyColor === 'grey';
-        const on = grey ? (this.o.accent ?? p?.color ?? KEY_TIERS.available) : color;
+        const on = grey ? (this.o.accent ?? KEY_TIERS.available) : color;
         const can = !!p && (!p.can || p.can.includes(transportOf(command)));
         let view: PlaybackView;
         const title = '';
@@ -214,7 +214,7 @@ export class PlaybackKeys {
             const active = command === 'repeat' ? repeat !== 'off' : this.flagOf(k, p, command);
             view = { icon: iconOf(command, active, repeat), color: active ? on : KEY_TIERS.off, active: active ? on : undefined };
         }
-        const image = renderPlaybackKey({ ...view, marker, status: p ? this.o.board.status?.(p) : undefined });
+        const image = renderPlaybackKey({ ...view, marker, status: p ? this.o.board.status?.(p, undefined, 'media') : undefined });
         if (image === k.last && title === k.lastTitle) return;
         k.last = image;
         k.lastTitle = title;
