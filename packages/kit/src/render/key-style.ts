@@ -15,10 +15,13 @@ export const KEY_BG = "#101010";
  */
 export const KEY_TIERS = { available: "#e0e0e0", off: "#8a8a90", unavailable: "#4a4a50" } as const;
 
-/** Icon placement: full size without text, smaller and higher with a caption under it. */
+/** The one symbol size of a key, straight on the key or the dimmed cover: no disc, no fade. */
+export const KEY_GLYPH = { size: 72, x: 36, y: 36 } as const;
+
+/** Icon placement: the one symbol size without text, a smaller one with a caption under it. */
 export const KEY_ICON = {
-    full: { size: 112, x: 16, y: 16 },
-    withCaption: { size: 92, x: 26, y: 6 },
+    full: KEY_GLYPH,
+    withCaption: { size: 60, x: 42, y: 20 },
 } as const;
 
 /** "On" (MA-C's active look), drawn under the icon: a tinted plate in the colour. */

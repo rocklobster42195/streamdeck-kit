@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mdiAllInclusive, mdiRepeatOnce, mdiShuffleDisabled, mdiShuffleVariant, mdiSkipNext } from '@mdi/js';
+import { mdiAllInclusive, mdiRepeatOnce, mdiShuffleDisabled, mdiShuffle, mdiSkipNext } from '@mdi/js';
 import { PlaybackKeys, parseTransport, type Player, type PlayerEntry, type TransportCommand } from '../src/index.js';
 
 const svgOf = (dataUri: string) => Buffer.from(dataUri.slice(dataUri.indexOf(',') + 1), 'base64').toString();
@@ -54,10 +54,10 @@ describe('PlaybackKeys', () => {
         expect(images.at(-1)).toContain(mdiShuffleDisabled);
         await k.press('a');
         expect(fake.sent).toEqual([['shuffle', true]]);
-        expect(images.at(-1)).toContain(mdiShuffleVariant);
+        expect(images.at(-1)).toContain(mdiShuffle);
         expect(images.at(-1)).toContain('stroke="#3a8dde"');
         fake.set({ shuffle: true });
-        expect(images.at(-1)).toContain(mdiShuffleVariant);
+        expect(images.at(-1)).toContain(mdiShuffle);
     });
 
     it('repeat goes off → all → one → off', async () => {

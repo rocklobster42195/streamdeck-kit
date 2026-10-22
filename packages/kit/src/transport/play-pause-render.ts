@@ -2,10 +2,10 @@
 // base — the cover while it plays, the cover dimmed with a play symbol while paused, a scrolling
 // title and a progress pill at the bottom — plus two corners the user fills (see corners.ts).
 import { mdiMusicNote, mdiPlay, mdiSkipNext, mdiSkipPrevious, mdiTimerSand } from '@mdi/js';
-import { KEY_BG, KEY_SIZE, KEY_TIERS, keySvg } from '../render/key-style.js';
+import { KEY_BG, KEY_GLYPH, KEY_SIZE, KEY_TIERS, keySvg } from '../render/key-style.js';
 import { cornerSvg, type CornerBadge } from './corners.js';
 
-import { keyLoadingOverlay, keyStatusBadge, type StatusKind } from '../render/status-badge.js';
+import { HOURGLASS, keyLoadingOverlay, keyStatusBadge, type StatusKind } from '../render/status-badge.js';
 
 export type PlayPauseView = {
     /** No player to control (none chosen, gone, plugin away): a dimmed play symbol. */
@@ -31,7 +31,7 @@ export type PlayPauseView = {
     right?: CornerBadge;
     /** What the player is doing about a command (a corner badge). */
     status?: StatusKind;
-    /** A double or triple tap just skipped: its symbol on a dark disc over the picture. */
+    /** A double or triple tap just skipped: the picture dims and its symbol sits straight on it. */
     flash?: 'next' | 'previous';
 };
 
@@ -43,7 +43,7 @@ export function renderPlayPauseKey(v: PlayPauseView): string {
     // Waiting for the device: this key's own hourglass, or the player's (a command taking a while)
     const loading = v.loading || v.status === 'loading';
     if (v.unavailable) {
-        parts.push(icon(mdiPlay, 36, 36, 72, KEY_TIERS.unavailable));
+        parts.push(glyph(mdiPlay, KEY_TIERS.unavailable));
     } else if (v.cover) {
         const mix = v.previousCover ? Math.min(1, Math.max(0, v.coverMix ?? 1)) : 1;
         if (mix < 1) parts.push(`<image href="${v.previousCover}" width="${S}" height="${S}" preserveAspectRatio="xMidYMid slice"/>`);
@@ -52,18 +52,18 @@ export function renderPlayPauseKey(v: PlayPauseView): string {
         if (dim > 0) {
             // Paused: the cover stays, dimmed, with a play symbol (press to resume); fades in and out
             const shade = (0.55 * dim).toFixed(2);
-            parts.push(`<rect width="${S}" height="${S}" fill="#000" opacity="${shade}"/>`, `<circle cx="72" cy="72" r="30" fill="#000" opacity="${shade}"/>`);
-            parts.push(icon(loading ? mdiTimerSand : mdiPlay, 48, 48, 48, v.accent, dim));
+            parts.push(`<rect width="${S}" height="${S}" fill="#000" opacity="${shade}"/>`);
+            parts.push(loading ? icon(mdiTimerSand, HOURGLASS.x, HOURGLASS.y, HOURGLASS.size, v.accent, dim) : glyph(mdiPlay, v.accent, dim));
         } else if (v.status === 'loading') {
             parts.push(keyLoadingOverlay());
         }
     } else {
-        parts.push(icon(loading ? mdiTimerSand : v.playing ? mdiMusicNote : mdiPlay, 36, 36, 72, v.iconColor));
+        parts.push(loading ? icon(mdiTimerSand, HOURGLASS.x, HOURGLASS.y, HOURGLASS.size, v.iconColor) : glyph(v.playing ? mdiMusicNote : mdiPlay, v.iconColor));
     }
     if (v.titleSvg && !v.unavailable) parts.push(v.titleSvg);
     if (v.progress !== undefined && !v.unavailable) parts.push(progressPill(v.progress, v.accent));
     parts.push(cornerSvg(v.left, 'left'), cornerSvg(v.right, 'right'));
-    if (v.flash && !v.unavailable) parts.push(`<circle cx="72" cy="72" r="40" fill="#000" opacity="0.7"/>`, icon(v.flash === 'next' ? mdiSkipNext : mdiSkipPrevious, 36, 36, 72, '#FFFFFF'));
+    if (v.flash && !v.unavailable) parts.push(`<rect width="${S}" height="${S}" fill="#000" opacity="0.55"/>`, glyph(v.flash === 'next' ? mdiSkipNext : mdiSkipPrevious, v.accent));
     if (v.status === 'failed' && !v.unavailable) parts.push(keyStatusBadge(v.status));
     return keySvg(parts, KEY_BG);
 }
@@ -107,6 +107,10 @@ function parseColor(c: string): [number, number, number] | undefined {
     }
     const m = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(c);
     return m ? [+m[1], +m[2], +m[3]] : undefined;
+}
+
+function glyph(path: string, fill: string, opacity = 1): string {
+    return icon(path, KEY_GLYPH.x, KEY_GLYPH.y, KEY_GLYPH.size, fill, opacity);
 }
 
 function icon(path: string, x: number, y: number, size: number, fill: string, opacity = 1): string {

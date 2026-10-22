@@ -15,9 +15,9 @@ describe('family key style', () => {
         expect(long).toContain('…');
     });
 
-    it('keeps MA-C\'s icon sizes and builds an SVG data URI', () => {
-        expect(KEY_ICON.full.size).toBe(112);
-        expect(KEY_ICON.withCaption.size).toBe(92);
+    it('has one symbol size, a smaller one with a caption, and builds an SVG data URI', () => {
+        expect(KEY_ICON.full.size).toBe(72);
+        expect(KEY_ICON.withCaption.size).toBe(60);
         expect(keySvg([]).startsWith('data:image/svg+xml;base64,')).toBe(true);
     });
 });

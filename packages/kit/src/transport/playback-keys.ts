@@ -10,14 +10,14 @@ import {
     mdiRepeatOnce,
     mdiRewind,
     mdiShuffleDisabled,
-    mdiShuffleVariant,
+    mdiShuffle,
     mdiSkipNext,
     mdiSkipPrevious,
     mdiTransition,
 } from '@mdi/js';
 import { KEY_ICON, KEY_TIERS, keyActiveFrame, keyActivePlate, keyCaption, keyIcon, keySvg } from '../render/key-style.js';
 import { KEY_GREY, resolveKeyColor } from '../players/key-color.js';
-import { keyLoadingOverlay, keyStatusBadge, type StatusKind } from '../render/status-badge.js';
+import { keyLoadingGlyph, keyStatusBadge, type StatusKind } from '../render/status-badge.js';
 import { ACTIVE_PLAYER, positionNow, type Player, type PlayerBoard, type RepeatMode, type TransportCommand } from '../players/players.js';
 import { DEFAULT_SEEK_STEP, SeekStepper } from '../players/seek.js';
 
@@ -237,14 +237,14 @@ export type PlaybackView = {
 
 /** The key in the family style (MA-C's, the kit's key-style): the icon, "on" with plate and frame. */
 export function renderPlaybackKey(v: PlaybackView): string {
+    if (v.status === 'loading') return keySvg([keyLoadingGlyph()]);
     const parts: string[] = [];
     if (v.active) parts.push(keyActivePlate(v.active));
-    parts.push(keyIcon(v.icon, v.caption ? KEY_ICON.withCaption : v.marker ? { size: 100, x: 22, y: 22 } : KEY_ICON.full, v.color));
+    parts.push(keyIcon(v.icon, v.caption ? KEY_ICON.withCaption : KEY_ICON.full, v.color));
     if (v.caption) parts.push(keyCaption(v.caption, '#ffffff'));
     if (v.marker) parts.push(keyIcon(v.marker, { size: 22, x: 144 - 35, y: 13 }, '#b8b8be'));
     if (v.active) parts.push(keyActiveFrame(v.active));
-    if (v.status === 'loading') parts.push(keyLoadingOverlay());
-    else if (v.status) parts.push(keyStatusBadge(v.status));
+    if (v.status) parts.push(keyStatusBadge(v.status));
     return keySvg(parts);
 }
 
@@ -255,7 +255,7 @@ function iconOf(command: PlaybackCommand, active: boolean, repeat: RepeatMode): 
         case 'previous':
             return mdiSkipPrevious;
         case 'shuffle':
-            return active ? mdiShuffleVariant : mdiShuffleDisabled;
+            return active ? mdiShuffle : mdiShuffleDisabled;
         case 'repeat':
             return repeat === 'one' ? mdiRepeatOnce : repeat === 'all' ? mdiRepeat : mdiRepeatOff;
         case 'crossfade':

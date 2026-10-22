@@ -8,7 +8,7 @@ import { openRing } from '../render/gauge/open-ring.js';
 import { pie } from '../render/gauge/pie.js';
 import { KEY_ICON, KEY_TIERS, keyActiveFrame, keyActivePlate, keyCaption, keyIcon, keySvg } from '../render/key-style.js';
 import { KEY_GREY, resolveKeyColor } from '../players/key-color.js';
-import { keyLoadingOverlay, keyStatusBadge, type StatusKind } from '../render/status-badge.js';
+import { keyLoadingGlyph, keyStatusBadge, type StatusKind } from '../render/status-badge.js';
 import { ACTIVE_PLAYER, type Player, type PlayerBoard } from '../players/players.js';
 
 export type VolumeCommand = 'up' | 'down' | 'mute' | 'preset';
@@ -181,6 +181,7 @@ export type VolumeView = {
 
 /** The key in the family style (the kit's key-style), like the Playback Control key. */
 export function renderVolumeKey(v: VolumeView): string {
+    if (v.status === 'loading') return keySvg([keyLoadingGlyph()]);
     const parts: string[] = [];
     const icon = (path: string, color: string, caption?: string) => {
         parts.push(keyIcon(path, caption ? KEY_ICON.withCaption : KEY_ICON.full, color));
@@ -207,8 +208,7 @@ export function renderVolumeKey(v: VolumeView): string {
         else if (v.gauge !== 'pie') parts.push(keyIcon(volumeIcon(v.volume), { size: 56, x: 44, y: 44 }, '#e0e0e0'));
     }
     if (v.marker) parts.push(keyIcon(v.marker, { size: 22, x: 144 - 35, y: 13 }, '#b8b8be'));
-    if (v.status === 'loading') parts.push(keyLoadingOverlay());
-    else if (v.status) parts.push(keyStatusBadge(v.status));
+    if (v.status) parts.push(keyStatusBadge(v.status));
     return keySvg(parts);
 }
 

@@ -7,6 +7,9 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 ### Fixed
 
 - **`<pi-key-color>`: the Stream Decks without dials follow the SDK's device types.** alpha.35 left the Panorama tile out for type 9 as "Network Dock" (it is the Stream Deck Neo, also without dials) and missed the Corsair Voyager (6).
+- **One symbol size on every key, no discs** (feedback from a beta tester: "consistency is key"). Play, Next/Previous, Volume +/−, shuffle/repeat, the paused play symbol on a dimmed cover and the skip symbol are all drawn at 72 px (`KEY_GLYPH`) straight on the key or the dimmed cover: no dark disc, no fade. Before they were 112, 100, 72 and 48 px, some on a disc. A key with a caption uses 60 px (`KEY_ICON.withCaption`), placed lower so icon and caption read as one group instead of the icon floating at the top. `KEY_ICON.full` is now 72 px, so every plugin that uses it follows.
+- **Loading hourglass: no disc, one size.** On a plain key (Playback, Volume) the hourglass replaces the symbol instead of lying over it; on a cover it sits straight on the dimmed cover. It is drawn at 52 px (`HOURGLASS`) because its path fills 20 of 24 units, so it looks as large as the other symbols.
+- **Shuffle: the thin crossed arrows are "on", the parallel arrows "off"** (`mdiShuffle` / `mdiShuffleDisabled`; the thick `mdiShuffleVariant` is gone).
 
 ## [0.1.0-alpha.35] — 2026-10-16
 

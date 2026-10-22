@@ -4,7 +4,7 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { renderPlayPauseKey, renderPlaybackKey, renderTrackDial, renderVolumeDial, renderVolumeKey } from '../packages/kit/dist/index.js';
-import { mdiShuffleVariant } from '@mdi/js';
+import { mdiShuffle } from '@mdi/js';
 
 const out = path.resolve(process.argv[2] ?? 'status-preview.png');
 const sharp = createRequire(path.resolve('../music-assistant-controller/package.json'))('sharp');
@@ -16,7 +16,7 @@ const cover = async () => {
     return `data:image/png;base64,${(await sharp(Buffer.from(svg)).png().toBuffer()).toString('base64')}`;
 };
 const c = await cover();
-const keyBase = { icon: mdiShuffleVariant, color: '#e0e0e0' };
+const keyBase = { icon: mdiShuffle, color: '#e0e0e0' };
 const volBase = { command: 'up', volume: 42, muted: false, preset: 20, showVolume: true, gauge: 'ring', color: '#e0e0e0' };
 const keys = [
     ['Play/Pause, spielt', renderPlayPauseKey({ playing: true, cover: c, iconColor: '#ccc', accent: '#ffb199', progress: 0.4 })],
