@@ -2,7 +2,8 @@
 // (a fan's speeds, a mode, audio devices, scenes), each with its own name, icon and colour, and
 // shows the current one. The plugin decides what a state means and how to reach it; the kit has
 // the list (as stored by <pi-states>), the stepping and the picture.
-import { mdiCloudOffOutline, mdiHelpCircleOutline } from '@mdi/js';
+import { mdiHelpCircleOutline } from '@mdi/js';
+import { keyOfflineBadge } from '../render/status-badge.js';
 import { KEY_SIZE, keyCaption, keyIcon, keySvg } from '../render/key-style.js';
 
 export type StateOption = {
@@ -61,6 +62,6 @@ export function renderMultiStateKey(v: MultiStateKeyView): string {
         parts.push(`<circle cx="${x0 + i * gap}" cy="122" r="${on ? 5 : 3.5}" fill="${on && !v.offline ? v.color : '#4a4a50'}"/>`);
     }
     if (!known && !v.offline) parts.push(keyIcon(mdiHelpCircleOutline, { size: 30, x: KEY_SIZE - 40, y: 8 }, '#c8c8cc'));
-    if (v.offline) parts.push(keyIcon(mdiCloudOffOutline, { size: 30, x: KEY_SIZE - 40, y: 8 }, '#ff6b6b'));
+    if (v.offline) parts.push(keyOfflineBadge());
     return keySvg(parts);
 }
