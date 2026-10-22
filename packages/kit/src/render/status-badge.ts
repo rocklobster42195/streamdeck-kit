@@ -1,7 +1,7 @@
 // A player's status on a key or a dial (grill 2026-10-10): "loading" (a command is being carried
 // out and takes a while: Music Assistant starting a Spotify playlist) is an hourglass in the middle,
 // one symbol size, straight on the dimmed key; "failed" (refused, or ran into an error, for a few
-// seconds) a small badge at the bottom left, where nothing else sits. "Offline" uses the same
+// seconds) a small badge: on a key top left (not where the marker sits, nor the caption), on a dial bottom left. "Offline" uses the same
 // spot and look (an error is always in the same place).
 import { mdiAlertCircle, mdiCloudOffOutline, mdiTimerSand } from '@mdi/js';
 
@@ -40,14 +40,14 @@ export function keyLoadingGlyph(): string {
     return `<path transform="${HOURGLASS_TRANSFORM}" fill="#e0e0e0" d="${mdiTimerSand}"/>`;
 }
 
-/** The badge on a 144 px key, bottom left. */
+/** The badge on a 144 px key, top left (an error is always in the same place). */
 export function keyStatusBadge(kind: StatusKind): string {
-    return statusBadge(kind, 10, 112, 22);
+    return statusBadge(kind, 10, 10, 22);
 }
 
-/** "Offline" on a 144 px key: the same spot and look as a failed command (bottom left). */
+/** "Offline" on a 144 px key: the same spot and look as a failed command (top left). */
 export function keyOfflineBadge(): string {
-    return offlineBadge(10, 112, 22);
+    return offlineBadge(10, 10, 22);
 }
 
 /** "Offline" on a 200 × 100 dial strip: bottom left, where the dials show a failed command. */
