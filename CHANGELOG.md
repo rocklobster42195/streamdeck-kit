@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.36] — 2026-10-22
+
 ### Fixed
 
 - **`<pi-key-color>`: the Stream Decks without dials follow the SDK's device types.** alpha.35 left the Panorama tile out for type 9 as "Network Dock" (it is the Stream Deck Neo, also without dials) and missed the Corsair Voyager (6).
