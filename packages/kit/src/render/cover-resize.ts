@@ -21,9 +21,9 @@ export function coverResizer(maxSide = 256, quality = 82): CoverResize {
     };
 }
 
-type Raw = { width: number; height: number; data: ArrayLike<number> };
+export type Raw = { width: number; height: number; data: ArrayLike<number> };
 
-function decode(buf: Buffer): Raw | undefined {
+export function decode(buf: Buffer): Raw | undefined {
     try {
         if (buf.length > 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
             const png = PNG.sync.read(buf);
@@ -40,7 +40,7 @@ function decode(buf: Buffer): Raw | undefined {
 }
 
 /** Box filter: each destination pixel is the mean of the source pixels it covers; transparency goes onto black. */
-function boxResize(src: Raw, dw: number, dh: number): Uint8Array {
+export function boxResize(src: Raw, dw: number, dh: number): Uint8Array {
     const { width: sw, height: sh, data } = src;
     const out = new Uint8Array(dw * dh * 4);
     for (let dy = 0; dy < dh; dy++) {

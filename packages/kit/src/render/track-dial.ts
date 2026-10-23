@@ -3,7 +3,7 @@
 // (the text stays where it is, so nothing jumps when it pauses). Over a Panorama effect the text gets small dark boxes. SDK-free.
 import { mdiMusicNote, mdiPlay, mdiTimerSand } from '@mdi/js';
 import { statusBadge, type StatusKind } from './status-badge.js';
-import { image, mdi, progressBar, scrimBox, stripImage, text, textWidth, wrap } from './strip.js';
+import { image, isFlat, mdi, progressBar, scrimBox, stripImage, text, textWidth, wrap } from './strip.js';
 
 export type TrackDialLook = 'info' | 'eq';
 
@@ -103,5 +103,5 @@ export function renderTrackDial(v: TrackDialView): string {
         });
     }
     if (v.status === 'failed') parts.push(statusBadge(v.status, coverX + 5, 79));
-    return stripImage(parts, undefined, v.underlay ? v.underlay + scrim : undefined);
+    return stripImage(parts, undefined, v.underlay ? v.underlay + (isFlat(v.underlay) ? '' : scrim) : undefined);
 }

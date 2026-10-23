@@ -6,7 +6,7 @@ import { mdiVolumeOff } from '@mdi/js';
 import { arc } from './gauge/arc.js';
 import { openRing } from './gauge/open-ring.js';
 import { pie } from './gauge/pie.js';
-import { mdi, scrimBox, scrimDisc, stripImage, text, textWidth } from './strip.js';
+import { isFlat, mdi, scrimBox, scrimDisc, stripImage, text, textWidth } from './strip.js';
 import { volumeIcon } from '../transport/volume-keys.js';
 import { statusBadge, type StatusKind } from './status-badge.js';
 import { mdiTimerSand } from '@mdi/js';
@@ -56,7 +56,7 @@ export function renderVolumeDial(v: VolumeDialView): string {
 
     if (v.saved) {
         parts.push(mdi('M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z', cx - 38, 12, 76, SAVED));
-        return stripImage(parts, undefined, v.underlay ? v.underlay + scrimDisc(cx, 50, 42) : undefined);
+        return stripImage(parts, undefined, v.underlay ? v.underlay + (isFlat(v.underlay) ? '' : scrimDisc(cx, 50, 42)) : undefined);
     }
 
     // Gauge
@@ -110,5 +110,5 @@ export function renderVolumeDial(v: VolumeDialView): string {
         );
     }
     if (v.status === 'failed') parts.push(statusBadge(v.status, 4, 80));
-    return stripImage(parts, undefined, v.underlay ? v.underlay + scrim : undefined);
+    return stripImage(parts, undefined, v.underlay ? v.underlay + (isFlat(v.underlay) ? '' : scrim) : undefined);
 }

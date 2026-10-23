@@ -12,6 +12,11 @@ export function stripImage(parts: string[], background = "#0a0a0a", underlay = "
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
+/** Marks an underlay (a Panorama slice) as flat: the dials draw no soft scrims behind ring and text. */
+export const FLAT_MARK = "data-kit-flat";
+export const flatUnderlay = (svg: string): string => (svg ? `<g ${FLAT_MARK}="1">${svg}</g>` : svg);
+export const isFlat = (underlay: string | undefined): boolean => !!underlay && underlay.includes(FLAT_MARK);
+
 export function escapeXml(s: string): string {
     return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }

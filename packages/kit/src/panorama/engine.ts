@@ -7,6 +7,7 @@
 // settings (e.g. `color`), the first group member that sets a value wins. Live settings (from
 // outside sources such as HA entities, see updateLive) win over picked ones.
 import { DISPLAY_H, DISPLAY_W, PanoramaOrchestrator, safeEffectCall } from './orchestrator.js';
+import { flatUnderlay } from '../render/strip.js';
 import { DEFAULT_EFFECT_ID, effectRegistry } from './registry.js';
 import type { EffectInstance } from './types.js';
 
@@ -17,7 +18,10 @@ export type PanoramaEngineOptions = {
     defaultColor?: string;
 };
 
-type Group = { ctxs: string[]; effectId: string; timer: ReturnType<typeof setInterval> };
+/** The row setting that switches the soft backing behind ring and text (false = flat); default on. */
+export const ROW_SCRIM_KEY = 'rowScrim';
+
+type Group = { ctxs: string[]; effectId: string; timer: ReturnType<typeof setInterval>; tickMs: number };
 
 export class PanoramaEngine {
     readonly orchestrator = new PanoramaOrchestrator();
@@ -83,7 +87,9 @@ export class PanoramaEngine {
         const effect = this.effectFor(context);
         if (!effect) return '';
         const offset = this.orchestrator.getPanoramaSliceOffset(context);
-        return safeEffectCall(() => effect.renderSlice(offset, DISPLAY_W, DISPLAY_H), '', 'renderSlice');
+        const slice = safeEffectCall(() => effect.renderSlice(offset, DISPLAY_W, DISPLAY_H), '', 'renderSlice');
+        // A row set to flat (no soft backing behind ring and text) marks its slice, see isFlat()
+        return this.orchestrator.contextEffectSettings.get(context)?.[ROW_SCRIM_KEY] === false ? flatUnderlay(slice) : slice;
     }
 
     /** The displays of this context's group, left to right ([] while it isn't in a running group). */
@@ -182,16 +188,25 @@ export class PanoramaEngine {
         safeEffectCall(() => instance.initPanorama({ width: ctxs.length * DISPLAY_W, height: DISPLAY_H, settings: this.merged(ctxs) }), undefined, 'initPanorama');
         o.groupEffects.set(key, instance);
         for (const ctx of ctxs) o.panoramaContextGroupKey.set(ctx, key);
-        const tickMs = def.preferredTickMs ?? this.defaultTickMs;
-        const timer = setInterval(() => {
+        const baseMs = def.preferredTickMs ?? this.defaultTickMs;
+        const group: Group = { ctxs, effectId: def.id, tickMs: baseMs, timer: undefined as unknown as ReturnType<typeof setInterval> };
+        const run = () => {
             if (instance.setLevel) {
                 const levels = ctxs.map((c) => this.levels.get(c)).filter((l): l is number => l !== undefined);
                 safeEffectCall(() => instance.setLevel!(levels.length ? Math.max(...levels) : undefined), undefined, 'setLevel');
             }
-            safeEffectCall(() => instance.tickPanorama(tickMs), undefined, 'tickPanorama');
+            safeEffectCall(() => instance.tickPanorama(group.tickMs), undefined, 'tickPanorama');
             o.notifyGroupRender(ctxs);
-        }, tickMs);
-        this.groups.set(key, { ctxs, effectId: def.id, timer });
+            // An effect may speed up or slow down (a still picture that turns out to move)
+            const wanted = instance.tickMs ? safeEffectCall(() => instance.tickMs!(), undefined, 'tickMs') : undefined;
+            if (wanted && wanted > 0 && wanted !== group.tickMs && this.groups.get(key) === group) {
+                clearInterval(group.timer);
+                group.tickMs = wanted;
+                group.timer = setInterval(run, wanted);
+            }
+        };
+        group.timer = setInterval(run, baseMs);
+        this.groups.set(key, group);
     }
 
     private destroyGroup(key: string): void {

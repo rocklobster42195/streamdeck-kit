@@ -22,6 +22,9 @@ import { peerActions, type ActionsState, type BusAction } from '../bus/actions.j
 import type { DeckBus, PeerInfo } from '../bus/bus.js';
 import { BACKGROUND_AUTO, BACKGROUND_NONE } from './backgrounds.js';
 import { COVER_CHOICE, CoverBoard } from './covers.js';
+import { ROW_SCRIM_KEY } from './engine.js';
+import { getSourceStatus, onSourceStatus, type SourceStatus } from './image-source.js';
+import { receiveImageChunk, sweepImages } from './image-store.js';
 import { DEFAULT_EFFECT_ID, effectRegistry, listEffects, type EffectInfo } from './registry.js';
 import type { SharedPanorama } from './shared.js';
 
@@ -65,6 +68,8 @@ export type RowInfo = {
     covers: { id: string; label: string; color: string; playing: boolean }[];
     /** A dial that colours the row live right now ("HA-C · Wohnzimmer"); it wins over the choice. */
     liveColorFrom?: string;
+    /** How the last fetch of a web picture went, when the row's picture comes from a web address. */
+    sourceStatus?: SourceStatus;
 };
 
 /** The row setting that holds the colour choice. */
@@ -120,6 +125,21 @@ export class PanoramaRows {
     ) {
         this.covers = options.covers ?? new CoverBoard(options.name);
         this.covers.onChange(() => this.refreshAll());
+        // Once, a while after the start (the dials and peers are known by then): old unused pictures go
+        setTimeout(() => this.sweepPictures(), 10 * 60_000).unref?.();
+    }
+
+    /** Delete stored pictures that no row of ours, our dials or the peers refers to and that nobody showed for months. */
+    private sweepPictures(): void {
+        const keep = new Set<string>();
+        const add = (row: PanoramaRow | undefined) => {
+            const s = row?.settings?.source as { kind?: string; id?: string } | undefined;
+            if (s?.kind === 'file' && typeof s.id === 'string') keep.add(s.id);
+        };
+        for (const row of this.rows.values()) add(row);
+        for (const d of this.dials.values()) add(d.state().row);
+        for (const peer of this.peers) for (const row of Object.values((peer.state[STATE_KEY] as Record<string, PanoramaRow> | undefined) ?? {})) add(row);
+        sweepImages(keep);
     }
 
     /** Share rows with the other plugins (call once the bus exists). */
@@ -146,6 +166,8 @@ export class PanoramaRows {
     /** Serve the PI's Panorama section through the plugin's PI bridge. */
     attachPi(bridge: RowsPiBridge): void {
         this.pi = bridge;
+        // A web picture was fetched or failed: the PI shows how it went
+        onSourceStatus(() => bridge.schedulePush());
         bridge.addPusher(() => {
             const ctx = bridge.visibleAction;
             return ctx && this.dials.has(ctx) ? [this.info(ctx) as unknown as Record<string, unknown> & { event: string }] : [];
@@ -154,6 +176,10 @@ export class PanoramaRows {
             const d = this.dials.get(actionId);
             if (!d) return;
             this.setRow(d.device, { effect: typeof msg.effect === 'string' ? msg.effect : undefined, settings: (msg.settings as Record<string, unknown> | undefined) ?? undefined });
+        });
+        // A picture picked in the PI arrives in chunks; the row's settings get its id afterwards ("panorama-set")
+        bridge.handle('panorama-image-chunk', (msg) => {
+            receiveImageChunk(msg);
         });
         bridge.handle('panorama-member', (msg, actionId) => {
             const d = this.dials.get(actionId);
@@ -222,6 +248,8 @@ export class PanoramaRows {
         const effect = patch.effect ?? cur.effect;
         // A new effect starts from its own defaults; the same one keeps its tuning
         const settings = effect !== cur.effect ? { ...(patch.settings ?? {}) } : { ...cur.settings, ...(patch.settings ?? {}) };
+        // The soft backing choice belongs to the row, not to an effect
+        if (effect !== cur.effect && ROW_SCRIM_KEY in cur.settings && !(ROW_SCRIM_KEY in settings)) settings[ROW_SCRIM_KEY] = cur.settings[ROW_SCRIM_KEY];
         this.rows.set(device, { effect, settings, stamp: Math.max(Date.now(), cur.stamp + 1) });
         this.refresh(device);
     }
@@ -280,7 +308,9 @@ export class PanoramaRows {
         dials.sort((a, b) => a.column - b.column);
         const covers = this.covers.sources().map((s) => ({ id: s.id, label: `${s.name} · ${s.source}`, color: s.color, playing: s.playing }));
         const color = typeof row.settings[ROW_COLOR_KEY] === 'string' ? (row.settings[ROW_COLOR_KEY] as string) : COVER_CHOICE;
-        return { event: 'panorama-row', device: d.device, effect: row.effect, settings: row.settings, effects: listEffects(), dials, color, covers, liveColorFrom: this.liveColorFrom(d.device) };
+        const source = row.settings.source as { kind?: string; url?: string } | undefined;
+        const sourceStatus = source?.kind === 'url' ? getSourceStatus(source.url) : undefined;
+        return { event: 'panorama-row', device: d.device, effect: row.effect, settings: row.settings, effects: listEffects(), dials, color, covers, liveColorFrom: this.liveColorFrom(d.device), sourceStatus };
     }
 
     /** Who colours the row live right now: one of our dials or another plugin's ("HA-C · Wohnzimmer"). */
@@ -365,13 +395,23 @@ export class PanoramaRows {
         const out: Record<string, PanoramaRow> = {};
         for (const device of devices) {
             const row = this.rows.get(device);
-            if (row) out[device] = row;
+            if (row) out[device] = withoutLogin(row);
         }
         const json = JSON.stringify(out);
         if (json === this.published) return;
         this.published = json;
         this.bus.setState(STATE_KEY, out);
     }
+}
+
+/** The row as the other plugins get it over the bus: a web picture's user and password stay with this plugin. */
+export function withoutLogin(row: PanoramaRow): PanoramaRow {
+    const source = row.settings.source as { kind?: string; user?: string; password?: string } | undefined;
+    if (source?.kind !== 'url' || (source.user === undefined && source.password === undefined)) return row;
+    const rest: Record<string, unknown> = { ...source };
+    delete rest.user;
+    delete rest.password;
+    return { ...row, settings: { ...row.settings, source: rest } };
 }
 
 function newer(a: PanoramaRow | undefined, b: PanoramaRow | undefined): PanoramaRow | undefined {

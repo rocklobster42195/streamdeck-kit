@@ -12,7 +12,9 @@ export type EffectField =
     | { key: string; type: 'range'; label: string; min: number; max: number; step?: number; default: number; control?: string }
     | { key: string; type: 'color'; label: string; default: string }
     | { key: string; type: 'checkbox'; label: string; default: boolean }
-    | { key: string; type: 'select'; label: string; options: { label: string; value: string }[]; default: string };
+    | { key: string; type: 'select'; label: string; options: { label: string; value: string }[]; default: string }
+    /** A picture to show: a file picked in the PI (stored by the kit, see PanoramaSource) or, later, a web address. */
+    | { key: string; type: 'source'; label: string; default: unknown };
 
 export interface PanoramaInitContext<S> {
     /** Total panorama width in px = number of displays currently in the group x 200. */
@@ -32,6 +34,11 @@ export interface EffectInstance<S = Record<string, unknown>> {
     /** Called once per tick PER DISPLAY. Must only project/draw the state tickPanorama already
      *  computed. Returns an SVG fragment (no outer <svg> tag). */
     renderSlice(offsetX: number, width: number, height: number): string;
+
+    /** Optional: the tick interval this instance wants right now, in ms (read after every tick; the
+     *  effect's `preferredTickMs` is used until then). A still picture can tick slowly and speed up when
+     *  it turns out to move (a GIF, a slow zoom). */
+    tickMs?(): number | undefined;
 
     /** Called when the host's PI-managed settings change (e.g. a device's dominant color). */
     onSettingsChange?(settings: S): void;
@@ -69,6 +76,8 @@ export interface EffectDefinition<S = Record<string, unknown>> {
     displayName: string;
     /** Not offered in effect pickers (e.g. the blank effect hosts use for "no effect"). */
     hidden?: boolean;
+    /** false: the effect does not use the row's colour (e.g. a picture), so hosts leave the colour choice out. Default: true. */
+    rowColor?: boolean;
     defaultSettings: S;
     /** Drives auto-generated PI controls. Field labels/keys are entirely up to you. */
     settingsSchema: EffectField[];

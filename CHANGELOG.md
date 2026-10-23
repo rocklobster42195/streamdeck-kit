@@ -4,6 +4,13 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Added
+
+- **Panorama effects "Colour" and "Image"** (GitHub #6 of Sonos Controller). *Colour* takes the row's colour (Cover, fixed or the effect's own) and can fade to dark across the whole row. *Image* spreads a picture over the row, cut into one piece per dial: Fill / Fit / Stretch, a position for Fill, and "Darken the picture". The picture comes from a **file** (picked in the PI, scaled to at most 4000 px there, kept in a folder shared by the plugins, `configurePanoramaStorage`) or a **web address** (a webcam: http(s), optional user and password as Basic auth, a refresh from 10 s to 10 min, the last good picture stays, the status shows in the PI; user and password never go over deckbus or into a log). Animated **GIFs** play (up to 60 frames, else the first one), also from a web address. **Ken Burns:** now and then (every 30-600 s) one slow zoom or pan to a new view in a random direction, rest in between; the pieces are made once, the motion is only a transform, so a step costs nothing. New effect field type `source`, new effect options `rowColor: false` (the PI leaves the row colour out) and `EffectInstance.tickMs()` (an effect may speed up or slow down).
+- **Row setting "Soft backing behind ring and text"** (`rowScrim`, default on). Off draws the dials flat, without the dark discs and boxes behind the ring and text, for every effect (the slice is marked with `data-kit-flat`; `isFlat`, `flatUnderlay`).
+- Texts for all of it in en, de and es; error texts of a web picture are translated in the PI.
+- Tools: `tools/pi-harness.mjs` (the real Panorama section of the PI in a browser with a faked plugin side, also as screenshots), `preview-panorama-backgrounds.mjs`, `preview-panorama-motion.mjs`, `preview-panorama-player.mjs`. New dependency `omggif` (GIF).
+
 ## [0.1.0-alpha.36] — 2026-10-22
 
 ### Fixed

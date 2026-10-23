@@ -10,16 +10,17 @@ import { t } from '../i18n.js';
 import { sd } from '../sd-client.js';
 import { openSettingsWindow, showSettingsInline } from '../window.js';
 
-type Field = { key: string; type: 'range' | 'color' | 'checkbox' | 'select'; label: string; min?: number; max?: number; step?: number; default: unknown; options?: { label: string; value: string }[] };
+type Field = { key: string; type: 'range' | 'color' | 'checkbox' | 'select' | 'source'; label: string; min?: number; max?: number; step?: number; default: unknown; options?: { label: string; value: string }[] };
 type Info = {
     event: 'panorama-row';
     effect: string;
     settings: Record<string, unknown>;
-    effects: { id: string; displayName: string; settingsSchema: Field[] }[];
+    effects: { id: string; displayName: string; settingsSchema: Field[]; rowColor?: false }[];
     dials: { column: number; plugin: string; label: string; member: boolean; self: boolean }[];
     color: string;
     covers: { id: string; label: string; color: string; playing: boolean }[];
     liveColorFrom?: string;
+    sourceStatus?: { ok: boolean; at: number; code?: string; n?: number };
 };
 
 const NONE = 'none';
@@ -32,8 +33,8 @@ const COLOR_KEY = 'rowColor';
 const colorMode = (c: string) => (c === DEFAULT ? DEFAULT : c.startsWith('#') ? 'fixed' : COVER);
 
 /** Translation with a fallback (effect names and field labels come from the effect in English). */
-function tr(key: string, fallback: string): string {
-    const v = t(key);
+function tr(key: string, fallback: string, vars?: Record<string, string | number>): string {
+    const v = t(key, vars);
     return v === key ? fallback : v;
 }
 
@@ -96,14 +97,23 @@ export class PiPanorama extends HTMLElement {
                 <div class="pi-choice" style="--pi-choice-columns: 3">${options.join('')}</div>
                 <div class="pi-pano-map" style="--pi-pano-columns: ${columns}">${cells.join('')}</div>
                 <div class="pi-hint pi-padded">${escapeHtml(t('kit.panorama_map_hint'))}</div>
-                ${info.effect === NONE ? '' : this.colorHtml(info)}
+                ${info.effect === NONE ? '' : this.scrimHtml(info)}
+                ${info.effect === NONE || effect?.rowColor === false ? '' : this.colorHtml(info)}
                 <div class="pi-pano-fields">${(effect?.settingsSchema ?? []).filter((f) => f.type !== 'color').map((f) => this.fieldHtml(effect!.id, f, info.settings[f.key] ?? f.default)).join('')}</div>
             </div>
-            <div class="pi-hint pi-padded">${escapeHtml(t('kit.panorama_hint'))}</div>`;
+            ${effect?.rowColor === false ? '' : `<div class="pi-hint pi-padded">${escapeHtml(t('kit.panorama_hint'))}</div>`}`;
         this.querySelectorAll<HTMLElement>('[data-effect]').forEach((el) => el.addEventListener('click', () => sd.sendToPlugin({ event: 'panorama-set', effect: el.dataset.effect })));
         this.querySelectorAll<HTMLInputElement>('.pi-pano-map input').forEach((el) => el.addEventListener('change', () => sd.sendToPlugin({ event: 'panorama-member', column: Number(el.dataset.column), member: el.checked })));
         this.wireFields();
+        const state = this.querySelector<HTMLElement>('[data-source-state]');
+        if (state) this.showSourceState(state, info);
+        this.querySelector<HTMLInputElement>('[data-scrim]')?.addEventListener('change', (e) => sd.sendToPlugin({ event: 'panorama-set', settings: { rowScrim: (e.target as HTMLInputElement).checked } }));
         this.wireColor(info);
+    }
+
+    /** The soft backing behind ring and text over the effect: on unless the row says false. */
+    private scrimHtml(info: Info): string {
+        return `<label class="pi-pano-field pi-pano-inline"><span class="pi-label">${escapeHtml(t('kit.panorama_scrim'))}</span><input type="checkbox" data-scrim ${info.settings.rowScrim === false ? '' : 'checked'}/></label>`;
     }
 
     /** The row's colour: Cover (with the player), fixed, or the effect's own. */
@@ -164,7 +174,96 @@ export class PiPanorama extends HTMLElement {
             case 'checkbox':
                 return `<label class="pi-pano-field pi-pano-inline"><span class="pi-label">${label}</span><input type="checkbox" data-key="${key}" ${value ? 'checked' : ''}/></label>`;
             case 'select':
-                return `<label class="pi-pano-field"><span class="pi-label">${label}</span><select class="pi-input" data-key="${key}">${(f.options ?? []).map((o) => `<option value="${escapeHtml(o.value)}" ${o.value === value ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}</select></label>`;
+                return `<label class="pi-pano-field"><span class="pi-label">${label}</span><select class="pi-input" data-key="${key}">${(f.options ?? []).map((o) => `<option value="${escapeHtml(o.value)}" ${o.value === value ? 'selected' : ''}>${escapeHtml(tr(`effect.${effectId}.${f.key}_${o.value}`, o.label))}</option>`).join('')}</select></label>`;
+            case 'source': {
+                const s = value as { kind?: string; url?: string; user?: string; password?: string; intervalSec?: number } | undefined;
+                const web = s?.kind === 'url';
+                const secs = Number(s?.intervalSec ?? 60);
+                const tile = (mode: string, text: string) => `<button type="button" class="pi-choice-tile" data-src-mode="${mode}" aria-pressed="${(mode === 'url') === web}"><span>${escapeHtml(text)}</span></button>`;
+                return `<div class="pi-pano-field pi-pano-source"><span class="pi-label">${label}</span>
+                    <div class="pi-choice" style="--pi-choice-columns: 2">${tile('file', t('kit.panorama_source_file'))}${tile('url', t('kit.panorama_source_url'))}</div>
+                    <div data-src-file ${web ? 'hidden' : ''}>
+                        <div class="pi-pano-file"><span class="pi-pano-filename" data-source-label>${escapeHtml(this.sourceName(value))}</span><button type="button" class="pi-button pi-button-small" data-source-pick>${escapeHtml(t('kit.panorama_source_pick'))}</button><input type="file" accept="image/*" hidden data-source-file/></div>
+                        <div class="pi-hint" data-source-status></div>
+                        <div class="pi-hint">${escapeHtml(t('kit.panorama_source_gif_hint'))}</div>
+                    </div>
+                    <div class="pi-pano-url" data-src-url ${web ? '' : 'hidden'}>
+                        <label class="pi-pano-field-in"><span class="pi-label">${escapeHtml(t('kit.panorama_source_address'))}</span><input class="pi-input" type="text" data-url placeholder="http://192.168.1.40/snapshot.jpg" value="${escapeHtml(String(s?.url ?? ''))}"/></label>
+                        <label class="pi-pano-field-in"><span class="pi-label">${escapeHtml(t('kit.panorama_source_every'))}</span><span class="pi-pano-range"><input type="range" data-interval min="10" max="600" step="5" value="${secs}"/><span class="pi-hint" data-interval-value>${escapeHtml(this.intervalText(secs))}</span></span></label>
+                        <details><summary class="pi-label">${escapeHtml(t('kit.panorama_source_login'))}</summary>
+                            <label class="pi-pano-field-in"><span class="pi-label">${escapeHtml(t('kit.panorama_source_user'))}</span><input class="pi-input" type="text" data-login="user" autocomplete="off" value="${escapeHtml(String(s?.user ?? ''))}"/></label>
+                            <label class="pi-pano-field-in"><span class="pi-label">${escapeHtml(t('kit.panorama_source_password'))}</span><input class="pi-input" type="password" data-login="password" autocomplete="off" value="${escapeHtml(String(s?.password ?? ''))}"/></label>
+                        </details>
+                        <div class="pi-hint" data-source-state></div>
+                        <div class="pi-notice">${escapeHtml(t('kit.panorama_source_notice'))}</div>
+                    </div>
+                </div>`;
+            }
+        }
+    }
+
+    /** "60 s" / "5 min" for the refresh interval. */
+    private intervalText(secs: number): string {
+        return secs < 60 ? `${secs} s` : `${Number((secs / 60).toFixed(1))} min`;
+    }
+
+    private showSourceState(el: HTMLElement, info: Info): void {
+        el.textContent = this.sourceState(info);
+        el.classList.toggle('pi-source-error', info.sourceStatus?.ok === false);
+    }
+
+    /** How the last fetch of a web picture went ("Fetched 12 s ago" / the error). */
+    private sourceState(info: Info): string {
+        const st = info.sourceStatus;
+        if (!(info.settings.source as { kind?: string } | undefined)?.kind || (info.settings.source as { kind?: string }).kind !== 'url') return '';
+        if (!st) return t('kit.panorama_source_waiting');
+        if (!st.ok) return tr(`kit.source_error_${st.code ?? 'other'}`, t('kit.source_error_other', {}), { n: st.n ?? '' });
+        const secs = Math.max(0, Math.round((Date.now() - st.at) / 1000));
+        return t('kit.panorama_source_fetched', { ago: secs < 90 ? `${secs} s` : `${Math.round(secs / 60)} min` });
+    }
+
+    /** The picture a source field holds, for the label ("harbour.jpg"). */
+    private sourceName(value: unknown): string {
+        const s = value as { kind?: string; name?: string } | undefined;
+        return s?.kind === 'file' ? s.name || '…' : t('kit.panorama_source_none');
+    }
+
+    /**
+     * A picture picked in the PI: this is a browser, so it decodes the file (JPEG, PNG, GIF, WebP, ...),
+     * scales it down to at most 4000 px wide and sends it to the plugin as a JPEG in chunks; the plugin
+     * keeps it and the row settings only get a small reference. No file path is ever needed.
+     */
+    private async sendPicture(file: File, status: HTMLElement): Promise<void> {
+        status.textContent = t('kit.panorama_source_busy');
+        try {
+            const bitmap = await createImageBitmap(file);
+            const scale = Math.min(1, 4000 / bitmap.width);
+            const w = Math.max(1, Math.round(bitmap.width * scale));
+            const h = Math.max(1, Math.round(bitmap.height * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d')!;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(bitmap, 0, 0, w, h);
+            // A GIF goes as it is (a canvas would keep only its first frame); the plugin plays it
+            const gif = (file.type === 'image/gif' || /\.gif$/i.test(file.name)) && file.size <= 12 * 1024 * 1024;
+            const blob = gif ? file : await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('encode'))), 'image/jpeg', 0.9));
+            const bytes = new Uint8Array(await blob.arrayBuffer());
+            const id = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(16).padStart(2, '0')).join('');
+            const size = 192 * 1024;
+            const total = Math.ceil(bytes.length / size);
+            for (let i = 0; i < total; i++) {
+                const part = bytes.subarray(i * size, (i + 1) * size);
+                let binary = '';
+                for (let j = 0; j < part.length; j += 0x8000) binary += String.fromCharCode(...part.subarray(j, j + 0x8000));
+                sd.sendToPlugin({ event: 'panorama-image-chunk', id, index: i, total, data: btoa(binary) });
+            }
+            sd.sendToPlugin({ event: 'panorama-set', settings: { source: { kind: 'file', id, name: file.name, w, h } } });
+            status.textContent = '';
+        } catch {
+            status.textContent = t('kit.panorama_source_failed');
         }
     }
 
@@ -185,11 +284,54 @@ export class PiPanorama extends HTMLElement {
         });
         this.querySelectorAll<HTMLInputElement>('.pi-pano-fields input[type=checkbox]').forEach((el) => el.addEventListener('change', () => send(el.dataset.key!, el.checked, true)));
         this.querySelectorAll<HTMLSelectElement>('.pi-pano-fields select').forEach((el) => el.addEventListener('change', () => send(el.dataset.key!, el.value, true)));
+        this.querySelectorAll<HTMLElement>('.pi-pano-source').forEach((box) => {
+            const input = box.querySelector<HTMLInputElement>('[data-source-file]')!;
+            const status = box.querySelector<HTMLElement>('[data-source-status]')!;
+            // File or web address: the tiles only switch what is shown; the picture changes with the entries
+            box.querySelectorAll<HTMLElement>('[data-src-mode]').forEach((tile) =>
+                tile.addEventListener('click', () => {
+                    const web = tile.dataset.srcMode === 'url';
+                    box.querySelectorAll<HTMLElement>('[data-src-mode]').forEach((x) => x.setAttribute('aria-pressed', String(x === tile)));
+                    box.querySelector<HTMLElement>('[data-src-file]')!.hidden = web;
+                    box.querySelector<HTMLElement>('[data-src-url]')!.hidden = !web;
+                }),
+            );
+            const url = box.querySelector<HTMLInputElement>('[data-url]')!;
+            const every = box.querySelector<HTMLInputElement>('[data-interval]')!;
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            const sendUrl = () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    const address = url.value.trim();
+                    const login = (k: string) => box.querySelector<HTMLInputElement>(`[data-login="${k}"]`)!.value;
+                    const source = address ? { kind: 'url', url: address, user: login('user'), password: login('password'), intervalSec: Number(every.value) } : { kind: 'none' };
+                    sd.sendToPlugin({ event: 'panorama-set', settings: { source } });
+                }, 500);
+            };
+            url.addEventListener('input', sendUrl);
+            box.querySelectorAll<HTMLInputElement>('[data-login]').forEach((el) => el.addEventListener('input', sendUrl));
+            every.addEventListener('input', () => {
+                box.querySelector<HTMLElement>('[data-interval-value]')!.textContent = this.intervalText(Number(every.value));
+                sendUrl();
+            });
+            box.querySelector('[data-source-pick]')!.addEventListener('click', () => input.click());
+            input.addEventListener('change', () => {
+                const file = input.files?.[0];
+                input.value = '';
+                if (file) void this.sendPicture(file, status);
+            });
+        });
         this.querySelectorAll<HTMLElement & { value: string }>('.pi-pano-fields pi-swatch').forEach((el) => el.addEventListener('change', () => send(el.dataset.key!, el.value, true)));
     }
 
     /** Same structure: only the values (the effect was tuned elsewhere, e.g. by turning a dial). */
     private updateValues(info: Info): void {
+        const scrim = this.querySelector<HTMLInputElement>('[data-scrim]');
+        if (scrim && scrim !== document.activeElement) scrim.checked = info.settings.rowScrim !== false;
+        const state = this.querySelector<HTMLElement>('[data-source-state]');
+        if (state) this.showSourceState(state, info);
+        const label = this.querySelector<HTMLElement>('[data-source-label]');
+        if (label) label.textContent = this.sourceName(info.settings.source);
         for (const [key, value] of Object.entries(info.settings)) {
             const input = this.querySelector<HTMLInputElement>(`.pi-pano-fields input[data-key="${key}"]`);
             if (!input || input === document.activeElement) continue;

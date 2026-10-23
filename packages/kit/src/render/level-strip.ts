@@ -15,7 +15,7 @@ import { openRing, openRingPoint } from './gauge/open-ring.js';
 import { pie } from './gauge/pie.js';
 import { METER_TICKS } from './gauge/scale.js';
 import { vuMeter } from './gauge/vu.js';
-import { escapeXml, mdi, scrimDisc, stripImage, text, textWidth } from './strip.js';
+import { escapeXml, isFlat, mdi, scrimDisc, stripImage, text, textWidth } from './strip.js';
 
 export type LevelStyle = 'digital' | 'classic' | 'ring' | 'pie' | 'open';
 
@@ -101,7 +101,7 @@ function gauge(v: LevelStripView): string {
     const top = v.subName ? 34 : 44;
     const y = v.subName ? 71 : 64;
     const value = showMute ? 'MUTE' : v.valueText;
-    const scrims = v.background
+    const scrims = v.background && !isFlat(v.background)
         ? [
               scrimDisc(50, 50, 44),
               shadeText(100, top, v.name, 14, { bold: true, maxWidth: 94 }),
@@ -150,7 +150,7 @@ function digital(v: LevelStripView): string {
     const ink = invertedBand ? v.color : band ? inkOn(band) : undefined;
     const nameX = v.icon ? 32 : 8;
     const nameMax = Math.max(60, 192 - nameX - right - 10);
-    const scrims = v.background
+    const scrims = v.background && !isFlat(v.background)
         ? [
               band ? '' : v.icon ? shade(2, 4, Math.min(textWidth(name, 14, { bold: true }), nameMax) + 38, 18) : shadeText(nameX, 18, name, 14, { bold: true, maxWidth: nameMax }),
               band ? '' : showMute ? shade(192 - right - 4, 4, right + 8, 18) : shadeText(192, 18, v.valueText, 13, { bold: true, anchor: 'end' }),
@@ -191,7 +191,7 @@ function classic(v: LevelStripView): string {
     // Not running: the meters dimmed like a switched-off device
     if (v.inactive) parts.push(`<rect width="200" height="100" fill="#000" opacity="0.55"/>`);
     // Over an effect: a box behind the caption (letter-spaced, so a little wider than measured)
-    if (v.background) parts.push(shade(100 - textWidth(caption, 9) / 2 - 18, 88, textWidth(caption, 9) + 36, 13));
+    if (v.background && !isFlat(v.background)) parts.push(shade(100 - textWidth(caption, 9) / 2 - 18, 88, textWidth(caption, 9) + 36, 13));
     parts.push(`<text x="100" y="97" font-family="Arial,sans-serif" font-size="9" fill="${v.inactive ? INK_GREY : showMute ? MUTED : '#bfa76a'}" text-anchor="middle" letter-spacing="1.5">${caption}</text>`);
     return stripImage(parts, '#141210', v.background);
 }

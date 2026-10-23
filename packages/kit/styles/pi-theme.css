@@ -233,6 +233,12 @@ pi-panorama { display: flex; flex-direction: column; gap: 6px; }
 .pi-pano-inline { flex-direction: row; align-items: center; justify-content: space-between; }
 .pi-pano-range { display: flex; align-items: center; gap: 10px; }
 .pi-pano-range input { flex-grow: 1; }
+.pi-pano-url { display: flex; flex-direction: column; gap: 8px; }
+.pi-pano-field-in { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.pi-source-error { color: var(--pi-error-text, #ffb3b3); }
+.pi-notice { border: 1px solid #4a4326; background: #2b281a; color: #e8dca8; border-radius: 8px; padding: 8px 10px; font-size: 12px; }
+.pi-pano-file { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pi-pano-filename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .pi-pano-summary { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; padding: 10px 12px; width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; border: 1px solid var(--pi-control-border); }
 
 /* <pi-states>: the Multi-state key's list */
