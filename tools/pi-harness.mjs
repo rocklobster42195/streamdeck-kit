@@ -74,7 +74,7 @@ function checkEffect() {
 const wss = new WebSocketServer({ port: PORT + 1 });
 wss.on('connection', (ws) => {
     const send = (payload) => ws.send(JSON.stringify({ event: 'sendToPropertyInspector', payload }));
-    const push = () => send({ event: 'panorama-row', device: 'dev', effect: row.effect, settings: row.settings, effects: listEffects(), dials, color: 'cover', covers: [], sourceStatus: row.settings.source?.kind === 'url' ? src.getSourceStatus(row.settings.source.url) : undefined });
+    const push = () => send({ event: 'panorama-row', device: 'dev', effect: row.effect, settings: row.settings, effects: listEffects(), dials, color: row.settings.rowColor ?? 'cover', covers: [], sourceStatus: row.settings.source?.kind === 'url' ? src.getSourceStatus(row.settings.source.url) : undefined });
     const off = src.onSourceStatus(() => {
         push();
         release();
@@ -163,10 +163,10 @@ server.listen(PORT, () => {
     if (mode === 'serve') return console.log(`PI harness: http://localhost:${PORT}/?effect=image&width=320${picture ? '&pick=1' : ''}`);
     const out = path.resolve(args[1] ?? 'pi-harness.png');
     const query = args[2] && !args[2].startsWith('--') ? args[2] : '?effect=image';
-    const browser = ['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe'].find((p) => fs.existsSync(p));
+    const browser = [process.env.BROWSER, 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe'].find((p) => p && fs.existsSync(p));
     const width = Number(new URLSearchParams(query).get('width') ?? 320);
     const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-pi-browser-'));
-    const child = spawn(browser, ['--headless=new', '--disable-gpu', `--user-data-dir=${profile}`, `--window-size=${width},1300`, '--hide-scrollbars', '--enable-logging=stderr', '--v=0', `--screenshot=${out}`, `http://localhost:${PORT}/${query}`], { stdio: ['ignore', 'ignore', 'pipe'] });
+    const child = spawn(browser, ['--headless=new', '--disable-gpu', `--user-data-dir=${profile}`, `--window-size=${width},1300`, '--hide-scrollbars', '--enable-logging=stderr', '--v=0', ...(/[?&](pick|cam|url)/.test(query) ? [] : ['--virtual-time-budget=9000']), `--screenshot=${out}`, `http://localhost:${PORT}/${query}`], { stdio: ['ignore', 'ignore', 'pipe'] });
     let err = '';
     child.stderr.on('data', (d) => (err += d));
     child.on('exit', () => {

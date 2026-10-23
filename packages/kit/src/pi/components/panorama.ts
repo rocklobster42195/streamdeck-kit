@@ -129,7 +129,7 @@ export class PiPanorama extends HTMLElement {
             const options = [`<option value="${COVER}">${escapeHtml(t('kit.panorama_color_active'))}</option>`, `<option value="${COVER_ALL}" ${info.color === COVER_ALL ? 'selected' : ''}>${escapeHtml(t('kit.panorama_color_active_all'))}</option>`, ...info.covers.map((c) => `<option value="${COVER}:${escapeHtml(c.id)}" ${info.color === `${COVER}:${c.id}` ? 'selected' : ''}>${c.playing ? '▶ ' : ''}${escapeHtml(c.label)}</option>`)];
             detail = `<select class="pi-input" data-color-player>${options.join('')}</select>`;
             if (!info.covers.length) detail += `<div class="pi-hint">${escapeHtml(t('kit.panorama_color_none'))}</div>`;
-        } else if (mode === 'fixed') detail = `<pi-swatch data-color-fixed value="${escapeHtml(info.color)}"></pi-swatch>`;
+        } else if (mode === 'fixed') detail = `<pi-swatch class="pi-color" data-color-fixed value="${escapeHtml(info.color)}"></pi-swatch>`;
         const live = info.liveColorFrom ? `<div class="pi-hint">${escapeHtml(t('kit.panorama_color_live', { from: info.liveColorFrom }))}</div>` : '';
         return `<div class="pi-pano-field pi-pano-color"><span class="pi-label">${escapeHtml(t('kit.panorama_color'))}</span>
             <div class="pi-choice" style="--pi-choice-columns: 3">${tiles.join('')}</div>${detail}${live}</div>`;
@@ -170,7 +170,7 @@ export class PiPanorama extends HTMLElement {
                 return `<label class="pi-pano-field"><span class="pi-label">${label}</span><span class="pi-pano-range"><input type="range" data-key="${key}" min="${f.min}" max="${f.max}" step="${step}" value="${Number(value)}"/><span class="pi-hint" data-value="${key}">${Number(value)}</span></span></label>`;
             }
             case 'color':
-                return `<div class="pi-pano-field pi-pano-inline"><span class="pi-label">${label}</span><pi-swatch data-key="${key}" value="${escapeHtml(String(value))}"></pi-swatch></div>`;
+                return `<div class="pi-pano-field pi-pano-inline"><span class="pi-label">${label}</span><pi-swatch class="pi-color" data-key="${key}" value="${escapeHtml(String(value))}"></pi-swatch></div>`;
             case 'checkbox':
                 return `<label class="pi-pano-field pi-pano-inline"><span class="pi-label">${label}</span><input type="checkbox" data-key="${key}" ${value ? 'checked' : ''}/></label>`;
             case 'select':

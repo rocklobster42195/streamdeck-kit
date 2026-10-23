@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Fixed
+
+- **Panorama: the fixed row colour could not be picked.** The colour swatch under "Fixed" (and an effect's own colour field) had no size and shrank to 6 px, so it was invisible. It is the same 44 × 30 px swatch as everywhere else now.
+
 ## [0.1.0-alpha.37] — 2026-10-23
 
 ### Added
