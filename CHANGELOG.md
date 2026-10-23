@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.38] — 2026-10-23
+
 ### Changed
 
 - **Colour effect: "the effect's own" colour is the family's sage green (`#87AE73`)** instead of a near-black grey-blue, which was easy to take for "nothing happens".
