@@ -2,7 +2,7 @@
 // plugin's own key renderer: the dark background, the large plain icon (112 px, 92 px with a
 // caption), "on" as a tinted plate plus a rounded frame in the accent colour, the colour tiers, and
 // the bold caption at the bottom. Keys are SVG at the @2x size (144 px).
-import { escapeXml } from "./strip.js";
+import { escapeXml, textWidth, wrap } from "./strip.js";
 import { measureArialWidth, truncateToWidth } from "./text-width.js";
 
 export const KEY_SIZE = 144;
@@ -18,10 +18,16 @@ export const KEY_TIERS = { available: "#e0e0e0", off: "#8a8a90", unavailable: "#
 /** The one symbol size of a key, straight on the key or the dimmed cover: no disc, no fade. */
 export const KEY_GLYPH = { size: 72, x: 36, y: 36 } as const;
 
-/** Icon placement: the one symbol size without text, a smaller one with a caption under it. */
+/**
+ * Icon placement. `full` and `withCaption` are the one symbol size (a caption sits close under it, one
+ * group); `compact` is smaller, for a caption plus another row under it (a level bar, a message);
+ * `twoLines` is smaller and higher, for two lines of text (name + value, or a wrapped name).
+ */
 export const KEY_ICON = {
     full: KEY_GLYPH,
-    withCaption: { size: 60, x: 42, y: 20 },
+    withCaption: { size: 72, x: 36, y: 20 },
+    compact: { size: 60, x: 42, y: 20 },
+    twoLines: { size: 60, x: 42, y: 6 },
 } as const;
 
 /** "On" (MA-C's active look), drawn under the icon: a tinted plate in the colour. */
@@ -41,18 +47,38 @@ export function keyIcon(path: string, place: { size: number; x: number; y: numbe
 }
 
 /**
- * The caption under the icon: bold, as large as fits (28 px down to 16 px), cut with "…" when even
+ * The caption under the icon: bold, as large as fits (24 px down to 16 px), cut with "…" when even
  * that is too wide, kept clear of the "on" frame. `y` is the baseline (default near the bottom).
  */
 export function keyCaption(text: string, color: string, opts: { y?: number; max?: number; min?: number } = {}): string {
     // Inside the "on" frame (4 px inset, 3 px stroke) with a little air
     const width = KEY_SIZE - 24;
-    const max = opts.max ?? 28;
+    const max = opts.max ?? 24;
     const min = opts.min ?? 16;
     let size = max;
     while (size > min && measureArialWidth(text, size, true) > width) size--;
     const shown = measureArialWidth(text, size, true) > width ? truncateToWidth(text, size, width, true) : text;
-    return `<text x="${KEY_SIZE / 2}" y="${opts.y ?? KEY_SIZE - 11}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="${size}" font-weight="700" fill="${escapeXml(color)}">${escapeXml(shown)}</text>`;
+    return `<text x="${KEY_SIZE / 2}" y="${opts.y ?? KEY_SIZE - 16}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="${size}" font-weight="700" fill="${escapeXml(color)}">${escapeXml(shown)}</text>`;
+}
+
+/**
+ * A key's name and where its icon goes. A name that fits on one line (16 px or larger) sits under the
+ * icon, which has the one symbol size. A longer name with a space breaks onto two lines (20 px down to
+ * 14 px, the second line cut with "…" if it still doesn't fit) and the icon is smaller and higher, as with
+ * name + value. A long word without a space stays on one line, down to 13 px, then cut.
+ */
+export function keyLabel(text: string, color: string): { place: { size: number; x: number; y: number }; svg: string } {
+    const width = KEY_SIZE - 24;
+    const name = text.trim();
+    if (textWidth(name, 16, { bold: true }) <= width || !name.includes(" ")) {
+        return { place: KEY_ICON.withCaption, svg: keyCaption(name, color, { min: 13 }) };
+    }
+    let size = 20;
+    let lines = wrap(name, width, size, 2);
+    while (size > 14 && lines.join(" ") !== name) lines = wrap(name, width, --size, 2);
+    if (lines.length === 1) return { place: KEY_ICON.withCaption, svg: keyCaption(name, color, { min: 13 }) };
+    const svg = lines.map((line, i) => keyCaption(line, color, { y: 100 + i * 26, max: size, min: size })).join("");
+    return { place: KEY_ICON.twoLines, svg };
 }
 
 /** The key image: the background, then the parts, as an SVG data URI. */
