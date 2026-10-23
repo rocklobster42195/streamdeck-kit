@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.39] — 2026-10-23
+
 ### Added
 
 - **`keyLabel(text, color)`: a key's name and where its icon goes.** A name that fits on one line (16 px or larger) sits under the icon. A longer name with a space breaks onto two lines (20 px down to 14 px, the second line cut with "…" if it still does not fit) and the icon is smaller and higher, as with name + value. A long word stays on one line, down to 13 px, then cut. New icon placements `KEY_ICON.compact` (60 px, for a caption plus another row such as a level bar) and `KEY_ICON.twoLines` (60 px, high).
