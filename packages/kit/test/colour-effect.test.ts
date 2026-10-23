@@ -19,7 +19,7 @@ describe('colour effect', () => {
     });
 
     it('falls back to the default on a bad colour', () => {
-        expect(make({ color: 'red' }).renderSlice(0, 200, 100)).toContain('fill="#1F2A33"');
+        expect(make({ color: 'red' }).renderSlice(0, 200, 100)).toContain('fill="#87AE73"');
     });
 
     it('lets one gradient run over the whole row, each slice seeing its part', () => {

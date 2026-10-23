@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Changed
+
+- **Colour effect: "the effect's own" colour is the family's sage green (`#87AE73`)** instead of a near-black grey-blue, which was easy to take for "nothing happens".
+
 ### Fixed
 
 - **Panorama: the fixed row colour could not be picked.** The colour swatch under "Fixed" (and an effect's own colour field) had no size and shrank to 6 px, so it was invisible. It is the same 44 × 30 px swatch as everywhere else now.

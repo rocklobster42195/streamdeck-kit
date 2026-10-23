@@ -11,7 +11,8 @@ export interface ColourEffectSettings {
     fadeAmount?: number;
 }
 
-const DEFAULT_COLOR = '#1F2A33';
+// The family's sage green: a colour that shows ("the effect's own" colour was a near-black grey-blue)
+const DEFAULT_COLOR = '#87AE73';
 const DEFAULT_FADE = 60;
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
