@@ -130,7 +130,7 @@ describe('image effect', () => {
         const id = '0123456789abcdef';
         const settings = { source: { kind: 'file' as const, id, name: 'x.jpg', w: 800, h: 100 }, fit: 'fill' as const, dim: 0 };
         effect.initPanorama({ width: 600, height: 100, settings });
-        expect(effect.renderSlice(0, 200, 100)).toBe('');
+        expect(effect.renderSlice(0, 200, 100)).not.toContain('<image');
         // The picture arrives after the effect started: the next tick picks it up
         saveImage(id, picture(800, 100));
         effect.tickPanorama(1000);
@@ -138,7 +138,7 @@ describe('image effect', () => {
         const c = effect.renderSlice(400, 200, 100);
         expect(a).toContain('<image href="data:image/jpeg;base64,');
         expect(c).not.toBe(a);
-        expect(effect.renderSlice(600, 200, 100)).toBe('');
+        expect(effect.renderSlice(600, 200, 100)).not.toContain('<image');
     });
 
     it('darkens on request and follows a changed row width', () => {
@@ -149,5 +149,18 @@ describe('image effect', () => {
         expect(effect.renderSlice(0, 200, 100)).toContain('opacity="0.4"');
         effect.initPanorama({ width: 800, height: 100, settings });
         expect(effect.renderSlice(600, 200, 100)).toContain('<image');
+    });
+});
+
+describe('image effect without a picture', () => {
+    it('shows a dark panel with a faint picture symbol in the middle of the row, not nothing', () => {
+        const effect = image.createInstance();
+        effect.initPanorama({ width: 600, height: 100, settings: { source: { kind: 'none' } } });
+        const first = effect.renderSlice(0, 200, 100);
+        const middle = effect.renderSlice(200, 200, 100);
+        expect(first).toContain('fill="#1d1d21"');
+        expect(first).not.toContain('<path');
+        expect(middle).toContain('<path'); // the symbol sits in the middle dial
+        expect(effect.renderSlice(400, 200, 100)).not.toContain('<path');
     });
 });

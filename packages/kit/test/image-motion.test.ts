@@ -81,7 +81,6 @@ describe('image effect with a GIF', () => {
         effect.initPanorama({ width: 400, height: 100, settings: { source: { kind: 'file', id, name: 'x.gif', w: 32, h: 16 }, fit: 'stretch' } });
         const first = effect.renderSlice(0, 200, 100);
         expect(first).toContain('<image');
-        expect(effect.tickMs?.()).toBe(100);
         effect.tickPanorama(100);
         const second = effect.renderSlice(0, 200, 100);
         effect.tickPanorama(100);
@@ -171,7 +170,7 @@ describe('Ken Burns', () => {
         expect(ty).toBeCloseTo((10 - 20) * 2, 10);
     });
 
-    it('stands still for a long time, speeds up before a move and slows down after it', () => {
+    it('stands still for a long time, moves at the end of the interval and stands still again', () => {
         const id = 'cccc1111dddd1111';
         saveImage(id, wide());
         const source = { kind: 'file' as const, id, name: 'wide.jpg', w: 1600, h: 200 };
@@ -180,22 +179,17 @@ describe('Ken Burns', () => {
         const start = effect.renderSlice(400, 200, 100);
         expect(start).toContain('<image');
         expect(start).toContain('transform="translate(');
-        expect(effect.tickMs?.()).toBe(1000);
         effect.tickPanorama(30_000); // 30 s in: still at rest
         expect(effect.renderSlice(400, 200, 100)).toBe(start);
-        expect(effect.tickMs?.()).toBe(1000);
         effect.tickPanorama(15_000); // 45 s: the move starts any moment
-        expect(effect.tickMs?.()).toBe(200);
         effect.tickPanorama(5_000); // 50 s: in the move
         const moving = effect.renderSlice(400, 200, 100);
         expect(moving).not.toBe(start);
-        expect(effect.tickMs?.()).toBe(200);
         effect.tickPanorama(10_000); // 60 s: arrived
         const arrived = effect.renderSlice(400, 200, 100);
         expect(arrived).not.toBe(moving);
         effect.tickPanorama(5_000); // 65 s: resting again at the new view
         expect(effect.renderSlice(400, 200, 100)).toBe(arrived);
-        expect(effect.tickMs?.()).toBe(1000);
     });
 
     it('starts every instance at a different point of its rest, so rows do not all move together', () => {
@@ -214,8 +208,6 @@ describe('Ken Burns', () => {
         a.tickPanorama(5_000);
         b.tickPanorama(5_000);
         // 5 s later b has started its move, a is still resting
-        expect(a.tickMs?.()).toBe(1000);
-        expect(b.tickMs?.()).toBe(200);
         expect(a.renderSlice(400, 200, 100)).not.toBe(b.renderSlice(400, 200, 100));
     });
 
@@ -227,7 +219,6 @@ describe('Ken Burns', () => {
         const before = still.renderSlice(400, 200, 100);
         still.tickPanorama(50_000);
         expect(still.renderSlice(400, 200, 100)).toBe(before);
-        expect(still.tickMs?.()).toBe(1000);
     });
 });
 

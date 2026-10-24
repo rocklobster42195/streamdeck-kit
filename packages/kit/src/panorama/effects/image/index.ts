@@ -10,6 +10,7 @@ import { eachGifFrame, isGif } from '../../image-gif.js';
 import { makeWork, moveSeconds, motionPhase, placeTile, tileFor, windowFor, type Motion, type Tile } from '../../image-motion.js';
 import { setSourceStatus, UrlPictureLoader, type PanoramaUrlSource } from '../../image-source.js';
 import { readImage, type PanoramaSource } from '../../image-store.js';
+import { mdiImageOutline } from '@mdi/js';
 import { kitLog } from '../../../log.js';
 import type { EffectDefinition, EffectInstance, PanoramaInitContext } from '../../types.js';
 
@@ -30,9 +31,6 @@ export interface ImageEffectSettings {
 const FITS: ImageFit[] = ['fill', 'fit', 'stretch'];
 const MOTIONS: Motion[] = ['none', 'zoom', 'pan'];
 const MAX_DIM = 80;
-const MOTION_TICK_MS = 200;
-const GIF_TICK_MS = 100;
-const STILL_TICK_MS = 1000;
 const DEFAULT_MOTION_SECONDS = 120;
 
 /**
@@ -63,8 +61,6 @@ class ImageEffectInstance implements EffectInstance<ImageEffectSettings> {
     private tiles: { tile: Tile; href: string }[] = [];
     private lastE = NaN;
     private lastEy = NaN;
-    private moving = false;
-    private soon = false;
     private elapsedMs = 0;
     private readonly jitter = motionJitter.next();
     private jittered = false;
@@ -97,18 +93,19 @@ class ImageEffectInstance implements EffectInstance<ImageEffectSettings> {
         }
     }
 
-    /** Still, and a zoom or pan at rest: slowly. A GIF, or a move (about to start): as often as it moves. */
-    tickMs(): number {
-        if (this.gif && this.gif.frames.length > 1) return GIF_TICK_MS;
-        if (this.motion && this.tiles.length && (this.moving || this.soon)) return MOTION_TICK_MS;
-        return STILL_TICK_MS;
-    }
-
     renderSlice(offsetX: number, width: number, height: number): string {
         const slice = this.slices[Math.round(offsetX / SLICE_W)];
-        if (!slice) return '';
+        // No picture (yet): a plain dark panel with a faint picture symbol in the middle of the row, so the
+        // row does not look as if the effect had gone
+        if (!slice) return this.placeholder(offsetX, width, height);
         const dim = Math.max(0, Math.min(MAX_DIM, Number(this.settings.dim ?? 0))) / 100;
         return slice + (dim > 0 ? `<rect width="${width}" height="${height}" fill="#000" opacity="${dim}"/>` : '');
+    }
+
+    private placeholder(offsetX: number, width: number, height: number): string {
+        const cx = this.width / 2 - offsetX;
+        const icon = cx >= 24 && cx <= width - 24 ? `<path d="${mdiImageOutline}" fill="#5a5a62" transform="translate(${cx - 24} ${height / 2 - 24}) scale(2)"/>` : '';
+        return `<rect width="${width}" height="${height}" fill="#1d1d21"/>${icon}`;
     }
 
     destroy(): void {
@@ -124,8 +121,6 @@ class ImageEffectInstance implements EffectInstance<ImageEffectSettings> {
         this.tiles = [];
         this.lastE = NaN;
         this.lastEy = NaN;
-        this.moving = false;
-        this.soon = false;
         this.elapsedMs = 0;
         this.jittered = false;
     }
@@ -254,8 +249,6 @@ class ImageEffectInstance implements EffectInstance<ImageEffectSettings> {
         if (!this.work || !this.motion || !this.tiles.length) return;
         const interval = Math.max(30, Number(this.settings.motionSeconds ?? DEFAULT_MOTION_SECONDS));
         const ph = motionPhase(this.elapsedMs / 1000, interval);
-        this.moving = ph.moving;
-        this.soon = ph.soon;
         // At rest nothing changes: the pieces stay as they are
         if (!ph.moving && ph.e === this.lastE && ph.ey === this.lastEy && this.slices.length) return;
         this.lastE = ph.e;
@@ -302,8 +295,8 @@ const image: EffectDefinition<ImageEffectSettings> = {
         },
         { key: 'motionSeconds', type: 'range', label: 'Motion: a move every (seconds)', min: 30, max: 600, step: 10, default: DEFAULT_MOTION_SECONDS },
     ],
-    // A still picture: no need for 10 frames a second (the instance asks for more when it moves)
-    preferredTickMs: STILL_TICK_MS,
+    // No preferredTickMs: the dials of a row redraw on the group's tick (a level meter or a progress bar on
+    // such a dial moves with it), so this effect ticks at the default rate even though it is mostly still.
     createInstance: () => new ImageEffectInstance(),
 };
 

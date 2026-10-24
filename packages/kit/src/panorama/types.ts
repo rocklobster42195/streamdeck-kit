@@ -36,8 +36,8 @@ export interface EffectInstance<S = Record<string, unknown>> {
     renderSlice(offsetX: number, width: number, height: number): string;
 
     /** Optional: the tick interval this instance wants right now, in ms (read after every tick; the
-     *  effect's `preferredTickMs` is used until then). A still picture can tick slowly and speed up when
-     *  it turns out to move (a GIF, a slow zoom). */
+     *  effect's `preferredTickMs` is used until then). Do not go slower than the default (100 ms):
+     *  see `preferredTickMs`. */
     tickMs?(): number | undefined;
 
     /** Called when the host's PI-managed settings change (e.g. a device's dominant color). */
@@ -84,7 +84,12 @@ export interface EffectDefinition<S = Record<string, unknown>> {
     /** Group tick interval in ms this effect wants (defaults to the host's own default — currently
      *  100ms/10fps — when omitted). Faster/larger-amplitude motion (e.g. Boing Ball's bounce) reads
      *  as visibly choppy at the default rate; slow ambient drift (Particles) does not need more.
-     *  Confirmed on hardware (2026-07-18): Boing Ball at 10fps was noticeably stuttery. */
+     *  Confirmed on hardware (2026-07-18): Boing Ball at 10fps was noticeably stuttery.
+     *
+     *  Never slower than the default, even for a picture that hardly moves: the dials of a row are
+     *  redrawn on the group's tick (a plugin whose dial has a Panorama behind it redraws on the slice that
+     *  arrives with the tick), so a slow tick makes a level meter or a progress bar on such a dial
+     *  sluggish (seen 2026-10-24: Colour and Image at 1 tick a second made the mixer meters crawl). */
     preferredTickMs?: number;
     createInstance(): EffectInstance<S>;
 }

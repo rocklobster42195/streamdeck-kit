@@ -162,7 +162,6 @@ describe('image effect with a web address', () => {
         effect.initPanorama({ width: 200, height: 100, settings: { source: { kind: 'url' as const, url: `${base}/anim.gif`, intervalSec: 10 }, fit: 'stretch' as const } });
         await new Promise((ok) => setTimeout(ok, 120));
         effect.tickPanorama(1000);
-        expect(effect.tickMs?.()).toBe(100);
         const a = effect.renderSlice(0, 200, 100);
         effect.tickPanorama(100);
         expect(effect.renderSlice(0, 200, 100)).not.toBe(a);
@@ -173,14 +172,14 @@ describe('image effect with a web address', () => {
         const effect = image.createInstance();
         const settings = { source: { kind: 'url' as const, url: `${base}/open.jpg`, intervalSec: 10 }, fit: 'fill' as const };
         effect.initPanorama({ width: 400, height: 100, settings });
-        expect(effect.renderSlice(0, 200, 100)).toBe('');
+        expect(effect.renderSlice(0, 200, 100)).not.toContain('<image');
         await new Promise((ok) => setTimeout(ok, 120));
         effect.tickPanorama(1000);
         expect(effect.renderSlice(0, 200, 100)).toContain('<image href="data:image/jpeg;base64,');
         expect(effect.renderSlice(200, 200, 100)).toContain('<image');
         // A different address with nothing behind it: the old picture is not shown for it
         effect.onSettingsChange({ source: { kind: 'url', url: `${base}/page.html` } });
-        expect(effect.renderSlice(0, 200, 100)).toBe('');
+        expect(effect.renderSlice(0, 200, 100)).not.toContain('<image');
         effect.destroy?.();
     });
 });

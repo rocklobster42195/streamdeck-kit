@@ -69,8 +69,6 @@ const colour: EffectDefinition<ColourEffectSettings> = {
         { key: 'fade', type: 'checkbox', label: 'Fade across the row', default: false },
         { key: 'fadeAmount', type: 'range', label: 'Fade strength', min: 0, max: 100, step: 5, default: DEFAULT_FADE },
     ],
-    // A still colour: no need for 10 frames a second
-    preferredTickMs: 1000,
     createInstance: () => new ColourEffectInstance(),
 };
 

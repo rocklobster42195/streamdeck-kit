@@ -4,6 +4,14 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Fixed
+
+- **Colour and Image no longer make the other dials of a row crawl.** They ticked once a second (a still picture does not need more), but the dials of a row are redrawn on the group's tick (a plugin whose dial has a Panorama behind it redraws on the slice that arrives with the tick), so the level meters of a mixer dial next to them moved once a second. They tick at the default rate (10 a second) now, like every other effect; a test checks that for all effects. `preferredTickMs` and `EffectInstance.tickMs` are documented as "never slower than the default".
+
+### Changed
+
+- **Image without a picture shows a dark panel with a faint picture symbol** in the middle of the row instead of nothing, so the row does not look as if the effect had gone.
+
 ## [0.1.0-alpha.39] — 2026-10-23
 
 ### Added
