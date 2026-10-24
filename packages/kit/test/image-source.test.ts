@@ -7,6 +7,12 @@ import image from '../src/panorama/effects/image/index.js';
 import { fetchPicture, getSourceStatus, SourceError, intervalOf, parseSourceUrl, setSourceStatus, UrlPictureLoader } from '../src/panorama/image-source.js';
 import { withoutLogin } from '../src/panorama/rows.js';
 
+/** Waits until `cond` holds (a fetch on a slow runner takes longer than any fixed pause). */
+const until = async (cond: () => boolean, ms = 4000): Promise<void> => {
+    const end = Date.now() + ms;
+    while (!cond() && Date.now() < end) await new Promise((ok) => setTimeout(ok, 10));
+};
+
 function picture(w = 400, h = 100): Buffer {
     const data = new Uint8Array(w * h * 4);
     for (let i = 0; i < data.length; i += 4) {
@@ -116,7 +122,7 @@ describe('loader', () => {
         const loader = new UrlPictureLoader();
         loader.set({ kind: 'url', url, intervalSec: 10 });
         loader.tick(0);
-        await settle();
+        await until(() => !!loader.bytes);
         expect(hits['/loop.jpg']).toBe(1);
         expect(loader.bytes).toBeDefined();
         expect(getSourceStatus(url)?.ok).toBe(true);
@@ -125,7 +131,7 @@ describe('loader', () => {
         await settle();
         expect(hits['/loop.jpg']).toBe(1);
         loader.tick(5000);
-        await settle();
+        await until(() => loader.version > v);
         expect(hits['/loop.jpg']).toBe(2);
         expect(loader.version).toBeGreaterThan(v);
         // The same address again: nothing restarts
@@ -135,7 +141,7 @@ describe('loader', () => {
         const gone = new UrlPictureLoader();
         gone.set({ kind: 'url', url: `${base}/snap.jpg`, user: 'viewer', password: 'secret', intervalSec: 10 });
         gone.tick(0);
-        await settle();
+        await until(() => !!gone.bytes);
         const had = gone.bytes;
         expect(had).toBeDefined();
         gone.set({ kind: 'url', url: `${base}/snap.jpg`, user: 'viewer', password: 'secret', intervalSec: 10 });
@@ -148,7 +154,7 @@ describe('loader', () => {
         const loader = new UrlPictureLoader();
         loader.set({ kind: 'url', url: `${base}/open.jpg` });
         loader.tick(0);
-        await settle();
+        await until(() => !!loader.bytes);
         expect(loader.bytes).toBeDefined();
         loader.set({ kind: 'url', url: `${base}/page.html` });
         expect(loader.bytes).toBeUndefined();
@@ -160,7 +166,10 @@ describe('image effect with a web address', () => {
         expect((await fetchPicture({ kind: 'url', url: `${base}/anim.gif` })).subarray(0, 3).toString()).toBe('GIF');
         const effect = image.createInstance();
         effect.initPanorama({ width: 200, height: 100, settings: { source: { kind: 'url' as const, url: `${base}/anim.gif`, intervalSec: 10 }, fit: 'stretch' as const } });
-        await new Promise((ok) => setTimeout(ok, 120));
+        await until(() => {
+            effect.tickPanorama(0);
+            return effect.renderSlice(0, 200, 100).includes('data:image');
+        });
         effect.tickPanorama(1000);
         const a = effect.renderSlice(0, 200, 100);
         effect.tickPanorama(100);
@@ -173,7 +182,10 @@ describe('image effect with a web address', () => {
         const settings = { source: { kind: 'url' as const, url: `${base}/open.jpg`, intervalSec: 10 }, fit: 'fill' as const };
         effect.initPanorama({ width: 400, height: 100, settings });
         expect(effect.renderSlice(0, 200, 100)).not.toContain('<image');
-        await new Promise((ok) => setTimeout(ok, 120));
+        await until(() => {
+            effect.tickPanorama(0);
+            return effect.renderSlice(0, 200, 100).includes('data:image');
+        });
         effect.tickPanorama(1000);
         expect(effect.renderSlice(0, 200, 100)).toContain('<image href="data:image/jpeg;base64,');
         expect(effect.renderSlice(200, 200, 100)).toContain('<image');
