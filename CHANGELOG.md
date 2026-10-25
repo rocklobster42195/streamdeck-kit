@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.43] — 2026-10-25
+
 ### Added
 
 - **`RunTextOverlay`** (`/panorama`): draws the text of a Panorama run with the crossfade (the old line dissolves into the new one over 400 ms), moved here from Music Assistant Controller. `TextRunView` carries `at`, when the text changed; passed to `render`, displays of different plugins stay at the same point of the fade.
