@@ -6,7 +6,7 @@
 import { mdiAlertCircle, mdiCloudOffOutline, mdiTimerSand } from '@mdi/js';
 
 /** The hourglass: its path fills 20 of 24 units (a play symbol only 14), so it is drawn smaller to look as large as the key's other symbols. */
-export const HOURGLASS = { size: 52, x: 46, y: 46 } as const;
+export const HOURGLASS = { size: 68, x: 38, y: 38 } as const;
 const HOURGLASS_TRANSFORM = `translate(${HOURGLASS.x} ${HOURGLASS.y}) scale(${(HOURGLASS.size / 24).toFixed(4)})`;
 
 export type StatusKind = 'loading' | 'failed';

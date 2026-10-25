@@ -15,17 +15,21 @@ export const KEY_BG = "#101010";
  */
 export const KEY_TIERS = { available: "#e0e0e0", off: "#8a8a90", unavailable: "#4a4a50" } as const;
 
-/** The one symbol size of a key, straight on the key or the dimmed cover: no disc, no fade. */
-export const KEY_GLYPH = { size: 72, x: 36, y: 36 } as const;
+/**
+ * The one symbol size of a key, straight on the key or the dimmed cover: no disc, no fade. 96 px of the 144,
+ * the "Variante A" of the mock-up the family agreed on (alpha.36 had drawn 72 px, which looked clearly smaller).
+ */
+export const KEY_GLYPH = { size: 96, x: 24, y: 24 } as const;
 
 /**
- * Icon placement. `full` and `withCaption` are the one symbol size (a caption sits close under it, one
- * group); `compact` is smaller, for a caption plus another row under it (a level bar, a message);
- * `twoLines` is smaller and higher, for two lines of text (name + value, or a wrapped name).
+ * Icon placement. `full` is the one symbol size; `withCaption` a little smaller with the caption close
+ * under it (one group, as in the mock-up); `compact` is smaller, for a caption plus another row under it
+ * (a level bar, a message); `twoLines` is smaller and higher, for two lines of text (name + value, or a
+ * wrapped name).
  */
 export const KEY_ICON = {
     full: KEY_GLYPH,
-    withCaption: { size: 72, x: 36, y: 20 },
+    withCaption: { size: 80, x: 32, y: 10 },
     compact: { size: 60, x: 42, y: 20 },
     twoLines: { size: 60, x: 42, y: 6 },
 } as const;

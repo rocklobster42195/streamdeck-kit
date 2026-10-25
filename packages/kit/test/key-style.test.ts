@@ -15,9 +15,9 @@ describe('family key style', () => {
         expect(long).toContain('…');
     });
 
-    it('has one symbol size with and without a caption, smaller ones for more text, and builds an SVG data URI', () => {
-        expect(KEY_ICON.full.size).toBe(72);
-        expect(KEY_ICON.withCaption.size).toBe(72);
+    it('has one symbol size, a little smaller with a caption, smaller ones for more text, and builds an SVG data URI', () => {
+        expect(KEY_ICON.full.size).toBe(96);
+        expect(KEY_ICON.withCaption.size).toBe(80);
         expect(KEY_ICON.compact.size).toBe(60);
         expect(KEY_ICON.twoLines.size).toBe(60);
         // The icon and a caption under it do not touch: the icon ends above where the caption's letters start
@@ -25,7 +25,7 @@ describe('family key style', () => {
         expect(keySvg([]).startsWith('data:image/svg+xml;base64,')).toBe(true);
     });
 
-    it('puts a short name on one line under the one-size icon', () => {
+    it('puts a short name on one line under the icon', () => {
         const short = keyLabel('Wandlampen', '#fff');
         expect(short.place).toBe(KEY_ICON.withCaption);
         expect((short.svg.match(/<text/g) ?? []).length).toBe(1);
