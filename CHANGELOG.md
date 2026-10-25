@@ -4,6 +4,8 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+## [0.1.0-alpha.41] — 2026-10-25
+
 ### Changed
 
 - **The one symbol size of a key is 96 px again, as in the mock-up** (the "Variante A, 96 px" the family agreed on; alpha.36 had drawn 72 px, which looked clearly smaller than shown). A symbol with a caption under it is 80 px (`KEY_ICON.withCaption`, y 10), the hourglass 68 px (`HOURGLASS`) so it looks as large as the other symbols. `compact` and `twoLines` (60 px) are unchanged. Every plugin that uses `KEY_ICON` and `KEY_GLYPH` follows.
