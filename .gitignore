@@ -6,7 +6,7 @@ dist/
 .vscode/
 
 # Local assistant context and working notes (not part of the repo)
-CLAUDE.md
+CLAUDE.local.md
 notes/
 .claude/
 

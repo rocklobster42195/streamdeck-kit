@@ -1,5 +1,9 @@
 # @rocklobster42195/streamdeck-kit
 
+[![npm](https://img.shields.io/npm/v/@rocklobster42195/streamdeck-kit?include_prereleases&label=npm)](https://www.npmjs.com/package/@rocklobster42195/streamdeck-kit)
+[![Ko-fi](https://img.shields.io/badge/support-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/rocklobster42195)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/rocklobster42195/streamdeck-kit/blob/main/LICENSE)
+
 Building blocks for [Elgato Stream Deck](https://www.elgato.com/stream-deck) plugins written against the official [`@elgato/streamdeck`](https://www.npmjs.com/package/@elgato/streamdeck) SDK:
 
 - **Rendering helpers** for keys and Stream Deck + touch strips: exact Arial text widths, truncation and wrapping by measured width, a marquee, a title fader and a PNG encoder.
@@ -423,6 +427,33 @@ const copyPiTheme = {
     },
 };
 ```
+
+## The family
+
+The kit exists so that a small family of Stream Deck plugins looks and feels the same and shares what is worth sharing. They are all built on it:
+
+| | Plugin | For | Status |
+|---|---|---|---|
+| ![Sonos Controller](https://img.shields.io/badge/%20%20%20-87AE73?style=flat-square) | [Sonos Controller](https://github.com/rocklobster42195/streamdeck-sonos-controller) | Sonos speakers | on the Marketplace, 0.5.0 in beta |
+| ![Music Assistant Controller](https://img.shields.io/badge/%20%20%20-009FDF?style=flat-square) | [Music Assistant Controller](https://github.com/rocklobster42195/streamdeck-music-assistant-controller) | your Music Assistant server and its players | alpha |
+| ![System Audio Controller](https://img.shields.io/badge/%20%20%20-E14190?style=flat-square) | [System Audio Controller](https://github.com/rocklobster42195/streamdeck-system-audio-controller) | your computer's sound: volume, apps, microphone | beta |
+| ![X-Air Controller](https://img.shields.io/badge/%20%20%20-00ACA8?style=flat-square) | [X-Air Controller](https://github.com/rocklobster42195/streamdeck-xair-controller) | Behringer X-Air and Midas mixers | alpha |
+| ![Home Assistant Controller](https://img.shields.io/badge/%20%20%20-005DA0?style=flat-square) | [Home Assistant Controller](https://github.com/rocklobster42195/streamdeck-home-assistant-controller) | your smart home, also over MQTT | alpha |
+
+What the kit gives them in common:
+
+- **The same look and feel.** Keys and dials are drawn by the same code: one symbol size, the same colours, errors always in the same place, and a settings window in one style with diagnostics, in English, German and Spanish.
+- **One Panorama across plugins.** Dials of different plugins in one row share an effect (particles, a picture, a webcam, …) as if they were one display.
+- **They find each other.** Through [deckbus](https://github.com/rocklobster42195/streamdeck-kit/blob/main/docs/deckbus-protocol.md) the plugins share players and colours without any setup, on the same computer only.
+- **Reusable.** The kit is open, MIT licensed and on npm. If you build Stream Deck plugins yourself, take what helps.
+
+## Ideas and feedback
+
+Ideas from outside are very welcome: they show what I stopped seeing on my own deck. Please open an [issue](https://github.com/rocklobster42195/streamdeck-kit/issues/new/choose) with your idea or problem. Small fixes as pull requests are welcome too; for bigger things, please start with an issue. The kit is alpha and changes often: if you use it in your own plugin, pin an exact version.
+
+## Support
+
+The kit started as the foundation of my own Stream Deck plugins. It is free and MIT licensed, and everyone is welcome to use it. If you like it, a coffee and a beer are always welcome: **[ko-fi.com/rocklobster42195](https://ko-fi.com/rocklobster42195)**.
 
 ## License
 
