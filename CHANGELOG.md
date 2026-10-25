@@ -4,6 +4,10 @@ All notable changes to `@rocklobster42195/streamdeck-kit`. The format follows [K
 
 ## [Unreleased]
 
+### Changed
+
+- **Play/Pause key: a grey key's progress bar keeps the cover's colour** (as on Sonos Controller's own key). The symbol and the paused play symbol stay grey; without a cover colour the bar is grey too.
+
 ## [0.1.0-alpha.41] — 2026-10-25
 
 ### Changed
