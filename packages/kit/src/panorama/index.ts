@@ -8,4 +8,5 @@ export * from './inputs.js';
 export * from './rows.js';
 export * from './covers.js';
 export * from './text-run.js';
+export * from './text-overlay.js';
 export * from './image-store.js';

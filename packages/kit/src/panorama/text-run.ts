@@ -24,6 +24,8 @@ export type TextRunView = {
     length: number;
     /** What the run shows (undefined: no dial of it shows text). */
     text?: RunText;
+    /** When that text last changed (ms, the source dial's clock; 0 = unknown). */
+    at: number;
     /** True when the text comes from a dial of this plugin (it then knows more than the bus carries). */
     local: boolean;
 };
@@ -122,6 +124,7 @@ export class TextRuns {
             index: d.column - first,
             length,
             text: source?.text,
+            at: source?.at ?? 0,
             local: source?.local ?? true,
         };
     }
