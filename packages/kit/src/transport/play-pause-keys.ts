@@ -215,8 +215,11 @@ export class PlayPauseKeys {
     private view(id: string, k: Key, s: PlayPauseKeySettings & typeof PLAY_PAUSE_DEFAULTS, p: Player): string {
         const playing = this.shownPlaying(k, p);
         const iconColor = resolveKeyColor(s.keyColor, { cover: p.color, row: this.o.rowColor?.(id) });
-        // Grey keys are grey all through: the bar and the paused symbol too
-        const accent = !s.keyColor || s.keyColor === 'grey' ? KEY_GREY : iconColor;
+        // Grey keys are grey all through: the paused symbol too ...
+        const grey = !s.keyColor || s.keyColor === 'grey';
+        const accent = grey ? KEY_GREY : iconColor;
+        // ... except the progress bar, which keeps the cover's colour (as on SONOS Controller's key)
+        const barColor = grey && p.color ? p.color : undefined;
         const cover = s.showCover && p.cover ? this.covers.frame(id, p.cover, () => this.render(id)) : undefined;
         if (!cover) this.covers.forget(id);
         k.coverFading = cover?.previous !== undefined;
@@ -245,6 +248,7 @@ export class PlayPauseKeys {
             coverMix: cover?.mix,
             iconColor,
             accent,
+            barColor,
             progress,
             titleSvg: this.title(id, k, s, p),
             left: this.corner(s, s.topLeft, p),

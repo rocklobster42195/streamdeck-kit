@@ -23,6 +23,8 @@ export type PlayPauseView = {
     iconColor: string;
     /** The play symbol on a paused cover and the progress fill (the cover's colour or the key colour). */
     accent: string;
+    /** The progress fill, when it is not the accent: a grey key still fills in the cover's colour. */
+    barColor?: string;
     /** 0..1, or undefined for none (no duration: radio, a stream). */
     progress?: number;
     /** The scrolling title, as an SVG fragment (TitleFader.svg()). */
@@ -61,7 +63,7 @@ export function renderPlayPauseKey(v: PlayPauseView): string {
         parts.push(loading ? icon(mdiTimerSand, HOURGLASS.x, HOURGLASS.y, HOURGLASS.size, v.iconColor) : glyph(v.playing ? mdiMusicNote : mdiPlay, v.iconColor));
     }
     if (v.titleSvg && !v.unavailable) parts.push(v.titleSvg);
-    if (v.progress !== undefined && !v.unavailable) parts.push(progressPill(v.progress, v.accent));
+    if (v.progress !== undefined && !v.unavailable) parts.push(progressPill(v.progress, v.barColor ?? v.accent));
     parts.push(cornerSvg(v.left, 'left'), cornerSvg(v.right, 'right'));
     if (v.flash && !v.unavailable) parts.push(`<rect width="${S}" height="${S}" fill="#000" opacity="0.55"/>`, glyph(v.flash === 'next' ? mdiSkipNext : mdiSkipPrevious, v.accent));
     if (v.status === 'failed' && !v.unavailable) parts.push(keyStatusBadge(v.status));
